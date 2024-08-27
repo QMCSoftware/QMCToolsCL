@@ -17,23 +17,22 @@ batch_size_r_x,batch_size_r,batch_size_n,batch_size_d = np.uint64(np.ceil(r_x/gl
 print("global_size_r_x = %d\tglobal_size_r = %d\tglobal_size_n = %d\tglobal_size_d = %d"%(global_size_r_x,global_size_r,global_size_n,global_size_d))
 print("batch_size_r_x = %d\tbatch_size_r = %d\tbatch_size_n = %d\tbatch_size_d = %d"%(batch_size_r_x,batch_size_r,batch_size_n,batch_size_d)) 
 
-os.environ["PYOPENCL_CTX"] = "0"
-FILEDIR = os.path.dirname(os.path.realpath(__file__))
-with open(FILEDIR+"/qmcgencl/lattice.cl","r") as kernel_file:
-    kernelsource = kernel_file.read() # skip the first 2 lines importing the header file
-    kernelsource = kernelsource.replace("void","__kernel void")
+os.environ["PYOPENCL_CTX"] = "0:2"
 
-mf = cl.mem_flags
+FILEDIR = os.path.dirname(os.path.realpath(__file__))
+with open(FILEDIR+"/qmcseqcl/lattice.cl","r") as kernel_file:
+    kernelsource = kernel_file.read()
+
 ctx = cl.create_some_context()
 prg = cl.Program(ctx,kernelsource).build()
 queue = cl.CommandQueue(ctx,properties=cl.command_queue_properties.PROFILING_ENABLE)
 
 rng = np.random.default_rng()
 
-g_d = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=g)
-x_d = cl.Buffer(ctx, mf.READ_WRITE, np.dtype(np.float64).itemsize*r_x*n*d)
-xr_d = cl.Buffer(ctx, mf.WRITE_ONLY, np.dtype(np.float64).itemsize*r*n*d)
-shifts_d = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=rng.random((r,d),dtype=np.float64))
+g_d = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=g)
+x_d = cl.Buffer(ctx, cl.mem_flags.READ_WRITE, np.dtype(np.float64).itemsize*r_x*n*d)
+xr_d = cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, np.dtype(np.float64).itemsize*r*n*d)
+shifts_d = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=rng.random((r,d),dtype=np.float64))
 
 t_linear_cl = time()
 lattice_linear = prg.lattice_linear

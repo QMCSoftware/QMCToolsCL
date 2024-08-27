@@ -1,6 +1,6 @@
 *.pyc
 *.so 
 *.DS_Store
-qmcgencl/*.c
-qmcgencl.egg-info/*
+qmcseqcl/*.c
+qmcseqcl.egg-info/*
 build/*
