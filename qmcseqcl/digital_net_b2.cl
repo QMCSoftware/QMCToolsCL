@@ -1,4 +1,4 @@
-__kernel void gen_mats_lsb_to_msb(
+__kernel void gen_mats_lsb_to_msb_b2(
     const ulong r,
     const ulong d,
     const ulong mmax, 
@@ -47,7 +47,7 @@ __kernel void gen_mats_lsb_to_msb(
     }
 }
 
-__kernel void gen_mats_linear_matrix_scramble(
+__kernel void gen_mats_linear_matrix_scramble_b2(
     const ulong r,
     const ulong d,
     const ulong mmax, 
@@ -261,7 +261,7 @@ __kernel void digital_net_b2_from_binary(
     }
 }
 
-__kernel void interlace(
+__kernel void interlace_b2(
     const ulong r,
     const ulong d_alpha, 
     const ulong mmax, 
@@ -297,6 +297,47 @@ __kernel void interlace(
                     }
                 }
                 C_alpha[l*d_alpha*mmax+j_alpha*mmax+k] = v;
+            }
+        }
+    }
+}
+
+__kernel void undo_interlace_b2(
+    const ulong r,
+    const ulong d, 
+    const ulong mmax, 
+    const ulong batch_size_r,
+    const ulong batch_size_d, 
+    const ulong batch_size_mmax,
+    const ulong d_alpha,
+    const ulong tmax,
+    const ulong tmax_alpha,
+    const ulong alpha,
+    __global const ulong *C_alpha,
+    __global ulong *C)
+{
+    ulong l0 = get_global_id(0)*batch_size_r;
+    ulong j0 = get_global_id(1)*batch_size_d;
+    ulong k0 = get_global_id(2)*batch_size_mmax;
+    ulong ll,l,j_alpha,kk,k,t_alpha,tt_alpha,t,jj,j,v,b;
+    ulong bigone = 1;
+    for(ll=0; ll<batch_size_r; ll++){
+        l = l0+ll;
+        for(jj=0; jj<batch_size_d; jj++){
+            j = j0+jj;
+             for(kk=0; kk<batch_size_mmax; kk++){
+                k = k0+kk;
+                v = 0;
+                for(t=0; t<tmax; t++){
+                    j_alpha = j/alpha;
+                    tt_alpha = j%alpha;
+                    t_alpha = t*alpha+tt_alpha;
+                    b = (C_alpha[l*d_alpha*mmax+j_alpha*mmax+k]>>(tmax_alpha-t_alpha-1))&1;
+                    if(b){
+                        v += (bigone<<(tmax-t-1));
+                    }
+                }
+                C[l*d*mmax+j*mmax+k] = v;
             }
         }
     }

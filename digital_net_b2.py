@@ -86,8 +86,8 @@ rng = np.random.default_rng()
 # tmax = 4
 # C_d = cl.Buffer(ctx, cl.mem_flags.READ_WRITE | cl.mem_flags.COPY_HOST_PTR, hostbuf=C_lsb)
 # tmaxes_d = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=np.array([tmax],dtype=np.uint64))
-# gen_mats_lsb_to_msb = prg.gen_mats_lsb_to_msb
-# event_lsb_to_msb = gen_mats_lsb_to_msb(queue,(1,1,1),None,np.uint64(1),np.uint64(d),np.uint64(mmax),np.uint64(1),np.uint64(d),np.uint64(mmax),tmaxes_d,C_d,C_d)
+# gen_mats_lsb_to_msb_b2 = prg.gen_mats_lsb_to_msb_b2
+# event_lsb_to_msb = gen_mats_lsb_to_msb_b2(queue,(1,1,1),None,np.uint64(1),np.uint64(d),np.uint64(mmax),np.uint64(1),np.uint64(d),np.uint64(mmax),tmaxes_d,C_d,C_d)
 # C_msb_cl = np.empty((d,mmax),dtype=np.uint64)
 # cl.enqueue_copy(queue,C_msb_cl,C_d)
 
@@ -105,23 +105,33 @@ rng = np.random.default_rng()
 #         print()
 # S_d = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=S)
 # C_lms_d = cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, np.dtype(np.uint64).itemsize*r_C*d*mmax)
-# gen_mats_linear_matrix_scramble = prg.gen_mats_linear_matrix_scramble 
-# event_lms = gen_mats_linear_matrix_scramble(queue,(1,1,1),None,np.uint64(r_C),np.uint64(d),np.uint64(mmax),np.uint64(r_C),np.uint64(d),np.uint64(mmax),np.uint64(1),np.uint64(tmax_new),tmaxes_d,S_d,C_d,C_lms_d)
+# gen_mats_linear_matrix_scramble_b2 = prg.gen_mats_linear_matrix_scramble_b2 
+# event_lms = gen_mats_linear_matrix_scramble_b2(queue,(1,1,1),None,np.uint64(r_C),np.uint64(d),np.uint64(mmax),np.uint64(r_C),np.uint64(d),np.uint64(mmax),np.uint64(1),np.uint64(tmax_new),tmaxes_d,S_d,C_d,C_lms_d)
 # C_lms_cl = np.empty((r_C,d,mmax),dtype=np.uint64)
 # cl.enqueue_copy(queue,C_lms_cl,C_lms_d)
 # print(C_lms_cl)
 
 r = 1
 alpha = 2
-C = np.array([[8,4,2,1],[8,8+4,4+2,2+1],[8,4,8+4+2,4+1],[8,4,8+2,8+4+2+1],[8,8+4,8+4+2,8+4+2+1]],dtype=np.uint64)
+C = np.array([[8,4,2,1],[8,8+4,4+2,2+1],[8,4,8+4+2,4+1],[8,4,8+2,8+4+2+1]],dtype=np.uint64)
 tmax = 4
 d,mmax = C.shape 
 d_alpha = d//alpha
 tmax_alpha = min(alpha*tmax,64)
+# interlace 
 C_d = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=C)
 C_alpha_d = cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, np.dtype(np.uint64).itemsize*r*d_alpha*mmax)
-interlace = prg.interlace
-event_interlace = interlace(queue,(r,d_alpha,mmax),None,np.uint64(r),np.uint64(d_alpha),np.uint64(mmax),np.uint64(1),np.uint64(1),np.uint64(1),np.int64(d),np.int64(tmax),np.int64(tmax_alpha),np.int64(alpha),C_d,C_alpha_d)
+interlace_b2 = prg.interlace_b2
+event_interlace = interlace_b2(queue,(r,d_alpha,mmax),None,np.uint64(r),np.uint64(d_alpha),np.uint64(mmax),np.uint64(1),np.uint64(1),np.uint64(1),np.int64(d),np.int64(tmax),np.int64(tmax_alpha),np.int64(alpha),C_d,C_alpha_d)
 C_alpha_cl = np.empty((d_alpha,mmax),dtype=np.uint64)
 cl.enqueue_copy(queue,C_alpha_cl,C_alpha_d)
 print(C_alpha_cl)
+# undo interlace 
+C_alpha_d = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=C_alpha_cl)
+C_d = cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, np.dtype(np.uint64).itemsize*r*d*mmax)
+undo_interlace_b2 = prg.undo_interlace_b2
+event_undo_interlace = undo_interlace_b2(queue,(r,d,mmax),None,np.uint64(r),np.uint64(d),np.uint64(mmax),np.uint64(1),np.uint64(1),np.uint64(1),np.int64(d_alpha),np.int64(tmax),np.int64(tmax_alpha),np.int64(alpha),C_alpha_d,C_d)
+C_cl = np.empty((d,mmax),dtype=np.uint64)
+cl.enqueue_copy(queue,C_cl,C_d)
+print(C)
+assert ((C_cl-C)==0).all()
