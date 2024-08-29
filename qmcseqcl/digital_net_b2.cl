@@ -260,3 +260,44 @@ __kernel void digital_net_b2_from_binary(
         }
     }
 }
+
+__kernel void interlace(
+    const ulong r,
+    const ulong d_alpha, 
+    const ulong mmax, 
+    const ulong batch_size_r,
+    const ulong batch_size_d_alpha, 
+    const ulong batch_size_mmax,
+    const ulong d,
+    const ulong tmax,
+    const ulong tmax_alpha,
+    const ulong alpha,
+    __global const ulong *C,
+    __global ulong *C_alpha)
+{
+    ulong l0 = get_global_id(0)*batch_size_r;
+    ulong j0_alpha = get_global_id(1)*batch_size_d_alpha;
+    ulong k0 = get_global_id(2)*batch_size_mmax;
+    ulong ll,l,jj_alpha,j_alpha,kk,k,t_alpha,t,jj,j,v,b;
+    ulong bigone = 1;
+    for(ll=0; ll<batch_size_r; ll++){
+        l = l0+ll;
+        for(jj_alpha=0; jj_alpha<batch_size_d_alpha; jj_alpha++){
+            j_alpha = j0_alpha+jj_alpha;
+             for(kk=0; kk<batch_size_mmax; kk++){
+                k = k0+kk;
+                v = 0;
+                for(t_alpha=0; t_alpha<tmax_alpha; t_alpha++){
+                    t = t_alpha / alpha; 
+                    jj = t_alpha%alpha; 
+                    j = j_alpha*alpha+jj;
+                    b = (C[l*d*mmax+j*mmax+k]>>(tmax-t-1))&1;
+                    if(b){
+                        v += (bigone<<(tmax_alpha-t_alpha-1));
+                    }
+                }
+                C_alpha[l*d_alpha*mmax+j_alpha*mmax+k] = v;
+            }
+        }
+    }
+}
