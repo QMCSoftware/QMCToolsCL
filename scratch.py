@@ -17,7 +17,7 @@ time_perf,time_process = lattice_linear(r_x,n,d,gs,x,
     backend = "cl",
     wait = True,
     PYOPENCL_CTX = "0:2",
-    global_size = (1,1,1)
+    global_size = (1,2,1)
 )
-print("   time_perf: %.1e\ntime_process: %.1e"%(time_perf,time_process))
+print("   time_perf: %.1e\ntime_process: %.1e\n"%(time_perf,time_process))
 print(x)

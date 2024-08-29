@@ -25,7 +25,10 @@ def opencl_c_func(func):
             return tdelta_perf,tdelta_process
         else: # backend=="cl"
             t0_perf = time.perf_counter()
-            import pyopencl as cl
+            try:
+                import pyopencl as cl
+            except:
+                raise ImportError("install pyopencl to access these capabilities in QMCseqCL")
             if "PYOPENCL_CTX" in kwargs:
                 os.environ["PYOPENCL_CTX"] = kwargs["PYOPENCL_CTX"]
             context = kwargs["context"] if "context" in kwargs else cl.create_some_context()
