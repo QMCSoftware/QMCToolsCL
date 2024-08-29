@@ -1,25 +1,48 @@
 import ctypes
+import numpy as np
+import time
 import glob
 import os
 
 qmcgencl_clib = ctypes.CDLL(glob.glob(os.path.dirname(os.path.abspath(__file__))+"/clib*")[0], mode=ctypes.RTLD_GLOBAL)
 
-try: import pyopencl as cl
-except: print("install pyopencl to access HPC capabilities")
-
-def add_program_to_context(cl_file:str, context):
+def get_qmcseqcl_program_from_context(context):
+    import pyopencl as cl
     FILEDIR = os.path.dirname(os.path.realpath(__file__))
-    with open(FILEDIR+"/qmcseqcl/"+cl_file,"r") as kernel_file:
+    with open(FILEDIR+"/qmcseqcl/qmcseqcl.cl","r") as kernel_file:
         kernelsource = kernel_file.read()
     program = cl.Program(context,kernelsource).build()
     return program
 
-def lattice_linear_cl(context=None, program=None, queue=None, global_sizes=None, local_sizes=None):
-    if context is None: context = cl.create_some_context()
-    if program is None: program = add_program_to_context("lattice.cl",context) 
-    if queue is None: queue = cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
-
-
-
-
-event_lattice_linear = lattice_linear(queue,(global_size_r_x,global_size_n,global_size_d),None,np.uint64(r_x),np.uint64(n),np.uint64(d),np.uint64(batch_size_r_x),np.uint64(batch_size_n),np.uint64(batch_size_d),g_d,x_d)
+def opencl_c_func(func):
+    func_name = func.__name__
+    def wrapped_func(*args, **kwargs):
+        if "backend" in kwargs: 
+            assert kwargs["backend"].lower() in ["cl","c"] 
+            backend = kwargs["backend"].lower()
+        else: 
+            backend = "c"
+        if backend=="c":
+            t0_perf = time.perf_counter()
+            t0_process = time.process_time()
+            eval("%s_c(*args)"%func_name)
+            tdelta_process = time.process_time()-t0_process 
+            tdelta_perf = time.perf_counter()-t0_perf 
+            return tdelta_perf,tdelta_process
+        else: # backend=="cl"
+            t0_perf = time.perf_counter()
+            import pyopencl as cl
+            context = kwargs["context"] if "context" in kwargs else cl.create_some_context()
+            program = program if "program" in kwargs else get_qmcseqcl_program_from_context(context)
+            queue = kwargs["queue"] if "queue" in kwargs else cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
+            assert "global_size" in kwargs 
+            global_size = kwargs["global_size"]
+            local_size = kwargs["local_size"] if "local_size" in kwargs else None
+            cl_func = getattr(program,func_name)
+            args_device = (cl.Buffer(context,cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=arg) if isinstance(arg,np.ndarray) else arg for arg in args)
+            event = cl_func(queue,global_size,local_size,*args_device)
+            tdelta_process = (event.profile.end - event.profile.start)*1e-9
+            if isinstance(args[-1],np.ndarray):
+                cl.enqueue_copy(queue,args[-1],args_device[-1])
+            tdelta_perf = time.perf_counter()-t0_perf
+            return tdelta_perf,tdelta_process

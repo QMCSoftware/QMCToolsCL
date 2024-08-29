@@ -20,7 +20,7 @@ print("batch_size_r_x = %d\tbatch_size_r = %d\tbatch_size_n = %d\tbatch_size_d =
 os.environ["PYOPENCL_CTX"] = "0:2"
 
 FILEDIR = os.path.dirname(os.path.realpath(__file__))
-with open(FILEDIR+"/qmcseqcl/lattice.cl","r") as kernel_file:
+with open(FILEDIR+"/qmcseqcl/qmcseqcl.cl","r") as kernel_file:
     kernelsource = kernel_file.read()
 
 ctx = cl.create_some_context()

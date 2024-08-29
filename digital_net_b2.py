@@ -112,8 +112,8 @@ rng = np.random.default_rng()
 # print(C_lms_cl)
 
 r = 1
-alpha = 2
-C = np.array([[8,4,2,1],[8,8+4,4+2,2+1],[8,4,8+4+2,4+1],[8,4,8+2,8+4+2+1]],dtype=np.uint64)
+alpha = 3
+C = np.array([[8,4,2,1],[8,8+4,4+2,2+1],[8,4,8+4+2,4+1]],dtype=np.uint64)
 tmax = 4
 d,mmax = C.shape 
 d_alpha = d//alpha
