@@ -284,6 +284,12 @@ __kernel void digital_net_b2_binary(
         for(ll=0; ll<batch_size_r_x; ll++){
             l = l0+ll;
             xb[l*n*d+prev_i+j] = 0;
+            if(l==(r-1)){
+                break;
+            }
+        }
+        if(j==(d-1)){
+            break;
         }
     }
     // set first values
@@ -449,7 +455,16 @@ __kernel void interlace_b2(
                     }
                 }
                 C_alpha[l*d_alpha*mmax+j_alpha*mmax+k] = v;
+                if(k==(mmax-1)){
+                    break;
+                }
             }
+            if(j_alpha==(d_alpha-1)){
+                break;
+            }
+        }
+        if(l==(r-1)){
+            break;
         }
     }
 }
@@ -490,7 +505,16 @@ __kernel void undo_interlace_b2(
                     }
                 }
                 C[l*d*mmax+j*mmax+k] = v;
+                if(k==(mmax-1)){
+                    break;
+                }
             }
+            if(j==(d-1)){
+                break;
+            }
+        }
+        if(l==(r-1)){
+            break;
         }
     }
 }
