@@ -1,13 +1,14 @@
 __kernel void lattice_linear(
-    const ulong r,
-    const ulong n, 
-    const ulong d, 
-    const ulong batch_size_r_x,
-    const ulong batch_size_n, 
-    const ulong batch_size_d, 
-    __global const ulong *g,
-    __global double *x)
-{
+    // Lattice points in linear ordering so $x_{lij} = g_{lj} i/n mod 1$ for $0 \leq l < r$ and $0 \leq i < n$ and $0 \leq j < d$
+    const ulong r, // number of replications
+    const ulong n, // number of points
+    const ulong d, // dimension of points
+    const ulong batch_size_r_x, // batch size for replications
+    const ulong batch_size_n, // batch size for points
+    const ulong batch_size_d, // batch size for dimension
+    __global const ulong *g, // pointer to generating vector of size r*d
+    __global double *x // pointer to point storage of size r*n*d
+){
     ulong l0 = get_global_id(0)*batch_size_r_x;
     ulong i0 = get_global_id(1)*batch_size_n;
     ulong j0 = get_global_id(2)*batch_size_d;
