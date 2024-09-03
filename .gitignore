@@ -4,3 +4,6 @@
 qmcseqcl/*.c
 qmcseqcl.egg-info/*
 build/*
+
+tests/c_tests.txt 
+tests/cl_tests.txt

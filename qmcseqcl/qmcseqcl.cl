@@ -64,7 +64,7 @@ __kernel void lattice_b2(
         p = ceil(log2((double)n0+1));
         v = 0; 
         b = 0;
-        ulong t = gc ? n0 : n0^(n0>>1); 
+        ulong t = n0^(n0>>1);
         while(t>0){
             if(t&1){
                 v+= 1<<(p-b-1);
