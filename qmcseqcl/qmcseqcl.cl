@@ -38,15 +38,15 @@ __kernel void lattice_linear(
 }
 
 __kernel void lattice_b2(
-    // Lattice points in Graycode or natural ordering
+    // Lattice points in Gray code or natural ordering
     const ulong r, // replications
     const ulong n, // points
     const ulong d, // dimension
     const ulong batch_size_r, // batch size for replications
     const ulong batch_size_n, // batch size for points
     const ulong batch_size_d, // batch size for dimension
-    const ulong nstart, // starting index in sequence
-    const char gc, // flag to use Graycode or natural order
+    const ulong n_start, // starting index in sequence
+    const char gc, // flag to use Gray code or natural order
     __global const ulong *g, // pointer to generating vector of size r*d 
     __global double *x // pointer to point storage of size r*n*d
 ){   
@@ -55,7 +55,7 @@ __kernel void lattice_b2(
     ulong j0 = get_global_id(2)*batch_size_d;
     double ifrac;
     ulong p,v,itrue,igc,b,ll,l,ii,i,jj,j,idx;
-    ulong n0 = nstart+i0;
+    ulong n0 = n_start+i0;
     if(n0==0){
         p = 0;
         v = 0;
@@ -82,9 +82,9 @@ __kernel void lattice_b2(
                 idx = i*d+j;
             }
             else{
-                itrue = i+nstart;
+                itrue = i+n_start;
                 igc = itrue^(itrue>>1);
-                idx = (igc-nstart)*d+j;
+                idx = (igc-n_start)*d+j;
             }
             for(ll=0; ll<batch_size_r; ll++){
                 l = l0+ll;
@@ -100,7 +100,7 @@ __kernel void lattice_b2(
         if((i==(n-1))||(ii==(batch_size_n-1))){
             break;
         }
-        itrue = i+nstart+1;
+        itrue = i+n_start+1;
         if((itrue&(itrue-1))==0){ // if itrue>0 is a power of 2
             p += 1;
             v <<= 1;
@@ -154,7 +154,7 @@ __kernel void lattice_rshift(
 }
 
 __kernel void gen_mats_lsb_to_msb_b2(
-    // Convert base 2 generating matrices with integers stored in Least Significant Bit (LSB) order to Most Significant Bit (MSB) order
+    // Convert base 2 generating matrices with integers stored in Least Significant Bit order to Most Significant Bit order
     const ulong r, // replications
     const ulong d, // dimension
     const ulong mmax, // columns in each generating matrix 
@@ -162,8 +162,8 @@ __kernel void gen_mats_lsb_to_msb_b2(
     const ulong batch_size_d, // batch size for dimensions
     const ulong batch_size_mmax, // batch size for columns
     __global const ulong *tmaxes, // length r vector of bits in each integer of the resulting MSB generating matrices
-    __global const ulong *C, // original generating matrices of size r*d*mmax
-    __global ulong *Cnew // new generating matrices of size r*d*mmax
+    __global const ulong *C_lsb, // original generating matrices of size r*d*mmax
+    __global ulong *C_msb // new generating matrices of size r*d*mmax
 ){
     ulong l0 = get_global_id(0)*batch_size_r;
     ulong j0 = get_global_id(1)*batch_size_d;
@@ -178,7 +178,7 @@ __kernel void gen_mats_lsb_to_msb_b2(
             for(kk=0; kk<batch_size_mmax; kk++){
                 k = k0+kk;
                 idx = l*d*mmax+j*mmax+k;
-                v = C[idx];
+                v = C_lsb[idx];
                 vnew = 0;
                 t = 0; 
                 while(v!=0){
@@ -188,7 +188,7 @@ __kernel void gen_mats_lsb_to_msb_b2(
                     v >>= 1;
                     t += 1;
                 }
-                Cnew[idx] = vnew;
+                C_msb[idx] = vnew;
                 if(k==(mmax-1)){
                     break;
                 }
@@ -216,7 +216,7 @@ __kernel void gen_mats_linear_matrix_scramble_b2(
     __global const ulong *tmaxes, // bits in the integers of the original generating matrices
     __global const ulong *S, // scrambling matrices of size r*d*tmax_new
     __global const ulong *C, // original generating matrices of size r_C*d*mmax
-    __global ulong *Cnew // resulting generating matrices of size r*d*mmax
+    __global ulong *C_lms // resulting generating matrices of size r*d*mmax
 ){
     ulong l0 = get_global_id(0)*batch_size_r;
     ulong j0 = get_global_id(1)*batch_size_d;
@@ -247,7 +247,7 @@ __kernel void gen_mats_linear_matrix_scramble_b2(
                         vnew += bigone<<(tmax_new-t-1);
                     }
                 }
-                Cnew[idx] = vnew;
+                C_lms[idx] = vnew;
                 if(k==(mmax-1)){
                     break;
                 }
@@ -263,15 +263,15 @@ __kernel void gen_mats_linear_matrix_scramble_b2(
 }
 
 __kernel void digital_net_b2_binary(
-    // Binary representation of digital net in base 2 in either Graycode or natural ordering
+    // Binary representation of digital net in base 2 in either Gray code or natural ordering
     const ulong r, // replications
     const ulong n, // points
     const ulong d, // dimension
     const ulong batch_size_r, // batch size for replications
     const ulong batch_size_n, // batch size for points
     const ulong batch_size_d, // batch size for dimension
-    const ulong nstart, // starting index in sequence
-    const char gc, // flag to use Graycode or natural order
+    const ulong n_start, // starting index in sequence
+    const char gc, // flag to use Gray code or natural order
     const ulong mmax, // columns in each generating matrix
     __global const ulong *C, // generating matrices of size r*d*mmax
     __global ulong *xb // binary digital net points of size r*n*d
@@ -280,10 +280,10 @@ __kernel void digital_net_b2_binary(
     ulong i0 = get_global_id(1)*batch_size_n;
     ulong j0 = get_global_id(2)*batch_size_d;
     ulong b,t,ll,l,ii,i,jj,j,prev_i,new_i;
-    ulong itrue = nstart+i0;
+    ulong itrue = n_start+i0;
     // initial index 
     t = itrue^(itrue>>1);
-    prev_i = gc ? i0*d : (t-nstart)*d;
+    prev_i = gc ? i0*d : (t-n_start)*d;
     // initialize first values 0 
     for(jj=0; jj<batch_size_d; jj++){
         j = j0+jj;
@@ -316,13 +316,13 @@ __kernel void digital_net_b2_binary(
     // set remaining values
     for(ii=1; ii<batch_size_n; ii++){
         i = i0+ii;
-        itrue = i+nstart;
+        itrue = i+n_start;
         if(gc){
             new_i = i*d;
         }
         else{
             t = itrue^(itrue>>1);
-            new_i = (t-nstart)*d;
+            new_i = (t-n_start)*d;
         }
         b = 0;
         while(!((itrue>>b)&1)){
@@ -360,7 +360,7 @@ __kernel void digital_net_b2_binary_rdshift(
     __global const ulong *lshifts, // left shift applied to each element of xb
     __global const ulong *xb, // binary base 2 digital net points of size r_x*n*d
     __global const ulong *shiftsb, // digital shifts of size r*d
-    __global ulong *xrb // digitall shifted digital net points of size r*n*d
+    __global ulong *xrb // digital shifted digital net points of size r*n*d
 ){
     ulong l0 = get_global_id(0)*batch_size_r;
     ulong i0 = get_global_id(1)*batch_size_n;
@@ -428,7 +428,7 @@ __kernel void digital_net_b2_from_binary(
 }
 
 __kernel void interlace_b2(
-    // Interlace generating matrices (or transpose of point sets) to attain higher order digital nets in base 2
+    // Interlace generating matrices or transpose of point sets to attain higher order digital nets in base 2
     const ulong r, // replications
     const ulong d_alpha, // dimension of resulting generating matrices 
     const ulong mmax, // columns of generating matrices
@@ -439,7 +439,7 @@ __kernel void interlace_b2(
     const ulong tmax, // bits in integers of original generating matrices
     const ulong tmax_alpha, // bits in integers of resulting generating matrices
     const ulong alpha, // interlacing factor
-    __global const ulong *C, // origintal generating matrices of size r*d*mmax
+    __global const ulong *C, // original generating matrices of size r*d*mmax
     __global ulong *C_alpha // resulting interlaced generating matrices of size r*d_alpha*mmax
 ){
     ulong l0 = get_global_id(0)*batch_size_r;

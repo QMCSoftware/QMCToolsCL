@@ -91,25 +91,25 @@ rng = np.random.default_rng()
 # C_msb_cl = np.empty((d,mmax),dtype=np.uint64)
 # cl.enqueue_copy(queue,C_msb_cl,C_d)
 
-# r_C = 2
-# tmax_new = 6
-# slow,shigh = np.uint64(1)<<np.maximum(0,tmax-1-np.arange(tmax_new,dtype=np.uint64)),np.uint64(1)<<np.uint64(tmax)
-# S = rng.integers(0,np.uint64(1)<<np.minimum(np.arange(tmax_new,dtype=np.uint64),tmax),(r_C,d,tmax_new),dtype=np.uint64)
-# S[:,:,:tmax] <<= np.arange(tmax,0,-1,dtype=np.uint64)
-# S[:,:,:tmax] += np.uint64(1)<<np.arange(tmax-1,-1,-1,dtype=np.uint64)
-# for l in range(r_C):
-#     for j in range(d): 
-#         for t in range(tmax_new):
-#             b = bin(S[l,j,t])[2:]
-#             print("\t"+"0"*(tmax-len(b))+b)
-#         print()
-# S_d = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=S)
-# C_lms_d = cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, np.dtype(np.uint64).itemsize*r_C*d*mmax)
-# gen_mats_linear_matrix_scramble_b2 = prg.gen_mats_linear_matrix_scramble_b2 
-# event_lms = gen_mats_linear_matrix_scramble_b2(queue,(1,1,1),None,np.uint64(r_C),np.uint64(d),np.uint64(mmax),np.uint64(r_C),np.uint64(d),np.uint64(mmax),np.uint64(1),np.uint64(tmax_new),tmaxes_d,S_d,C_d,C_lms_d)
-# C_lms_cl = np.empty((r_C,d,mmax),dtype=np.uint64)
-# cl.enqueue_copy(queue,C_lms_cl,C_lms_d)
-# print(C_lms_cl)
+r_C = 2
+tmax_new = 6
+slow,shigh = np.uint64(1)<<np.maximum(0,tmax-1-np.arange(tmax_new,dtype=np.uint64)),np.uint64(1)<<np.uint64(tmax)
+S = rng.integers(0,np.uint64(1)<<np.minimum(np.arange(tmax_new,dtype=np.uint64),tmax),(r_C,d,tmax_new),dtype=np.uint64)
+S[:,:,:tmax] <<= np.arange(tmax,0,-1,dtype=np.uint64)
+S[:,:,:tmax] += np.uint64(1)<<np.arange(tmax-1,-1,-1,dtype=np.uint64)
+for l in range(r_C):
+    for j in range(d): 
+        for t in range(tmax_new):
+            b = bin(S[l,j,t])[2:]
+            print("\t"+"0"*(tmax-len(b))+b)
+        print()
+S_d = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=S)
+C_lms_d = cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, np.dtype(np.uint64).itemsize*r_C*d*mmax)
+gen_mats_linear_matrix_scramble_b2 = prg.gen_mats_linear_matrix_scramble_b2 
+event_lms = gen_mats_linear_matrix_scramble_b2(queue,(1,1,1),None,np.uint64(r_C),np.uint64(d),np.uint64(mmax),np.uint64(r_C),np.uint64(d),np.uint64(mmax),np.uint64(1),np.uint64(tmax_new),tmaxes_d,S_d,C_d,C_lms_d)
+C_lms_cl = np.empty((r_C,d,mmax),dtype=np.uint64)
+cl.enqueue_copy(queue,C_lms_cl,C_lms_d)
+print(C_lms_cl)
 
 r = 1
 alpha = 3

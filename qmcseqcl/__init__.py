@@ -5,6 +5,24 @@ import time
 import glob
 import os
 
+def random_tbit_uint64s(rng, t, shape):
+    """Generate the desired shape of random integers with t bits
+    
+    Args:
+        rng (np.random._generator.Generator): random number generator with rng.integers method
+        t: (int): number of bits with 0 <= t <= 64
+        shape (tuple of ints): shape of resulting integer array"""
+    assert 0<=t<=64, "t must be between 0 and 64"
+    if t<64: 
+        x = rng.integers(0,1<<t,shape,dtype=np.uint64)
+    else: # t==64
+        x = rng.integers(-(1<<63),1<<63,shape,dtype=np.int64)
+        negs = x<0
+        x[negs] = x[negs]-(-(1<<63))
+        x = x.astype(np.uint64)
+        x[~negs] = x[~negs]+((1<<63))
+    return x
+
 def get_qmcseqcl_program_from_context(context):
     import pyopencl as cl
     FILEDIR = os.path.dirname(os.path.realpath(__file__))
