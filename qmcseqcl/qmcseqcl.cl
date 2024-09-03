@@ -113,8 +113,8 @@ __kernel void lattice_b2(
     }
 }
 
-__kernel void lattice_rshift(
-    // Random shift for lattice points
+__kernel void lattice_shift(
+    // Shift mod 1 for lattice points
     const ulong r, // replications
     const ulong n, // points
     const ulong d, // dimension
@@ -123,7 +123,7 @@ __kernel void lattice_rshift(
     const ulong batch_size_d, // batch size for dimension
     const ulong r_x, // replications in x
     __global const double *x, // lattice points of size r_x*n*d
-    __global const double *shifts, // random shifts of size r*d
+    __global const double *shifts, // shifts of size r*d
     __global double *xr // pointer to point storage of size r*n*d
 ){
     ulong l0 = get_global_id(0)*batch_size_r;
@@ -348,8 +348,8 @@ __kernel void digital_net_b2_binary(
     }
 }
 
-__kernel void digital_net_b2_binary_rdshift(
-    // Random digital shift for binary representation of base 2 digital net 
+__kernel void digital_net_b2_digital_shift(
+    // Digital shift base 2 digital net 
     const ulong r, // replications
     const ulong n, // points
     const ulong d, // dimension
@@ -538,11 +538,11 @@ __kernel void generalized_digital_net_digits(
     const ulong batch_size_n, // batch size for points
     const ulong batch_size_d, // batch size for dimension
     const ulong mmax, // columns in each generating matrix
-    const ulong t_max, // rows of each generating matrix
+    const ulong tmax, // rows of each generating matrix
     const ulong n_start, // starting index in sequence
     __global const ulong *bases, // bases for each dimension of size r*d
-    __global const ulong *C, // generating matrices of size r*d*mmax*t_max
-    __global ulong *xdig // generalized digital net sequence of digits of size r*n*d*t_max
+    __global const ulong *C, // generating matrices of size r*d*mmax*tmax
+    __global ulong *xdig // generalized digital net sequence of digits of size r*n*d*tmax
 ){   
     ulong l0 = get_global_id(0)*batch_size_r;
     ulong i0 = get_global_id(1)*batch_size_n;
@@ -556,8 +556,8 @@ __kernel void generalized_digital_net_digits(
             itrue = i+n0;
             for(jj=0; jj<batch_size_d; jj++){
                 j = j0+jj;
-                idx_xdig = l*n*d*t_max+i*d*t_max+j*t_max;
-                for(t=0; t<t_max; t++){
+                idx_xdig = l*n*d*tmax+i*d*tmax+j*tmax;
+                for(t=0; t<tmax; t++){
                     xdig[idx_xdig+t] = 0;
                 }
                 b = bases[l*d+j];
@@ -567,12 +567,63 @@ __kernel void generalized_digital_net_digits(
                     dig = icp%b;
                     icp = (icp-dig)/b;
                     if(dig>0){
-                        idx_C = l*d*mmax*t_max+j*mmax*t_max+k*mmax;
-                        for(t=0; t<t_max; t++){
+                        idx_C = l*d*mmax*tmax+j*mmax*tmax+k*mmax;
+                        for(t=0; t<tmax; t++){
                             xdig[idx_xdig+t] = (xdig[idx_xdig+t]+dig*C[idx_C+t])%b;
                         }
                     }
                     k += 1;
+                }
+                if(j==(d-1)){
+                    break;
+                }
+            }
+            if(i==(n-1)){
+                break;
+            }
+        }
+        if(l==(r-1)){
+            break;
+        }
+    }
+}
+
+__kernel void generalized_digital_net_digital_shift(
+    // Digital shift a generalized digital net
+    const ulong r, // replications
+    const ulong n, // points
+    const ulong d, // dimension
+    const ulong batch_size_r, // batch size for replications
+    const ulong batch_size_n, // batch size for points
+    const ulong batch_size_d, // batch size for dimension
+    const ulong r_x, // replications of xdig
+    const ulong r_b, // replications of bases
+    const ulong tmax, // rows of each generating matrix
+    const ulong tmax_new, // rows of each new generating matrix
+    __global const ulong *bases, // bases for each dimension of size r_b*d
+    __global const ulong *shifts, // digital shifts of size r*d*tmax_new
+    __global const ulong *xdig, // binary digital net points of size r_x*n*d*tmax
+    __global ulong *xdig_new // float digital net points of size r*n*d*tmax_new
+){
+    ulong l0 = get_global_id(0)*batch_size_r;
+    ulong i0 = get_global_id(1)*batch_size_n;
+    ulong j0 = get_global_id(2)*batch_size_d;
+    ulong b,ll,l,ii,i,jj,j,t,idx_xdig,idx_xdig_new,idx_shift;
+    for(ll=0; ll<batch_size_r; ll++){
+        l = l0+ll;
+        for(ii=0; ii<batch_size_n; ii++){
+            i = i0+ii;
+            for(jj=0; jj<batch_size_d; jj++){
+                j = j0+jj;
+                idx_xdig = (l%r_x)*n*d*tmax+i*d*tmax+j*tmax;
+                idx_xdig_new = l*n*d*tmax_new+i*d*tmax_new+j*tmax_new;
+                idx_shift = l*d*tmax_new+j*tmax_new;
+                b = bases[(l%r_b)*d+j];
+                for(t=0; t<tmax; t++){
+                    xdig_new[idx_xdig_new+t] = (xdig[idx_xdig+t]+shifts[idx_shift+t])%b;
+                }
+                for(t=tmax; t<tmax_new; t++){
+                    xdig_new[idx_xdig_new+t] = shifts[idx_shift+t];
                 }
                 if(j==(d-1)){
                     break;
@@ -596,9 +647,10 @@ __kernel void generalized_digital_net_from_digits(
     const ulong batch_size_r, // batch size for replications
     const ulong batch_size_n, // batch size for points
     const ulong batch_size_d, // batch size for dimension
-    const ulong t_max, // rows of each generating matrix
-    __global const ulong *bases, // bases for each dimension of size r*d
-    __global const ulong *xdig, // binary digital net points of size r*n*d*t_max
+    const ulong r_b, // replications of bases 
+    const ulong tmax, // rows of each generating matrix
+    __global const ulong *bases, // bases for each dimension of size r_b*d
+    __global const ulong *xdig, // binary digital net points of size r*n*d*tmax
     __global double *x // float digital net points of size r*n*d
 ){
     ulong l0 = get_global_id(0)*batch_size_r;
@@ -612,11 +664,11 @@ __kernel void generalized_digital_net_from_digits(
             i = i0+ii;
             for(jj=0; jj<batch_size_d; jj++){
                 j = j0+jj;
-                idx_xdig = l*n*d*t_max+i*d*t_max+j*t_max;
+                idx_xdig = l*n*d*tmax+i*d*tmax+j*tmax;
                 v = 0.;
-                b = (double) bases[l*d+j];
+                b = (double) bases[(l%r_b)*d+j];
                 recip = 1/b;
-                for(t=0; t<t_max; t++){
+                for(t=0; t<tmax; t++){
                     xdig_double = (double) (xdig[idx_xdig+t]);
                     v += recip*xdig_double;
                     recip /= b;
