@@ -661,6 +661,103 @@ array([[[[1, 1, 0, 0, 1, 0, 0, 1],
 <BLANKLINE>
         [[1, 0, 1, 0, 1, 0, 1, 0],
          [2, 1, 1, 1, 0, 2, 0, 2]]]], dtype=uint64)
+>>> print(qmcseqcl.generalized_digital_net_permutation.__doc__)
+Permutation of digits for a generalized digital net
+<BLANKLINE>
+Args:
+    r (np.uint64): replications
+    n (np.uint64): points
+    d (np.uint64): dimension
+    r_x (np.uint64): replications of xdig
+    r_b (np.uint64): replications of bases
+    tmax (np.uint64): rows of each generating matrix
+    tmax_new (np.uint64): rows of each new generating matrix
+    bmax (np.uint64): common permutation size, typically the maximum basis
+    perms (np.ndarray of np.uint64): permutations of size r*d*tmax_new*bmax
+    xdig (np.ndarray of np.uint64): binary digital net points of size r_x*n*d*tmax
+    xdig_new (np.ndarray of np.uint64): float digital net points of size r*n*d*tmax_new
+>>> bmax = bases.max()
+>>> perms = np.zeros((r,d,tmax_new,bmax),dtype=np.uint64)
+>>> for l in range(r):
+...     for j in range(d):
+...         b = bases[l%r_b,j]
+...         for t in range(tmax_new):
+...             perms[l,j,t,:b] = rng.permutation(b)
+>>> perms
+array([[[[1, 0, 0],
+         [1, 0, 0],
+         [1, 0, 0],
+         [0, 1, 0],
+         [0, 1, 0],
+         [1, 0, 0],
+         [0, 1, 0],
+         [0, 1, 0]],
+<BLANKLINE>
+        [[0, 2, 1],
+         [0, 2, 1],
+         [1, 2, 0],
+         [2, 0, 1],
+         [1, 2, 0],
+         [1, 2, 0],
+         [2, 1, 0],
+         [2, 0, 1]]],
+<BLANKLINE>
+<BLANKLINE>
+       [[[0, 1, 0],
+         [0, 1, 0],
+         [1, 0, 0],
+         [0, 1, 0],
+         [1, 0, 0],
+         [0, 1, 0],
+         [1, 0, 0],
+         [0, 1, 0]],
+<BLANKLINE>
+        [[1, 0, 2],
+         [0, 1, 2],
+         [1, 2, 0],
+         [2, 0, 1],
+         [0, 1, 2],
+         [1, 0, 2],
+         [1, 2, 0],
+         [2, 0, 1]]]], dtype=uint64)
+>>> time_perf,time_process = qmcseqcl.generalized_digital_net_permutation(r,n,d,r_x,r_b,tmax,tmax_new,bmax,perms,xdig,xdig_new)
+>>> xdig_new
+array([[[[1, 0, 1, 0, 0, 1, 0, 0],
+         [1, 0, 1, 2, 1, 1, 2, 2]],
+<BLANKLINE>
+        [[0, 0, 1, 0, 0, 1, 0, 0],
+         [0, 2, 1, 2, 1, 1, 2, 2]],
+<BLANKLINE>
+        [[1, 1, 0, 0, 0, 1, 0, 0],
+         [2, 2, 1, 2, 1, 1, 2, 2]],
+<BLANKLINE>
+        [[0, 1, 0, 0, 0, 1, 0, 0],
+         [1, 2, 1, 2, 1, 1, 2, 2]],
+<BLANKLINE>
+        [[1, 0, 0, 0, 0, 1, 0, 0],
+         [0, 1, 1, 2, 1, 1, 2, 2]],
+<BLANKLINE>
+        [[0, 0, 0, 0, 0, 1, 0, 0],
+         [2, 1, 1, 2, 1, 1, 2, 2]]],
+<BLANKLINE>
+<BLANKLINE>
+       [[[0, 1, 1, 0, 1, 0, 1, 0],
+         [2, 0, 1, 2, 0, 1, 1, 2]],
+<BLANKLINE>
+        [[1, 1, 1, 0, 1, 0, 1, 0],
+         [1, 1, 1, 2, 0, 1, 1, 2]],
+<BLANKLINE>
+        [[0, 0, 0, 0, 1, 0, 1, 0],
+         [0, 1, 1, 2, 0, 1, 1, 2]],
+<BLANKLINE>
+        [[1, 0, 0, 0, 1, 0, 1, 0],
+         [2, 1, 1, 2, 0, 1, 1, 2]],
+<BLANKLINE>
+        [[0, 1, 0, 0, 1, 0, 1, 0],
+         [1, 2, 1, 2, 0, 1, 1, 2]],
+<BLANKLINE>
+        [[1, 1, 0, 0, 1, 0, 1, 0],
+         [0, 2, 1, 2, 0, 1, 1, 2]]]], dtype=uint64)
 >>> print(qmcseqcl.generalized_digital_net_from_digits.__doc__)
 Convert digits of generalized digital net to floats
 <BLANKLINE>
@@ -676,16 +773,16 @@ Args:
 >>> x = np.empty((r,n,d),dtype=np.float64)
 >>> time_perf,time_process = qmcseqcl.generalized_digital_net_from_digits(r,n,d,r_b,tmax_new,bases,xdig_new,x)
 >>> x
-array([[[0.78515625, 0.62124676],
-        [0.28515625, 0.73235787],
-        [0.66015625, 0.06569121],
-        [0.16015625, 0.39902454],
-        [0.91015625, 0.84346898],
-        [0.41015625, 0.17680232]],
+array([[[0.640625  , 0.40176802],
+        [0.140625  , 0.29065691],
+        [0.765625  , 0.95732358],
+        [0.265625  , 0.62399025],
+        [0.515625  , 0.1795458 ],
+        [0.015625  , 0.84621247]],
 <BLANKLINE>
-       [[0.0390625 , 0.27465325],
-        [0.5390625 , 0.38576437],
-        [0.4140625 , 0.7190977 ],
-        [0.9140625 , 0.05243103],
-        [0.1640625 , 0.49687548],
-        [0.6640625 , 0.83020881]]])
+       [[0.4140625 , 0.73052888],
+        [0.9140625 , 0.50830666],
+        [0.0390625 , 0.17497333],
+        [0.5390625 , 0.84163999],
+        [0.2890625 , 0.61941777],
+        [0.7890625 , 0.28608444]]])
