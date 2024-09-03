@@ -121,4 +121,4 @@ for block in blocks:
     doc_args = doc_args[:3]+doc_args[6:] # skip batch size args
     exec("%s_c = c_lib.%s"%(name,name)) 
     exec("%s_c.argtypes = [%s]"%(name,','.join(args)))
-    exec('@opencl_c_func\ndef %s():\n\t"""%s\n\nArgs:\n\t%s"""\n\tpass'%(name,desc.strip(),"\n\t".join(doc_args)))
+    exec('@opencl_c_func\ndef %s():\n    """%s\n\nArgs:\n    %s"""\n    pass'%(name,desc.strip(),"\n    ".join(doc_args)))
