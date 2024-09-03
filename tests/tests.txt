@@ -555,3 +555,90 @@ array([[[0.51363258, 0.44719671],
         [0.7689771 , 0.98422427],
         [0.70246404, 0.00767702],
         [0.36017888, 0.78911013]]])
+>>> print(qmcseqcl.generalized_digital_net_digits.__doc__)
+Generalized digital net where the base can be different for each dimension e.g. for the Halton sequence
+<BLANKLINE>
+Args:
+    r (np.uint64): replications
+    n (np.uint64): points
+    d (np.uint64): dimension
+    mmax (np.uint64): columns in each generating matrix
+    t_max (np.uint64): rows of each generating matrix
+    n_start (np.uint64): starting index in sequence
+    bases (np.ndarray of np.uint64): bases for each dimension of size r*d
+    C (np.ndarray of np.uint64): generating matrices of size r*d*mmax*t_max
+    xdig (np.ndarray of np.uint64): generalized digital net sequence of digits of size r*n*d*t_max
+>>> bases = np.array([[2,3],[5,7]],dtype=np.uint64)
+>>> r = np.uint64(bases.shape[0])
+>>> d = np.uint64(bases.shape[1]) 
+>>> mmax = np.uint64(5)
+>>> n = np.uint64(6)
+>>> t_max = mmax
+>>> n_start = np.uint64(2)
+>>> C = np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(r,d,1,1))
+>>> xdig = np.empty((r,n,d,t_max),dtype=np.uint64)
+>>> time_perf,time_process = qmcseqcl.generalized_digital_net_digits(r,n,d,mmax,t_max,n_start,bases,C,xdig)
+>>> xdig
+array([[[[0, 1, 0, 0, 0],
+         [2, 0, 0, 0, 0]],
+<BLANKLINE>
+        [[1, 1, 0, 0, 0],
+         [0, 1, 0, 0, 0]],
+<BLANKLINE>
+        [[0, 0, 1, 0, 0],
+         [1, 1, 0, 0, 0]],
+<BLANKLINE>
+        [[1, 0, 1, 0, 0],
+         [2, 1, 0, 0, 0]],
+<BLANKLINE>
+        [[0, 1, 1, 0, 0],
+         [0, 2, 0, 0, 0]],
+<BLANKLINE>
+        [[1, 1, 1, 0, 0],
+         [1, 2, 0, 0, 0]]],
+<BLANKLINE>
+<BLANKLINE>
+       [[[2, 0, 0, 0, 0],
+         [2, 0, 0, 0, 0]],
+<BLANKLINE>
+        [[3, 0, 0, 0, 0],
+         [3, 0, 0, 0, 0]],
+<BLANKLINE>
+        [[4, 0, 0, 0, 0],
+         [4, 0, 0, 0, 0]],
+<BLANKLINE>
+        [[0, 1, 0, 0, 0],
+         [5, 0, 0, 0, 0]],
+<BLANKLINE>
+        [[1, 1, 0, 0, 0],
+         [6, 0, 0, 0, 0]],
+<BLANKLINE>
+        [[2, 1, 0, 0, 0],
+         [0, 1, 0, 0, 0]]]], dtype=uint64)
+>>> print(qmcseqcl.generalized_digital_net_from_digits.__doc__)
+Convert digits of generalized digital net to floats
+<BLANKLINE>
+Args:
+    r (np.uint64): replications
+    n (np.uint64): points
+    d (np.uint64): dimension
+    t_max (np.uint64): rows of each generating matrix
+    bases (np.ndarray of np.uint64): bases for each dimension of size r*d
+    xdig (np.ndarray of np.uint64): binary digital net points of size r*n*d*t_max
+    x (np.ndarray of np.double): float digital net points of size r*n*d
+>>> x = np.empty((r,n,d),dtype=np.float64)
+>>> time_perf,time_process = qmcseqcl.generalized_digital_net_from_digits(r,n,d,t_max,bases,xdig,x)
+>>> x
+array([[[0.25      , 0.66666667],
+        [0.75      , 0.11111111],
+        [0.125     , 0.44444444],
+        [0.625     , 0.77777778],
+        [0.375     , 0.22222222],
+        [0.875     , 0.55555556]],
+<BLANKLINE>
+       [[0.4       , 0.28571429],
+        [0.6       , 0.42857143],
+        [0.8       , 0.57142857],
+        [0.04      , 0.71428571],
+        [0.24      , 0.85714286],
+        [0.44      , 0.02040816]]])

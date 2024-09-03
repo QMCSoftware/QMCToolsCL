@@ -528,3 +528,110 @@ __kernel void undo_interlace_b2(
         }
     }
 }
+
+__kernel void generalized_digital_net_digits(
+    // Generalized digital net where the base can be different for each dimension e.g. for the Halton sequence
+    const ulong r, // replications
+    const ulong n, // points
+    const ulong d, // dimension
+    const ulong batch_size_r, // batch size for replications
+    const ulong batch_size_n, // batch size for points
+    const ulong batch_size_d, // batch size for dimension
+    const ulong mmax, // columns in each generating matrix
+    const ulong t_max, // rows of each generating matrix
+    const ulong n_start, // starting index in sequence
+    __global const ulong *bases, // bases for each dimension of size r*d
+    __global const ulong *C, // generating matrices of size r*d*mmax*t_max
+    __global ulong *xdig // generalized digital net sequence of digits of size r*n*d*t_max
+){   
+    ulong l0 = get_global_id(0)*batch_size_r;
+    ulong i0 = get_global_id(1)*batch_size_n;
+    ulong j0 = get_global_id(2)*batch_size_d;
+    ulong idx_xdig,idx_C,b,dig,itrue,icp,ii,i,jj,j,ll,l,t,k;
+    ulong n0 = n_start+i0;
+    for(ll=0; ll<batch_size_r; ll++){
+        l = l0+ll;
+        for(ii=0; ii<batch_size_n; ii++){
+            i = i0+ii;
+            itrue = i+n0;
+            for(jj=0; jj<batch_size_d; jj++){
+                j = j0+jj;
+                idx_xdig = l*n*d*t_max+i*d*t_max+j*t_max;
+                for(t=0; t<t_max; t++){
+                    xdig[idx_xdig+t] = 0;
+                }
+                b = bases[l*d+j];
+                k = 0;
+                icp = itrue; 
+                while(icp>0){
+                    dig = icp%b;
+                    icp = (icp-dig)/b;
+                    if(dig>0){
+                        idx_C = l*d*mmax*t_max+j*mmax*t_max+k*mmax;
+                        for(t=0; t<t_max; t++){
+                            xdig[idx_xdig+t] = (xdig[idx_xdig+t]+dig*C[idx_C+t])%b;
+                        }
+                    }
+                    k += 1;
+                }
+                if(j==(d-1)){
+                    break;
+                }
+            }
+            if(i==(n-1)){
+                break;
+            }
+        }
+        if(l==(r-1)){
+            break;
+        }
+    }
+}
+
+__kernel void generalized_digital_net_from_digits(
+    // Convert digits of generalized digital net to floats
+    const ulong r, // replications
+    const ulong n, // points
+    const ulong d, // dimension
+    const ulong batch_size_r, // batch size for replications
+    const ulong batch_size_n, // batch size for points
+    const ulong batch_size_d, // batch size for dimension
+    const ulong t_max, // rows of each generating matrix
+    __global const ulong *bases, // bases for each dimension of size r*d
+    __global const ulong *xdig, // binary digital net points of size r*n*d*t_max
+    __global double *x // float digital net points of size r*n*d
+){
+    ulong l0 = get_global_id(0)*batch_size_r;
+    ulong i0 = get_global_id(1)*batch_size_n;
+    ulong j0 = get_global_id(2)*batch_size_d;
+    ulong ll,l,ii,i,jj,j,t,idx_xdig;
+    double recip,v,xdig_double,b;
+    for(ll=0; ll<batch_size_r; ll++){
+        l = l0+ll;
+        for(ii=0; ii<batch_size_n; ii++){
+            i = i0+ii;
+            for(jj=0; jj<batch_size_d; jj++){
+                j = j0+jj;
+                idx_xdig = l*n*d*t_max+i*d*t_max+j*t_max;
+                v = 0.;
+                b = (double) bases[l*d+j];
+                recip = 1/b;
+                for(t=0; t<t_max; t++){
+                    xdig_double = (double) (xdig[idx_xdig+t]);
+                    v += recip*xdig_double;
+                    recip /= b;
+                }
+                x[l*n*d+i*d+j] = v;
+                if(j==(d-1)){
+                    break;
+                }
+            }
+            if(i==(n-1)){
+                break;
+            }
+        }
+        if(l==(r-1)){
+            break;
+        }
+    }
+}

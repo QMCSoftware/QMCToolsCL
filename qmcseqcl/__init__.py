@@ -32,9 +32,7 @@ def get_qmcseqcl_program_from_context(context):
     return program
 
 def print_opencl_device_info():
-    """
-    Copied from https://github.com/HandsOnOpenCL/Exercises-Solutions/blob/master/Exercises/Exercise01/Python/DeviceInfo.py
-    """
+    """ Print OpenCL devices info. Copied from https://github.com/HandsOnOpenCL/Exercises-Solutions/blob/master/Exercises/Exercise01/Python/DeviceInfo.py """
     import pyopencl as cl
     platforms = cl.get_platforms()
     print("\nNumber of OpenCL platforms:", len(platforms))
