@@ -93,7 +93,8 @@ c_lib = ctypes.CDLL(glob.glob(os.path.dirname(os.path.abspath(__file__))+"/c_lib
 
 c_to_ctypes_map = {
     "ulong": "uint64",
-    "double": "double"
+    "double": "double",
+    "char": "uint8",
 }
 
 with open("./qmcseqcl/qmcseqcl.cl","r") as f:
@@ -111,13 +112,13 @@ for block in blocks:
         if var_type not in c_to_ctypes_map:
                 raise Exception("var_type %s not found in map"%var_type)
         c_var_type = c_to_ctypes_map[var_type]
-        doc_args += ["%s (np.%s): %s"%(var,c_var_type,var_desc)]
         if var[0]!="*":
+            doc_args += ["%s (np.%s): %s"%(var,c_var_type,var_desc)]
             args += ["ctypes.c_%s"%c_var_type]
         else:
+            doc_args += ["%s (np.ndarray of np.%s): %s"%(var[1:],c_var_type,var_desc)]
             args += ["np.ctypeslib.ndpointer(ctypes.c_%s,flags='C_CONTIGUOUS')"%c_var_type]
     doc_args = doc_args[:3]+doc_args[6:] # skip batch size args
     exec("%s_c = c_lib.%s"%(name,name)) 
     exec("%s_c.argtypes = [%s]"%(name,','.join(args)))
-    exec('@opencl_c_func\ndef lattice_linear():\n\t"""%s\n\nArgs:\n\t%s"""\n\tpass'%(desc.strip(),"\n\t".join(doc_args)))
-    break # only consider the first block right now 
+    exec('@opencl_c_func\ndef %s():\n\t"""%s\n\nArgs:\n\t%s"""\n\tpass'%(name,desc.strip(),"\n\t".join(doc_args)))

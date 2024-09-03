@@ -9,9 +9,9 @@ gs = np.array([
     [1,182667,469891,498753,110745]],
     dtype=np.uint64)
 
-r_x = np.uint64(2) 
-n = np.uint64(8) 
-d = np.uint64(len(gs))
+r_x = np.uint64(gs.shape[0]) 
+n = np.uint64(16) 
+d = np.uint64(gs.shape[1])
 
 x = np.zeros((r_x,n,d),dtype=np.float64)
 
