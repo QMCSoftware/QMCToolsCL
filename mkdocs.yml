@@ -1,1 +1,6 @@
 site_name: QMCseqCL
+theme:
+  navigation_depth: 5
+  name: mkdocs
+  color_mode: auto
+  user_color_mode_toggle: True
