@@ -10,23 +10,34 @@ jobs:
             os: ["ubuntu-latest"] # ["macos-latest", "ubuntu-latest", "windows-latest"]
     steps:
       - uses: actions/checkout@v2
-      - name: Install Dependencies 
+      - name: Install Base Dependencies 
         shell: bash -l {0}
         run: |
           pip install numpy
-          pip install siphash24
           pip install pytest
-          pip install pyopencl
-          pip install pyopencl[pocl]
       - name: Install QMCseqCL 
         shell: bash -l {0}
         run: |
           pip install -e .
+      - name: Prepare Doctests from Docs 
+        shell: bash -l {0}
+        run: |
+          python prep_docs_doctests.py
+      - name: Doctests in C 
+        shell: bash -l {0}
+        run: |
+          	pytest test.index.c.txt
+      - name: Install PyOpenCL
+        shell: bash -l {0}
+        run: |
+          pip install siphash24
+          pip install pyopencl
+          pip install pyopencl[pocl]
       - name: PyOpenCL Device Info
         shell: bash -l {0}
         run: |
           python -c "import qmcseqcl; qmcseqcl.print_opencl_device_info()"
-      - name: Run Tests
+      - name: Doctests in OpenCL 
         shell: bash -l {0}
         run: |
-          make doctests
+          	pytest test.index.cl.txt
