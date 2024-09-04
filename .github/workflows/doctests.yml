@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-            os: ["macos-latest"] # ["macos-latest", "ubuntu-latest", "windows-latest"]
+            os: ["macos-latest","ubuntu-latest"] # ["macos-latest", "ubuntu-latest", "windows-latest"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
@@ -41,7 +41,7 @@ jobs:
         shell: bash -l {0}
         run: |
           python -c "import qmcseqcl; qmcseqcl.print_opencl_device_info()"
-      - name: Doctests in OpenCL 
+      - name: Doctests with PyOpenCL
         shell: bash -l {0}
         run: |
-          pytest test.index.cl.txt --verbose
+          pytest test.index.cl.txt
