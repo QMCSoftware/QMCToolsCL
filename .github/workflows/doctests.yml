@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-            os: ["macos-latest","ubuntu-latest"] # ["macos-latest", "ubuntu-latest", "windows-latest"]
+            os: ["macos-latest", "ubuntu-latest", "windows-latest"]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
@@ -30,7 +30,7 @@ jobs:
       - name: Doctests in C 
         shell: bash -l {0}
         run: |
-          pytest test.index.c.txt
+          python -m pytest test.index.c.txt
       - name: Install PyOpenCL
         shell: bash -l {0}
         run: |
@@ -44,4 +44,4 @@ jobs:
       - name: Doctests with PyOpenCL
         shell: bash -l {0}
         run: |
-          pytest test.index.cl.txt
+          python -m pytest test.index.cl.txt
