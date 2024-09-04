@@ -17,6 +17,7 @@ jobs:
           pip install -e .
           pip install pytest
           pip install pyopencl
+          pip install pyopencl[pocl]
       - name: Run Tests
         shell: bash -l {0}
         run: |
