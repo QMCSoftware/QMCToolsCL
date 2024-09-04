@@ -32,7 +32,6 @@ jobs:
         run: |
           pip install siphash24
           pip install pyopencl
-          pip install pyopencl[pocl]
       - name: PyOpenCL Device Info
         shell: bash -l {0}
         run: |
