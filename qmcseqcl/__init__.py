@@ -92,6 +92,7 @@ def opencl_c_func(func):
             queue = kwargs["queue"] if "queue" in kwargs else cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
             assert "global_size" in kwargs 
             global_size = kwargs["global_size"]
+            global_size = [min(global_size[i],args[i]) for i in range(3)]
             local_size = kwargs["local_size"] if "local_size" in kwargs else None
             cl_func = getattr(program,func_name)
             args_device = [cl.Buffer(context,cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=arg) if isinstance(arg,np.ndarray) else arg for arg in args]
