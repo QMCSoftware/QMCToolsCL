@@ -26,7 +26,7 @@ jobs:
       - name: Doctests in C 
         shell: bash -l {0}
         run: |
-          	pytest test.index.c.txt
+          pytest test.index.c.txt
       - name: Install PyOpenCL
         shell: bash -l {0}
         run: |
@@ -40,4 +40,4 @@ jobs:
       - name: Doctests in OpenCL 
         shell: bash -l {0}
         run: |
-          	pytest test.index.cl.txt
+          pytest test.index.cl.txt
