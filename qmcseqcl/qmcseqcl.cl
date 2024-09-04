@@ -203,7 +203,7 @@ __kernel void gen_mats_lsb_to_msb_b2(
     }
 }
 
-__kernel void gen_mats_linear_matrix_scramble_b2(
+__kernel void linear_matrix_scramble_digital_net_b2(
     // Linear matrix scrambling for base 2 generating matrices
     const ulong r, // replications
     const ulong d, // dimension
@@ -529,6 +529,58 @@ __kernel void undo_interlace_b2(
     }
 }
 
+__kernel void linear_matrix_scramble_generalized_digital_net(
+    // Linear matrix scramble for generalized digital net 
+    const ulong r, // replications 
+    const ulong d, // dimension 
+    const ulong mmax, // columns in each generating matrix
+    const ulong batch_size_r, // batch size for replications
+    const ulong batch_size_d, // batch size for dimension
+    const ulong batch_size_mmax, // batch size columns
+    const ulong r_C, // number of replications of C 
+    const ulong r_b, // number of replications of bases
+    const ulong tmax, // number of rows in each generating matrix 
+    const ulong tmax_new, // new number of rows in each generating matrix 
+    __global const ulong *bases, // bases for each dimension of size r*d 
+    __global const ulong *S, // scramble matrices of size r*d*tmax_new*tmax
+    __global const ulong *C, // generating matrices of size r_C*d*mmax*tmax 
+    __global ulong *C_lms // new generating matrices of size r*d*mmax*tmax_new
+){
+    ulong l0 = get_global_id(0)*batch_size_r;
+    ulong j0 = get_global_id(1)*batch_size_d;
+    ulong k0 = get_global_id(2)*batch_size_mmax;
+    ulong ll,l,jj,j,kk,k,t,c,b,v,idx_C,idx_C_lms,idx_S; 
+    for(ll=0; ll<batch_size_r; ll++){
+        l = l0+ll;
+        for(jj=0; jj<batch_size_d; jj++){
+            j = j0+jj;
+            b = bases[(l%r_b)*d+j];
+            for(kk=0; kk<batch_size_mmax; kk++){
+                k = k0+kk;
+                idx_C = (l%r_C)*d*mmax*tmax+j*mmax*tmax+k*tmax;
+                idx_C_lms = l*d*mmax*tmax_new+j*mmax*tmax_new+k*tmax_new;
+                for(t=0; t<tmax_new; t++){
+                    v = 0;
+                    idx_S = l*d*tmax_new*tmax+j*tmax_new*tmax+t*tmax;
+                    for(c=0; c<tmax; c++){
+                        v += (S[idx_S+c]*C[idx_C+c])%b;
+                    }
+                    C_lms[idx_C_lms+t] = v;
+                }
+                if(k==(mmax-1)){
+                    break;
+                }
+            }
+            if(j==(d-1)){
+                break;
+            }
+        }
+        if(l==(r-1)){
+            break;
+        }
+    }
+}
+
 __kernel void generalized_digital_net_digits(
     // Generalized digital net where the base can be different for each dimension e.g. for the Halton sequence
     const ulong r, // replications
@@ -537,10 +589,11 @@ __kernel void generalized_digital_net_digits(
     const ulong batch_size_r, // batch size for replications
     const ulong batch_size_n, // batch size for points
     const ulong batch_size_d, // batch size for dimension
+    const ulong r_b, // number of replications of bases
     const ulong mmax, // columns in each generating matrix
     const ulong tmax, // rows of each generating matrix
     const ulong n_start, // starting index in sequence
-    __global const ulong *bases, // bases for each dimension of size r*d
+    __global const ulong *bases, // bases for each dimension of size r_b*d
     __global const ulong *C, // generating matrices of size r*d*mmax*tmax
     __global ulong *xdig // generalized digital net sequence of digits of size r*n*d*tmax
 ){   
@@ -560,7 +613,7 @@ __kernel void generalized_digital_net_digits(
                 for(t=0; t<tmax; t++){
                     xdig[idx_xdig+t] = 0;
                 }
-                b = bases[l*d+j];
+                b = bases[(l%r_b)*d+j];
                 k = 0;
                 icp = itrue; 
                 while(icp>0){
