@@ -16,8 +16,8 @@ jobs:
           pip install numpy
           pip install -e .
           pip install pytest
+          pip install pyopencl
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          ls
           make doctests
