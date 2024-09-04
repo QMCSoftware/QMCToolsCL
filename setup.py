@@ -29,7 +29,7 @@ setuptools.setup(
     ext_modules = [
         Extension(
             name = 'qmcseqcl.c_lib',
-            sources = [os.path.dirname(os.path.abspath(__file__))+"/qmcseqcl/qmcseqcl.c"]
+            sources = ["./qmcseqcl/qmcseqcl.c"]
         )
     ],
 )
