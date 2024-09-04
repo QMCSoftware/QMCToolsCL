@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-            os: ["macos-latest"] # ["macos-latest", "ubuntu-latest", "windows-latest"]
+            os: ["ubuntu-latest"] # ["macos-latest", "ubuntu-latest", "windows-latest"]
     steps:
       - uses: actions/checkout@v2
       - name: Install Base Dependencies 
@@ -31,7 +31,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install siphash24
-          pip install pyopencl
+          pip install pyopencl[pocl]
       - name: PyOpenCL Device Info
         shell: bash -l {0}
         run: |
