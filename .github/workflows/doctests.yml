@@ -35,6 +35,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install siphash24
+          conda install pyopencl
           conda install pocl
       - name: PyOpenCL Device Info
         shell: bash -l {0}
