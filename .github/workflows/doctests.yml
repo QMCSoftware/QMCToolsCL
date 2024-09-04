@@ -40,4 +40,4 @@ jobs:
       - name: Doctests in OpenCL 
         shell: bash -l {0}
         run: |
-          pytest test.index.cl.txt
+          pytest test.index.cl.txt --verbose
