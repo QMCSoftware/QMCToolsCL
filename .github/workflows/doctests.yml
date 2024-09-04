@@ -44,4 +44,5 @@ jobs:
       - name: Doctests with PyOpenCL
         shell: bash -l {0}
         run: |
+          pip install pytest
           python -m pytest test.index.cl.txt
