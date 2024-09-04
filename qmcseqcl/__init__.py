@@ -115,7 +115,7 @@ c_to_ctypes_map = {
 
 with open("./qmcseqcl/qmcseqcl.cl","r") as f:
     code = f.read() 
-blocks = re.findall('(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
+blocks = re.findall(r'(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
 for block in blocks:
     lines = block.replace("(","").splitlines()
     name = lines[0]

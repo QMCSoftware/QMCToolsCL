@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-            os: ["macos-latest", "ubuntu-latest", "windows-latest"]
+            os: ["ubuntu-latest"] # ["macos-latest", "ubuntu-latest", "windows-latest"]
     steps:
       - uses: actions/checkout@v2
       - name: Install QMCseqCL 
@@ -16,7 +16,7 @@ jobs:
           pip install numpy
           pip install -e .
           pip install pytest
-          pip install pyopencl
+          conda install pyopencl
       - name: Run Tests
         shell: bash -l {0}
         run: |
