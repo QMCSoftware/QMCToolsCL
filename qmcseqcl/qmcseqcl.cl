@@ -213,7 +213,6 @@ __kernel void linear_matrix_scramble_digital_net_b2(
     const ulong batch_size_mmax, // batch size for columns
     const ulong r_C, // original generating matrices
     const ulong tmax_new, // bits in the integers of the resulting generating matrices
-    __global const ulong *tmaxes, // bits in the integers of the original generating matrices
     __global const ulong *S, // scrambling matrices of size r*d*tmax_new
     __global const ulong *C, // original generating matrices of size r_C*d*mmax
     __global ulong *C_lms // resulting generating matrices of size r*d*mmax
@@ -221,12 +220,11 @@ __kernel void linear_matrix_scramble_digital_net_b2(
     ulong l0 = get_global_id(0)*batch_size_r;
     ulong j0 = get_global_id(1)*batch_size_d;
     ulong k0 = get_global_id(2)*batch_size_mmax;
-    ulong tmax,b,t,ll,l,jj,j,kk,k,u,v,udotv,vnew,idx;
+    ulong b,t,ll,l,jj,j,kk,k,u,v,udotv,vnew,idx;
     ulong bigone = 1;
     ulong nelemC = r_C*d*mmax;
     for(ll=0; ll<batch_size_r; ll++){
         l = l0+ll;
-        tmax = tmaxes[l%r_C];
         for(jj=0; jj<batch_size_d; jj++){
             j = j0+jj;
             for(kk=0; kk<batch_size_mmax; kk++){

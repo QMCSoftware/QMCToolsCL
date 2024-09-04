@@ -2,7 +2,7 @@ import setuptools
 from setuptools import Extension
 import os 
 
-cl_file = os.path.dirname(os.path.abspath(__file__))+"/qmcseqcl/qmcseqcl.cl"
+cl_file = "./qmcseqcl/qmcseqcl.cl"
 with open(cl_file,"r") as f:
     cl_content = f.read()
 c_content = '#include "qmcseqcl.h"\n\n'+cl_content 

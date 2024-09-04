@@ -240,7 +240,6 @@ Args:
     mmax (np.uint64): columns in each generating matrix 
     r_C (np.uint64): original generating matrices
     tmax_new (np.uint64): bits in the integers of the resulting generating matrices
-    tmaxes (np.ndarray of np.uint64): bits in the integers of the original generating matrices
     S (np.ndarray of np.uint64): scrambling matrices of size r*d*tmax_new
     C (np.ndarray of np.uint64): original generating matrices of size r_C*d*mmax
     C_lms (np.ndarray of np.uint64): resulting generating matrices of size r*d*mmax
@@ -332,7 +331,7 @@ l = 1
         1101
         0111
 >>> C_lms = np.empty((r,d,mmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.linear_matrix_scramble_digital_net_b2(r,d,mmax,r_C,tmax_new,tmaxes,S,C,C_lms,**kwargs)
+>>> time_perf,time_process = qmcseqcl.linear_matrix_scramble_digital_net_b2(r,d,mmax,r_C,tmax_new,S,C,C_lms,**kwargs)
 >>> C_lms
 array([[[232,  96,  52,  30],
         [180, 245, 158, 192],
