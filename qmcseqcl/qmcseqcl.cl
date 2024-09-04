@@ -1,5 +1,5 @@
 __kernel void lattice_linear(
-    // Lattice points in linear ordering
+    // Lattice points in linear order
     const ulong r, // replications
     const ulong n, // points
     const ulong d, // dimension
@@ -38,7 +38,7 @@ __kernel void lattice_linear(
 }
 
 __kernel void lattice_b2(
-    // Lattice points in Gray code or natural ordering
+    // Lattice points in Gray code or natural order
     const ulong r, // replications
     const ulong n, // points
     const ulong d, // dimension
@@ -263,7 +263,7 @@ __kernel void linear_matrix_scramble_digital_net_b2(
 }
 
 __kernel void digital_net_b2_binary(
-    // Binary representation of digital net in base 2 in either Gray code or natural ordering
+    // Binary representation of digital net in base 2 in either Gray code or natural order
     const ulong r, // replications
     const ulong n, // points
     const ulong d, // dimension
@@ -601,12 +601,11 @@ __kernel void generalized_digital_net_digits(
     ulong i0 = get_global_id(1)*batch_size_n;
     ulong j0 = get_global_id(2)*batch_size_d;
     ulong idx_xdig,idx_C,b,dig,itrue,icp,ii,i,jj,j,ll,l,t,k;
-    ulong n0 = n_start+i0;
     for(ll=0; ll<batch_size_r; ll++){
         l = l0+ll;
         for(ii=0; ii<batch_size_n; ii++){
             i = i0+ii;
-            itrue = i+n0;
+            itrue = i+n_start;
             for(jj=0; jj<batch_size_d; jj++){
                 j = j0+jj;
                 idx_xdig = l*n*d*tmax+i*d*tmax+j*tmax;
