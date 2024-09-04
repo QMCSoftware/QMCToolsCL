@@ -1,4 +1,4 @@
-name: DocTests in Docs
+name: doctests
 on: [push]
 
 jobs:
@@ -9,6 +9,7 @@ jobs:
         matrix:
             os: ["macos-latest", "ubuntu-latest", "windows-latest"]
     steps:
+      - uses: actions/checkout@v2
       - name: Install QMCseqCL 
         shell: bash -l {0}
         run: |
