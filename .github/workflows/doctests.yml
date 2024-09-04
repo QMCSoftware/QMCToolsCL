@@ -23,7 +23,7 @@ jobs:
         run: |
           pip install -e .
       - name: PyOpenCL Device Info
-        shall: bash -l {0}
+        shell: bash -l {0}
         run: |
           python -c "import qmcseqcl; qmcseqcl.print_opencl_device_info()"
       - name: Run Tests
