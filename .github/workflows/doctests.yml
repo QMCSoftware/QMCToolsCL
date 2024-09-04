@@ -10,14 +10,22 @@ jobs:
             os: ["ubuntu-latest"] # ["macos-latest", "ubuntu-latest", "windows-latest"]
     steps:
       - uses: actions/checkout@v2
-      - name: Install QMCseqCL 
+      - name: Install Dependencies 
         shell: bash -l {0}
         run: |
           pip install numpy
-          pip install -e .
+          pip install siphash24
           pip install pytest
           pip install pyopencl
           pip install pyopencl[pocl]
+      - name: Install QMCseqCL 
+        shell: bash -l {0}
+        run: |
+          pip install -e .
+      - name: PyOpenCL Device Info
+        shall: bash -l {0}
+        run: |
+          python -c "import qmcseqcl; qmcseqcl.print_opencl_device_info()"
       - name: Run Tests
         shell: bash -l {0}
         run: |

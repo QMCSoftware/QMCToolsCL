@@ -44,7 +44,6 @@ To use the **OpenCL backend** supply the following keyword arguments to function
 >>> kwargs = {
 ...     "backend": "CL",
 ...     "wait": True, # required for accurate timing
-...     "PYOPENCL_CTX": "0:0", # OpenCL device index
 ...     "global_size": (2,2,2), # global size 
 ... }
 ```
