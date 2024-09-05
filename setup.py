@@ -1,6 +1,5 @@
 import setuptools
 from setuptools import Extension
-import os 
 
 cl_file = "./qmcseqcl/qmcseqcl.cl"
 with open(cl_file,"r") as f:

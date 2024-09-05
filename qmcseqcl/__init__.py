@@ -144,3 +144,108 @@ for block in blocks:
     exec("%s_c = c_lib.%s"%(name,name)) 
     exec("%s_c.argtypes = [%s]"%(name,','.join(args)))
     exec('@opencl_c_func\ndef %s():\n    """%s\n\nArgs:\n    %s"""\n    pass'%(name,desc.strip(),"\n    ".join(doc_args)))
+
+class NUSNodeB2(object):
+    def __init__(self, shift_bits=None, xb=None, left=None, right=None):
+        self.shift_bits = shift_bits
+        self.xb = xb 
+        self.left = left 
+        self.right = right
+
+def nested_uniform_scramble_digital_net_b2(
+    r,
+    n, 
+    d,
+    tmax,
+    tmax_new,
+    rngs,
+    root_nodes,
+    xb,
+    xrb):
+    """ Nested uniform scramble of digital net b2
+    
+    Args: 
+        r (np.uint64): replications 
+        n (np.uint64): points
+        d (np.uint64): dimensions
+        tmax (np.uint64): maximum number of bits in each integer
+        tmax_new (np.uint64): maximum number of bits in each integer after scrambling
+        rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
+        root_nodes (np.ndarray of NUSNodeB2): root nodes of size r*d
+        xb (np.ndarray of np.uint64): array of unrandomized points of size r*n*d
+        xrb (np.ndarray of np.uint64): array to store scrambled points of size r*n*d
+    """
+    for l in range(r): 
+        for j in range(d):
+            rng = rngs[l,j]
+            root_node = root_nodes[l,j]
+            if root_node.shift_bits is None:
+                # initilize root nodes 
+                assert root_node.xb is None and root_node.left is None and root_node.right is None
+                root_node.xb = np.uint64(0) 
+                root_node.shift_bits = random_tbit_uint64s(rng,tmax_new,1)[0]
+            for i in range(n):
+                _xb_new = xb[l,i,j]<<(tmax_new-tmax)
+                _xb = _xb_new
+                node = root_nodes[l,j]
+                t = tmax_new
+                shift = np.uint64(0)                 
+                while t>0:
+                    b = (_xb>>(t-1))&1 # leading bit of _xb
+                    ones_mask_tm1 = (2**(t-1)-1)
+                    _xb_next = _xb&ones_mask_tm1 # drop the leading bit of _xb 
+                    if node.xb is None: # this is not a leaf node, so node.shift_bits in [0,1]
+                        if node.shift_bits: shift += 2**(t-1) # add node.shift_bits to the shift
+                        if b==0: # looking to move left
+                            if node.left is None: # left node does not exist
+                                shift_bits = int(rng.integers(0,2**(t-1))) # get (t-1) random bits
+                                node.left = NUSNodeB2(shift_bits,_xb_next,None,None) # create the left node 
+                                shift += shift_bits # add the (t-1) random bits to the shift
+                                break
+                            else: # left node exists, so move there 
+                                node = node.left
+                        else: # b==1, looking to move right
+                            if node.right is None: # right node does not exist
+                                shift_bits = int(rng.integers(0,2**(t-1))) # get (t-1) random bits
+                                node.right = NUSNodeB2(shift_bits,_xb_next,None,None) # create the right node
+                                shift += shift_bits # add the (t-1) random bits to the shift
+                                break 
+                            else: # right node exists, so move there
+                                node = node.right
+                    elif node.xb==_xb: # this is a leaf node we have already seen before!
+                        shift += node.shift_bits
+                        break
+                    else: #  node.xb!=_xb, this is a leaf node where the _xb values don't match
+                        node_b = (node.xb>>(t-1))&1 # leading bit of node.xb
+                        node_xb_next = node.xb&ones_mask_tm1 # drop the leading bit of node.xb
+                        node_shift_bits_next = node.shift_bits&ones_mask_tm1 # drop the leading bit of node.shift_bits
+                        node_leading_shift_bit = (node.shift_bits>>(t-1))&1
+                        if node_leading_shift_bit: shift += 2**(t-1)
+                        if node_b==0 and b==1: # the node will move its contents left and the _xb will go right
+                            node.left = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None)  # create the left node from the current node
+                            node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
+                            # create the right node 
+                            shift_bits = int(rng.integers(0,2**(t-1))) # (t-1) random bits for the right node
+                            node.right = NUSNodeB2(shift_bits,_xb_next,None,None)
+                            shift += shift_bits
+                            break
+                        elif node_b==1 and b==0: # the node will move its contents right and the _xb will go left
+                            node.right = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None)  # create the right node from the current node
+                            node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
+                            # create the left node 
+                            shift_bits = int(rng.integers(0,2**(t-1))) # (t-1) random bits for the left node
+                            node.left = NUSNodeB2(shift_bits,_xb_next,None,None)
+                            shift += shift_bits
+                            break
+                        elif node_b==0 and b==0: # move the node contents and _xb to the left
+                            node.left = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None) 
+                            node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
+                            node = node.left
+                        elif node_b==1 and b==1: # move the node contents and _xb to the right 
+                            node.right = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None) 
+                            node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
+                            node = node.right
+                    t -= 1
+                    _xb = _xb_next
+                xrb[l,i,j] = _xb_new^shift
+
