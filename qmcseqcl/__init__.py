@@ -156,6 +156,7 @@ def nested_uniform_scramble_digital_net_b2(
     r,
     n, 
     d,
+    r_x,
     tmax,
     tmax_new,
     rngs,
@@ -168,6 +169,7 @@ def nested_uniform_scramble_digital_net_b2(
         r (np.uint64): replications 
         n (np.uint64): points
         d (np.uint64): dimensions
+        r_x (np.uint64): replications of x
         tmax (np.uint64): maximum number of bits in each integer
         tmax_new (np.uint64): maximum number of bits in each integer after scrambling
         rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
@@ -185,7 +187,7 @@ def nested_uniform_scramble_digital_net_b2(
                 root_node.xb = np.uint64(0) 
                 root_node.shift_bits = random_tbit_uint64s(rng,tmax_new,1)[0]
             for i in range(n):
-                _xb_new = xb[l,i,j]<<(tmax_new-tmax)
+                _xb_new = xb[l%r_x,i,j]<<(tmax_new-tmax)
                 _xb = _xb_new
                 node = root_nodes[l,j]
                 t = tmax_new
