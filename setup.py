@@ -6,7 +6,7 @@ cl_file = "./qmcseqcl/qmcseqcl.cl"
 with open(cl_file,"r") as f:
     cl_content = f.read()
 c_content = '#include "qmcseqcl.h"\n\n'+cl_content 
-c_content = c_content.replace("__kernel void","void")
+c_content = c_content.replace("__kernel void","EXPORT void")
 c_content = c_content.replace("__global ","")
 c_content = c_content.replace("ulong","unsigned long long")
 c_content = c_content.replace("get_global_id(0)","0")

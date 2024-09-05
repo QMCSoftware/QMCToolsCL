@@ -13,5 +13,5 @@
 #pragma warning Unknown dynamic link import / export semantics.
 #endif
 
-//#include <stdlib.h>
-#include <math.h>
+#include <stdlib.h>;
+#include <math.h>;
