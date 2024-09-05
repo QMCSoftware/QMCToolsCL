@@ -506,10 +506,10 @@ Args:
 >>> print(qmcseqcl.random_tbit_uint64s.__doc__)
 Generate the desired shape of random integers with t bits
 
-    Args:
-        rng (np.random._generator.Generator): random number generator with rng.integers method
-        t: (int): number of bits with 0 <= t <= 64
-        shape (tuple of ints): shape of resulting integer array
+Args:
+    rng (np.random._generator.Generator): random number generator with rng.integers method
+    t: (int): number of bits with 0 <= t <= 64
+    shape (tuple of ints): shape of resulting integer array
 >>> shiftsb = qmcseqcl.random_tbit_uint64s(rng,tmax_new,(r,d))
 >>> shiftsb
 array([[1440145505151606152, 5686212125327047696],
@@ -683,7 +683,7 @@ Args:
     r (np.uint64): replications 
     n (np.uint64): points
     d (np.uint64): dimensions
-    r_x (np.uint64): replications of x
+    r_x (np.uint64): replications of xb
     tmax (np.uint64): maximum number of bits in each integer
     tmax_new (np.uint64): maximum number of bits in each integer after scrambling
     rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
