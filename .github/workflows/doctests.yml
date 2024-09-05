@@ -19,6 +19,7 @@ jobs:
         run: |
           pip install numpy
           pip install pytest
+          conda env export
       - name: Install QMCseqCL 
         shell: bash -l {0}
         run: |
