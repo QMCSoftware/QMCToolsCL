@@ -20,9 +20,13 @@ jobs:
           pip install numpy
           pip install pytest
           conda env export
+          python -V 
+          pip -V 
+          pip3 -V 
       - name: Install QMCseqCL 
         shell: bash -l {0}
         run: |
+          conda env export
           pip install -e .
       - name: Prepare Doctests from Docs 
         shell: bash -l {0}
