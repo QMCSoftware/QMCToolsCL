@@ -163,20 +163,21 @@ def nested_uniform_scramble_digital_net_b2(
     root_nodes,
     xb,
     xrb):
-    """ Nested uniform scramble of digital net b2
-    
-    Args: 
-        r (np.uint64): replications 
-        n (np.uint64): points
-        d (np.uint64): dimensions
-        r_x (np.uint64): replications of x
-        tmax (np.uint64): maximum number of bits in each integer
-        tmax_new (np.uint64): maximum number of bits in each integer after scrambling
-        rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
-        root_nodes (np.ndarray of NUSNodeB2): root nodes of size r*d
-        xb (np.ndarray of np.uint64): array of unrandomized points of size r*n*d
-        xrb (np.ndarray of np.uint64): array to store scrambled points of size r*n*d
-    """
+    """Nested uniform scramble of digital net b2
+
+Args: 
+    r (np.uint64): replications 
+    n (np.uint64): points
+    d (np.uint64): dimensions
+    r_x (np.uint64): replications of x
+    tmax (np.uint64): maximum number of bits in each integer
+    tmax_new (np.uint64): maximum number of bits in each integer after scrambling
+    rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
+    root_nodes (np.ndarray of NUSNodeB2): root nodes of size r*d
+    xb (np.ndarray of np.uint64): array of unrandomized points of size r*n*d
+    xrb (np.ndarray of np.uint64): array to store scrambled points of size r*n*d"""
+    t0_perf = time.perf_counter()
+    t0_process = time.process_time()
     for l in range(r): 
         for j in range(d):
             rng = rngs[l,j]
@@ -250,4 +251,7 @@ def nested_uniform_scramble_digital_net_b2(
                     t -= 1
                     _xb = _xb_next
                 xrb[l,i,j] = _xb_new^shift
+    tdelta_process = time.process_time()-t0_process 
+    tdelta_perf = time.perf_counter()-t0_perf
+    return tdelta_perf,tdelta_process,
 
