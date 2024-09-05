@@ -20,13 +20,9 @@ jobs:
           pip install numpy
           pip install pytest
           conda env export
-          python -V 
-          pip -V 
-          pip3 -V 
       - name: Install QMCseqCL 
         shell: bash -l {0}
         run: |
-          conda env export
           pip install -e .
       - name: Prepare Doctests from Docs 
         shell: bash -l {0}
@@ -41,7 +37,12 @@ jobs:
         run: |
           pip install siphash24
           conda install pyopencl -y
-          conda install pocl -y
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            conda install pocl -y
+            conda install ocl_icd_wrapper_apple -y 
+          else
+            conda install intel-opencl-rt -y
+          fi
       - name: PyOpenCL Device Info
         shell: bash -l {0}
         run: |
