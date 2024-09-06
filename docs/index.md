@@ -677,7 +677,7 @@ array([[[0.51363258, 0.44719671],
 >>> tmax = np.uint64(np.ceil(np.log2(np.max(C))))
 >>> xb = np.empty((r,n,d),dtype=np.uint64)
 >>> time_perf,time_process = qmcseqcl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
->>> print(qmcseqcl.nested_uniform_scramble_digital_net_b2.__doc__)
+>>> print(qmcseqcl.dnb2_nested_uniform_scramble.__doc__)
 Nested uniform scramble of digital net b2
 
 Args: 
@@ -688,7 +688,7 @@ Args:
     tmax (np.uint64): maximum number of bits in each integer
     tmax_new (np.uint64): maximum number of bits in each integer after scrambling
     rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
-    root_nodes (np.ndarray of NUSNodeB2): root nodes of size r*d
+    root_nodes (np.ndarray of NUSNode_dnb2): root nodes of size r*d
     xb (np.ndarray of np.uint64): array of unrandomized points of size r*n*d
     xrb (np.ndarray of np.uint64): array to store scrambled points of size r*n*d
 >>> tmax_new = np.uint64(2*tmax) 
@@ -697,9 +697,9 @@ Args:
 >>> base_seed_seq = np.random.SeedSequence(7)
 >>> seeds = base_seed_seq.spawn(r*d)
 >>> rngs = np.array([np.random.Generator(np.random.SFC64(seed)) for seed in seeds]).reshape(r,d)
->>> root_nodes = np.array([qmcseqcl.NUSNodeB2() for i in range(r*d)]).reshape(r,d)
+>>> root_nodes = np.array([qmcseqcl.NUSNode_dnb2() for i in range(r*d)]).reshape(r,d)
 >>> xrb = np.zeros((r,n,d),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.nested_uniform_scramble_digital_net_b2(r,n,d,r_x,tmax,tmax_new,rngs,root_nodes,xb,xrb)
+>>> time_perf,time_process = qmcseqcl.dnb2_nested_uniform_scramble(r,n,d,r_x,tmax,tmax_new,rngs,root_nodes,xb,xrb)
 >>> xrb
 array([[[ 94,  54, 235,  30],
         [174, 243,  26, 129],
@@ -1400,9 +1400,9 @@ array([[[0.72216797, 0.01401849],
 >>> base_seed_seq = np.random.SeedSequence(7)
 >>> seeds = base_seed_seq.spawn(r*d)
 >>> rngs = np.array([np.random.Generator(np.random.SFC64(seed)) for seed in seeds]).reshape(r,d)
->>> root_nodes = np.array([qmcseqcl.NUSNode() for i in range(r*d)]).reshape(r,d)
+>>> root_nodes = np.array([qmcseqcl.NUSNode_gdn() for i in range(r*d)]).reshape(r,d)
 >>> xrdig = np.zeros((r,n,d,tmax_new),dtype=np.uint64)
->>> print(qmcseqcl.nested_uniform_scramble_general_digital_net.__doc__)
+>>> print(qmcseqcl.gdn_nested_uniform_scramble.__doc__)
 Nested uniform scramble of general digital nets
 
 Args: 
@@ -1414,11 +1414,11 @@ Args:
     tmax (np.uint64): maximum number digits in each point representation
     tmax_new (np.uint64): maximum number digits in each point representation after scrambling
     rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
-    root_nodes (np.ndarray of NUSNode): root nodes of size r*d
+    root_nodes (np.ndarray of NUSNode_gdn): root nodes of size r*d
     bases (np.ndarray of np.uint64): array of bases of size r*d
     xdig (np.ndarray of np.uint64): array of unrandomized points of size r*n*d*tmax
     xrdig (np.ndarray of np.uint64): array to store scrambled points of size r*n*d*tmax_new
->>> time_perf,time_process = qmcseqcl.nested_uniform_scramble_general_digital_net(r,n,d,r_x,r_b,tmax,tmax_new,rngs,root_nodes,bases,xdig,xrdig)
+>>> time_perf,time_process = qmcseqcl.gdn_nested_uniform_scramble(r,n,d,r_x,r_b,tmax,tmax_new,rngs,root_nodes,bases,xdig,xrdig)
 >>> xrdig 
 array([[[[0, 0, 1, 0, 0, 1, 0, 0],
          [2, 2, 2, 2, 1, 0, 2, 1],

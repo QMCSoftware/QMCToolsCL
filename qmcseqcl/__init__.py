@@ -9,15 +9,14 @@ def print_opencl_device_info():
     """ Print OpenCL devices info. Copied from https://github.com/HandsOnOpenCL/Exercises-Solutions/blob/master/Exercises/Exercise01/Python/DeviceInfo.py """
     import pyopencl as cl
     platforms = cl.get_platforms()
-    print("\nNumber of OpenCL platforms:", len(platforms))
-    print("\n-------------------------")
-    for p in platforms:
-        print("Platform:", p.name)
-        print("Vendor:", p.vendor)
-        print("Version:", p.version)
+    for i,p in enumerate(platforms):
+        print("Platform %d -------------------------"%i)
+        print("\tName:",p.name)
+        print("\tVendor:", p.vendor)
+        print("\tVersion:", p.version)
         devices = p.get_devices()
-        for d in devices:
-            print("\t-------------------------")
+        for j,d in enumerate(devices):
+            print("\n\tDevice %d -------------------------"%j)
             print("\t\tName:", d.name)
             print("\t\tName:", d.name)
             print("\t\tVersion:", d.opencl_c_version)
@@ -28,8 +27,7 @@ def print_opencl_device_info():
             print("\t\tMax Work-group Total Size:", d.max_work_group_size)
             dim = d.max_work_item_sizes
             print("\t\tMax Work-group Dims:(", dim[0], " ".join(map(str, dim[1:])), ")")
-            print("\t-------------------------")
-        print("\n-------------------------")
+        print()
 
 def random_tbit_uint64s(rng, t, shape):
     """Generate the desired shape of random integers with t bits
@@ -92,15 +90,13 @@ def opencl_c_func(func):
                 import pyopencl as cl
             except:
                 raise ImportError("install pyopencl to access these capabilities in QMCseqCL")
-            if "PYOPENCL_CTX" in kwargs:
-                os.environ["PYOPENCL_CTX"] = kwargs["PYOPENCL_CTX"]
             if "context" in kwargs:
                 context = kwargs["context"]
             else:
-                platform = cl.get_platforms()[0]
-                device = platform.get_devices()[0]
+                platform = cl.get_platforms()[kwargs["platform_id"] if "platform_id" in kwargs else 0]
+                device = platform.get_devices()[kwargs["device_id"] if "device_id" in kwargs else 0]
                 context = cl.Context([device])
-            program = program if "program" in kwargs else get_qmcseqcl_program_from_context(context)
+            program = kwargs["program"] if "program" in kwargs else get_qmcseqcl_program_from_context(context)
             queue = kwargs["queue"] if "queue" in kwargs else cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
             assert "global_size" in kwargs 
             global_size = kwargs["global_size"]
@@ -157,14 +153,14 @@ for block in blocks:
     exec("%s_c.argtypes = [%s]"%(name,','.join(args)))
     exec('@opencl_c_func\ndef %s():\n    """%s\n\nArgs:\n    %s"""\n    pass'%(name,desc.strip(),"\n    ".join(doc_args)))
 
-class NUSNodeB2(object):
+class NUSNode_dnb2(object):
     def __init__(self, shift_bits=None, xb=None, left_b2=None, right_b2=None):
         self.shift_bits = shift_bits
         self.xb = xb 
         self.left_b2 = left_b2 
         self.right_b2 = right_b2
 
-def nested_uniform_scramble_digital_net_b2(
+def dnb2_nested_uniform_scramble(
     r,
     n, 
     d,
@@ -185,7 +181,7 @@ Args:
     tmax (np.uint64): maximum number of bits in each integer
     tmax_new (np.uint64): maximum number of bits in each integer after scrambling
     rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
-    root_nodes (np.ndarray of NUSNodeB2): root nodes of size r*d
+    root_nodes (np.ndarray of NUSNode_dnb2): root nodes of size r*d
     xb (np.ndarray of np.uint64): array of unrandomized points of size r*n*d
     xrb (np.ndarray of np.uint64): array to store scrambled points of size r*n*d"""
     t0_perf = time.perf_counter()
@@ -194,7 +190,7 @@ Args:
         for j in range(d):
             rng = rngs[l,j]
             root_node = root_nodes[l,j]
-            assert isinstance(root_node,NUSNodeB2)
+            assert isinstance(root_node,NUSNode_dnb2)
             if root_node.shift_bits is None:
                 # initilize root nodes 
                 assert root_node.xb is None and root_node.left_b2 is None and root_node.right_b2 is None
@@ -215,7 +211,7 @@ Args:
                         if b==0: # looking to move left
                             if node.left_b2 is None: # left node does not exist
                                 shift_bits = int(rng.integers(0,2**(t-1))) # get (t-1) random bits
-                                node.left_b2 = NUSNodeB2(shift_bits,_xb_next,None,None) # create the left node 
+                                node.left_b2 = NUSNode_dnb2(shift_bits,_xb_next,None,None) # create the left node 
                                 shift += shift_bits # add the (t-1) random bits to the shift
                                 break
                             else: # left node exists, so move there 
@@ -223,7 +219,7 @@ Args:
                         else: # b==1, looking to move right
                             if node.right_b2 is None: # right node does not exist
                                 shift_bits = int(rng.integers(0,2**(t-1))) # get (t-1) random bits
-                                node.right_b2 = NUSNodeB2(shift_bits,_xb_next,None,None) # create the right node
+                                node.right_b2 = NUSNode_dnb2(shift_bits,_xb_next,None,None) # create the right node
                                 shift += shift_bits # add the (t-1) random bits to the shift
                                 break 
                             else: # right node exists, so move there
@@ -238,27 +234,27 @@ Args:
                         node_leading_shift_bit = (node.shift_bits>>(t-1))&1
                         if node_leading_shift_bit: shift += 2**(t-1)
                         if node_b==0 and b==1: # the node will move its contents left and the _xb will go right
-                            node.left_b2 = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None)  # create the left node from the current node
+                            node.left_b2 = NUSNode_dnb2(node_shift_bits_next,node_xb_next,None,None)  # create the left node from the current node
                             node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
                             # create the right node 
                             shift_bits = int(rng.integers(0,2**(t-1))) # (t-1) random bits for the right node
-                            node.right_b2 = NUSNodeB2(shift_bits,_xb_next,None,None)
+                            node.right_b2 = NUSNode_dnb2(shift_bits,_xb_next,None,None)
                             shift += shift_bits
                             break
                         elif node_b==1 and b==0: # the node will move its contents right and the _xb will go left
-                            node.right_b2 = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None)  # create the right node from the current node
+                            node.right_b2 = NUSNode_dnb2(node_shift_bits_next,node_xb_next,None,None)  # create the right node from the current node
                             node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
                             # create the left node 
                             shift_bits = int(rng.integers(0,2**(t-1))) # (t-1) random bits for the left node
-                            node.left_b2 = NUSNodeB2(shift_bits,_xb_next,None,None)
+                            node.left_b2 = NUSNode_dnb2(shift_bits,_xb_next,None,None)
                             shift += shift_bits
                             break
                         elif node_b==0 and b==0: # move the node contents and _xb to the left
-                            node.left_b2 = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None) 
+                            node.left_b2 = NUSNode_dnb2(node_shift_bits_next,node_xb_next,None,None) 
                             node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
                             node = node.left_b2
                         elif node_b==1 and b==1: # move the node contents and _xb to the right 
-                            node.right_b2 = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None) 
+                            node.right_b2 = NUSNode_dnb2(node_shift_bits_next,node_xb_next,None,None) 
                             node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
                             node = node.right_b2
                     t -= 1
@@ -268,13 +264,13 @@ Args:
     tdelta_perf = time.perf_counter()-t0_perf
     return tdelta_perf,tdelta_process,
 
-class NUSNode(object):
+class NUSNode_gdn(object):
     def __init__(self, perm=None, xdig=None, children=None):
         self.perm = perm
         self.xdig = xdig 
         self.children = children
 
-def nested_uniform_scramble_general_digital_net(
+def gdn_nested_uniform_scramble(
     r,
     n, 
     d,
@@ -298,7 +294,7 @@ Args:
     tmax (np.uint64): maximum number digits in each point representation
     tmax_new (np.uint64): maximum number digits in each point representation after scrambling
     rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
-    root_nodes (np.ndarray of NUSNode): root nodes of size r*d
+    root_nodes (np.ndarray of NUSNode_gdn): root nodes of size r*d
     bases (np.ndarray of np.uint64): array of bases of size r*d
     xdig (np.ndarray of np.uint64): array of unrandomized points of size r*n*d*tmax
     xrdig (np.ndarray of np.uint64): array to store scrambled points of size r*n*d*tmax_new"""
@@ -309,7 +305,7 @@ Args:
             rng = rngs[l,j]
             root_node = root_nodes[l,j]
             b = bases[l%r_b,j]
-            assert isinstance(root_node,NUSNode)
+            assert isinstance(root_node,NUSNode_gdn)
             if root_node.perm is None:
                 # initilize root nodes
                 assert root_node.xdig is None and root_node.children is None
@@ -328,7 +324,7 @@ Args:
                         perm[t] = node.perm[dig] # set the permuted value
                         if node.children[dig] is None: # child in dig position does not exist
                             node_perm = random_uint64_permutations(rng,tmax_new-t-1,b)
-                            node.children[dig] = NUSNode(node_perm,_xdig[1:],[None]*b)
+                            node.children[dig] = NUSNode_gdn(node_perm,_xdig[1:],[None]*b)
                             perm[(t+1):] = node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xdig[1:]] # digits in _xdig[1:] index node_perm rows
                             break
                         else: # child in dig position exists, so move there 
@@ -340,14 +336,14 @@ Args:
                         node_dig = node.xdig[0]
                         perm[t] = node.perm[0,dig]
                         # move node contenst to the child in the dig position
-                        node.children[node_dig] = NUSNode(node.perm[1:],node.xdig[1:],[None]*b) 
+                        node.children[node_dig] = NUSNode_gdn(node.perm[1:],node.xdig[1:],[None]*b) 
                         node.perm = node.perm[0]
                         node.xdig = None
                         if node_dig==dig: 
                             node = node.children[dig] 
                         else: # create child node in the dig position
                             dig_node_perm = random_uint64_permutations(rng,tmax_new-t-1,b)
-                            node.children[dig] = NUSNode(dig_node_perm,_xdig[1:],[None]*b) # create a new leaf node
+                            node.children[dig] = NUSNode_gdn(dig_node_perm,_xdig[1:],[None]*b) # create a new leaf node
                             perm[(t+1):] = dig_node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xdig[1:]] # digits in _xdig[1:] index node_perm rows
                             break
                     t += 1

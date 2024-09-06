@@ -1,5 +1,8 @@
 ags.py
 
+*.csv
+*.png
+
 *.pyc
 *.so 
 *.DS_Store
