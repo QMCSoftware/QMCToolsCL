@@ -617,7 +617,7 @@ __kernel void generalized_digital_net_digits(
                     dig = icp%b;
                     icp = (icp-dig)/b;
                     if(dig>0){
-                        idx_C = l*d*mmax*tmax+j*mmax*tmax+k*mmax;
+                        idx_C = l*d*mmax*tmax+j*mmax*tmax+k*tmax;
                         for(t=0; t<tmax; t++){
                             xdig[idx_xdig+t] = (xdig[idx_xdig+t]+dig*C[idx_C+t])%b;
                         }
@@ -638,6 +638,84 @@ __kernel void generalized_digital_net_digits(
     }
 }
 
+__kernel void generalized_digital_net_digits_same_base(
+    // Generalized digital net with the same base for each dimension e.g. a digital net in base greater than 2
+    const ulong r, // replications
+    const ulong n, // points
+    const ulong d, // dimension
+    const ulong batch_size_r, // batch size for replications
+    const ulong batch_size_n, // batch size for points
+    const ulong batch_size_d, // batch size for dimension
+    const ulong mmax, // columns in each generating matrix
+    const ulong tmax, // rows of each generating matrix
+    const ulong n_start, // starting index in sequence
+    const ulong b, // common base
+    __global const ulong *C, // generating matrices of size r*d*mmax*tmax
+    __global ulong *xdig // generalized digital net sequence of digits of size r*n*d*tmax
+){   
+    ulong l0 = get_global_id(0)*batch_size_r;
+    ulong i0 = get_global_id(1)*batch_size_n;
+    ulong j0 = get_global_id(2)*batch_size_d;
+    ulong idx_xdig,idx_C,dig,itrue,icp,ii,i,jj,j,ll,l,t,k;
+    // initialize xdig everything to 0
+    for(ll=0; ll<batch_size_r; ll++){
+        l = l0+ll;
+        for(ii=0; ii<batch_size_n; ii++){
+            i = i0+ii;
+            for(jj=0; jj<batch_size_d; jj++){
+                j = j0+jj;
+                idx_xdig = l*n*d*tmax+i*d*tmax+j*tmax;
+                for(t=0; t<tmax; t++){
+                    xdig[idx_xdig+t] = 0;
+                }
+                if(j==(d-1)){
+                    break;
+                }
+            }
+            if(i==(n-1)){
+                break;
+            }
+        }
+        if(l==(r-1)){
+            break;
+        }
+    }
+    // now set the points
+    for(ii=0; ii<batch_size_n; ii++){
+        i = i0+ii;
+        itrue = i+n_start;
+        k = 0;
+        icp = itrue; 
+        while(icp>0){
+            dig = icp%b;
+            icp = (icp-dig)/b;
+            if(dig>0){
+                for(ll=0; ll<batch_size_r; ll++){
+                    l = l0+ll;
+                    for(jj=0; jj<batch_size_d; jj++){
+                        j = j0+jj;
+                        idx_xdig = l*n*d*tmax+i*d*tmax+j*tmax;
+                        idx_C = l*d*mmax*tmax+j*mmax*tmax+k*tmax;
+                        for(t=0; t<tmax; t++){
+                            xdig[idx_xdig+t] = (xdig[idx_xdig+t]+dig*C[idx_C+t])%b;
+                        }
+                        if(j==(d-1)){
+                            break;
+                        }
+                    }
+                    if(l==(r-1)){
+                        break;
+                    }
+                }
+            }
+            k += 1;
+        }
+        if(i==(n-1)){
+            break;
+        }
+    }
+}
+                
 __kernel void generalized_digital_net_digital_shift(
     // Digital shift a generalized digital net
     const ulong r, // replications
