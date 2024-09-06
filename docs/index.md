@@ -1378,3 +1378,139 @@ array([[[0.58935547, 0.01401849],
         [0.60757207, 0.56378123],
         [0.87529134, 0.04236342]]])
 ```
+
+### nested uniform scramble 
+
+```python 
+>>> r = np.uint64(1)
+>>> n_start = np.uint64(0) 
+>>> n = np.uint64(9)
+>>> bases = np.array([[2,3,5]],dtype=np.uint64)
+>>> r_b = np.uint64(bases.shape[0])
+>>> d = np.uint64(bases.shape[1])
+>>> mmax = np.uint64(3)
+>>> tmax = mmax
+>>> C = np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(r,d,1,1))
+>>> xdig = np.empty((r,n,d,tmax),dtype=np.uint64)
+>>> time_perf,time_process = qmcseqcl.generalized_digital_net_digits(r,n,d,r_b,mmax,tmax,n_start,bases,C,xdig)
+>>> r_x = r 
+>>> r = np.uint64(2) 
+>>> tmax_new = np.uint64(8)
+>>> base_seed_seq = np.random.SeedSequence(7)
+>>> seeds = base_seed_seq.spawn(r*d)
+>>> rngs = np.array([np.random.Generator(np.random.SFC64(seed)) for seed in seeds]).reshape(r,d)
+>>> root_nodes = np.array([qmcseqcl.NUSNode() for i in range(r*d)]).reshape(r,d)
+>>> xrdig = np.zeros((r,n,d,tmax_new),dtype=np.uint64)
+>>> print(qmcseqcl.nested_uniform_scramble_general_digital_net.__doc__)
+Nested uniform scramble of general digital nets
+
+Args: 
+    r (np.uint64): replications 
+    n (np.uint64): points
+    d (np.uint64): dimensions
+    r_x (np.uint64): replications of xb
+    r_b (np.uint64): replications of bases
+    tmax (np.uint64): maximum number digits in each point representation
+    tmax_new (np.uint64): maximum number digits in each point representation after scrambling
+    rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
+    root_nodes (np.ndarray of NUSNode): root nodes of size r*d
+    bases (np.ndarray of np.uint64): array of bases of size r*d
+    xdig (np.ndarray of np.uint64): array of unrandomized points of size r*n*d*tmax
+    xrdig (np.ndarray of np.uint64): array to store scrambled points of size r*n*d*tmax_new
+>>> time_perf,time_process = qmcseqcl.nested_uniform_scramble_general_digital_net(r,n,d,r_x,r_b,tmax,tmax_new,rngs,root_nodes,bases,xdig,xrdig)
+>>> xrdig 
+array([[[[0, 0, 1, 0, 0, 1, 0, 0],
+         [2, 2, 2, 2, 1, 0, 2, 1],
+         [3, 4, 2, 0, 3, 4, 1, 0]],
+
+        [[1, 0, 1, 0, 1, 0, 1, 1],
+         [1, 0, 1, 0, 1, 0, 1, 2],
+         [1, 0, 3, 3, 3, 0, 1, 2]],
+
+        [[0, 1, 1, 1, 1, 0, 0, 0],
+         [0, 2, 2, 0, 0, 2, 0, 2],
+         [4, 1, 2, 1, 4, 3, 0, 0]],
+
+        [[1, 1, 0, 0, 0, 1, 0, 1],
+         [2, 1, 1, 1, 0, 2, 2, 2],
+         [2, 3, 2, 4, 2, 2, 2, 0]],
+
+        [[0, 0, 0, 0, 0, 1, 0, 0],
+         [1, 2, 2, 0, 1, 1, 2, 0],
+         [0, 1, 0, 4, 3, 1, 3, 0]],
+
+        [[1, 0, 0, 0, 1, 1, 1, 1],
+         [0, 0, 2, 0, 0, 1, 0, 2],
+         [3, 2, 1, 4, 2, 1, 4, 1]],
+
+        [[0, 1, 0, 0, 0, 0, 0, 0],
+         [2, 0, 1, 1, 1, 0, 1, 2],
+         [1, 1, 4, 4, 4, 0, 1, 1]],
+
+        [[1, 1, 1, 1, 1, 0, 1, 1],
+         [1, 1, 1, 2, 0, 0, 0, 0],
+         [4, 4, 1, 4, 1, 2, 3, 0]],
+
+        [[1, 0, 1, 0, 0, 0, 0, 0],
+         [0, 1, 2, 0, 2, 1, 0, 1],
+         [2, 1, 0, 0, 1, 2, 3, 0]]],
+
+
+       [[[0, 0, 0, 0, 1, 1, 0, 0],
+         [0, 1, 1, 1, 0, 0, 2, 1],
+         [2, 4, 0, 0, 1, 1, 0, 0]],
+
+        [[1, 0, 1, 0, 1, 0, 0, 1],
+         [1, 0, 1, 2, 0, 0, 0, 1],
+         [1, 1, 1, 1, 3, 0, 1, 0]],
+
+        [[0, 1, 0, 1, 0, 1, 0, 1],
+         [2, 0, 1, 0, 0, 2, 1, 0],
+         [0, 0, 2, 2, 0, 0, 4, 0]],
+
+        [[1, 1, 0, 0, 1, 1, 1, 0],
+         [0, 2, 1, 1, 2, 1, 2, 2],
+         [4, 1, 4, 3, 4, 0, 1, 3]],
+
+        [[0, 0, 1, 1, 0, 1, 0, 0],
+         [1, 2, 2, 2, 1, 1, 0, 1],
+         [3, 1, 0, 4, 2, 0, 1, 2]],
+
+        [[1, 0, 0, 1, 1, 0, 0, 0],
+         [2, 1, 0, 2, 0, 1, 1, 1],
+         [2, 3, 2, 0, 4, 3, 2, 1]],
+
+        [[0, 1, 1, 0, 1, 0, 1, 1],
+         [0, 0, 0, 1, 2, 1, 1, 0],
+         [1, 3, 3, 4, 4, 4, 0, 4]],
+
+        [[1, 1, 1, 1, 0, 1, 0, 0],
+         [1, 1, 1, 1, 0, 1, 0, 0],
+         [0, 2, 1, 4, 3, 3, 2, 0]],
+
+        [[1, 0, 1, 0, 0, 0, 0, 0],
+         [2, 2, 2, 2, 2, 2, 2, 1],
+         [4, 3, 0, 0, 4, 2, 0, 4]]]], dtype=uint64)
+>>> xr = np.empty((r,n,d),dtype=np.float64) 
+>>> time_perf,time_process = qmcseqcl.generalized_digital_net_from_digits(r,n,d,r_b,tmax_new,bases,xrdig,xr)
+>>> xr
+array([[[0.140625  , 0.99283646, 0.7772288 ],
+        [0.66796875, 0.37524768, 0.22977792],
+        [0.46875   , 0.29934461, 0.859072  ],
+        [0.76953125, 0.8311233 , 0.5431936 ],
+        [0.015625  , 0.63603109, 0.0474624 ],
+        [0.55859375, 0.07575065, 0.69515776],
+        [0.25      , 0.72092669, 0.27969536],
+        [0.98046875, 0.50617284, 0.9748864 ],
+        [0.625     , 0.1949398 , 0.4404864 ]],
+
+       [[0.046875  , 0.16156074, 0.560384  ],
+        [0.66015625, 0.39521414, 0.2505728 ],
+        [0.33203125, 0.70690444, 0.0192512 ],
+        [0.8046875 , 0.28242646, 0.87810048],
+        [0.203125  , 0.65996037, 0.64705792],
+        [0.59375   , 0.80445054, 0.53750016],
+        [0.41796875, 0.02240512, 0.35194624],
+        [0.953125  , 0.4951989 , 0.0955776 ],
+        [0.625     , 0.99969517, 0.92141824]]])
+```

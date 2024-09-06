@@ -269,9 +269,9 @@ Args:
     return tdelta_perf,tdelta_process,
 
 class NUSNode(object):
-    def __init__(self, perm=None, xb_vec=None, children=None):
+    def __init__(self, perm=None, xdig=None, children=None):
         self.perm = perm
-        self.xb_vec = xb_vec 
+        self.xdig = xdig 
         self.children = children
 
 def nested_uniform_scramble_general_digital_net(
@@ -279,13 +279,14 @@ def nested_uniform_scramble_general_digital_net(
     n, 
     d,
     r_x,
+    r_b,
     tmax,
     tmax_new,
     rngs,
     root_nodes,
     bases,
-    xb,
-    xrb):
+    xdig,
+    xrdig):
     """Nested uniform scramble of general digital nets
 
 Args: 
@@ -299,57 +300,58 @@ Args:
     rngs (np.ndarray of numpy.random._generator.Generator): random number generators of size r*d
     root_nodes (np.ndarray of NUSNode): root nodes of size r*d
     bases (np.ndarray of np.uint64): array of bases of size r*d
-    xb (np.ndarray of np.uint64): array of unrandomized points of size r*n*d*tmax
-    xrb (np.ndarray of np.uint64): array to store scrambled points of size r*n*d*tmax_new"""
+    xdig (np.ndarray of np.uint64): array of unrandomized points of size r*n*d*tmax
+    xrdig (np.ndarray of np.uint64): array to store scrambled points of size r*n*d*tmax_new"""
     t0_perf = time.perf_counter()
     t0_process = time.process_time()
     for l in range(r): 
         for j in range(d):
             rng = rngs[l,j]
             root_node = root_nodes[l,j]
-            b = bases[l,j]
+            b = bases[l%r_b,j]
             assert isinstance(root_node,NUSNode)
             if root_node.perm is None:
                 # initilize root nodes
-                assert root_node.xb_vec is None and root_node.left is None and root_node.right is None
-                root_node.xb_vec = np.zeros(tmax_new,dtype=np.uint64) 
+                assert root_node.xdig is None and root_node.children is None
+                root_node.xdig = np.zeros(tmax_new,dtype=np.uint64) 
                 root_node.perm = random_uint64_permutations(rng,tmax_new,b)
                 root_node.children = [None]*b
             for i in range(n):
                 node = root_nodes[l,j]
                 t = 0
-                perm = np.zeros(tmax_new,dtype=np.uint64)                
-                while t<(tmax_new-1):
-                    _xb = xb[l%r_x,i,j,t:]
-                    dig = _xb[0]
-                    if node.xb_vec is None: # this is not a leaf node, so node.perm is a single permutation
+                perm = np.zeros(tmax_new,dtype=np.uint64)         
+                while t<tmax:
+                    _xdig = np.zeros(tmax_new-t,dtype=np.uint64)
+                    _xdig[:(tmax-t)] = xdig[l%r_x,i,j,t:]
+                    dig = _xdig[0]
+                    if node.xdig is None: # this is not a leaf node, so node.perm is a single permutation
                         perm[t] = node.perm[dig] # set the permuted value
                         if node.children[dig] is None: # child in dig position does not exist
                             node_perm = random_uint64_permutations(rng,tmax_new-t-1,b)
-                            node.children[dig] = NUSNode(node_perm,_xb[1:],[None]*b)
-                            perm[(t+1):] = node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xb[1:]] # digits in _xb[1:] index node_perm rows
+                            node.children[dig] = NUSNode(node_perm,_xdig[1:],[None]*b)
+                            perm[(t+1):] = node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xdig[1:]] # digits in _xdig[1:] index node_perm rows
                             break
                         else: # child in dig position exists, so move there 
                             node = node.children[dig]
-                    elif (node.xb_vec==_xb).all(): # this is a leaf node we have already seen before!
-                        perm[t:] = node.perm[np.arange(tmax_new-t,dtype=np.uint64),_xb] # digits in _xb inde node_perm rows
+                    elif (node.xdig==_xdig).all(): # this is a leaf node we have already seen before!
+                        perm[t:] = node.perm[np.arange(tmax_new-t,dtype=np.uint64),_xdig] # digits in _xdig index node_perm rows
                         break
-                    else: # node.xb_vec!=_xb, this is a leaf node where the _xb values don't match
-                        node_dig = node.xb_vec[0]
+                    else: # node.xdig!=_xdig, this is a leaf node where the _xdig values don't match
+                        node_dig = node.xdig[0]
                         perm[t] = node.perm[0,dig]
                         # move node contenst to the child in the dig position
-                        node.children[node_dig] = NUSNode(node.perm[1:],node.xb_vec[1:],[None]*b) 
+                        node.children[node_dig] = NUSNode(node.perm[1:],node.xdig[1:],[None]*b) 
                         node.perm = node.perm[0]
-                        node.xb_vec = None
+                        node.xdig = None
                         if node_dig==dig: 
                             node = node.children[dig] 
                         else: # create child node in the dig position
                             dig_node_perm = random_uint64_permutations(rng,tmax_new-t-1,b)
-                            node.children[dig] = NUSNode(dig_node_perm,_xb[1:],[None]*b) # create a new leaf node
-                            perm[(t+1):] = dig_node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xb[1:]] # digits in _xb[1:] index node_perm rows
+                            node.children[dig] = NUSNode(dig_node_perm,_xdig[1:],[None]*b) # create a new leaf node
+                            perm[(t+1):] = dig_node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xdig[1:]] # digits in _xdig[1:] index node_perm rows
                             break
                     t += 1
-                xrb[l,i,j] = perm
+                xrdig[l,i,j] = perm
     tdelta_process = time.process_time()-t0_process 
     tdelta_perf = time.perf_counter()-t0_perf
     return tdelta_perf,tdelta_process,
