@@ -477,7 +477,7 @@ __kernel void interlace_b2(
 }
 
 __kernel void undo_interlace_b2(
-    // Undo interlacing of generating matrices 
+    // Undo interlacing of generating matrices in base 2
     const ulong r, // replications
     const ulong d, // dimension of resulting generating matrices 
     const ulong mmax, // columns in generating matrices
@@ -780,6 +780,96 @@ __kernel void generalized_digital_net_from_digits(
                 }
             }
             if(i==(n-1)){
+                break;
+            }
+        }
+        if(l==(r-1)){
+            break;
+        }
+    }
+}
+
+__kernel void interlace_gdn(
+    // Interlace generating matrices or transpose of point sets to attain higher order digital nets
+    const ulong r, // replications
+    const ulong d_alpha, // dimension of resulting generating matrices 
+    const ulong mmax, // columns of generating matrices
+    const ulong batch_size_r, // batch size for replications
+    const ulong batch_size_d_alpha, // batch size for dimension of resulting generating matrices
+    const ulong batch_size_mmax, // batch size for replications
+    const ulong d, // dimension of original generating matrices
+    const ulong tmax, // rows of original generating matrices
+    const ulong tmax_alpha, // rows of interlaced generating matrices
+    const ulong alpha, // interlacing factor
+    __global const ulong *C, // original generating matrices of size r*d*mmax*tmax
+    __global ulong *C_alpha // resulting interlaced generating matrices of size r*d_alpha*mmax*tmax_alpha
+){
+    ulong l0 = get_global_id(0)*batch_size_r;
+    ulong j0_alpha = get_global_id(1)*batch_size_d_alpha;
+    ulong k0 = get_global_id(2)*batch_size_mmax;
+    ulong ll,l,jj_alpha,j_alpha,kk,k,t_alpha,t,jj,j;
+    for(ll=0; ll<batch_size_r; ll++){
+        l = l0+ll;
+        for(jj_alpha=0; jj_alpha<batch_size_d_alpha; jj_alpha++){
+            j_alpha = j0_alpha+jj_alpha;
+             for(kk=0; kk<batch_size_mmax; kk++){
+                k = k0+kk;
+                for(t_alpha=0; t_alpha<tmax_alpha; t_alpha++){
+                    t = t_alpha / alpha; 
+                    jj = t_alpha%alpha; 
+                    j = j_alpha*alpha+jj;
+                    C_alpha[l*d_alpha*mmax*tmax_alpha+j_alpha*mmax*tmax_alpha+k*tmax_alpha+t_alpha] = C[l*d*mmax*tmax+j*mmax*tmax+k*tmax+t];
+                }
+                if(k==(mmax-1)){
+                    break;
+                }
+            }
+            if(j_alpha==(d_alpha-1)){
+                break;
+            }
+        }
+        if(l==(r-1)){
+            break;
+        }
+    }
+}
+
+__kernel void undo_interlace_gdn(
+    // Undo interlacing of generating matrices 
+    const ulong r, // replications
+    const ulong d, // dimension of resulting generating matrices 
+    const ulong mmax, // columns in generating matrices
+    const ulong batch_size_r, // batch size of replications
+    const ulong batch_size_d, // batch size of dimension of resulting generating matrices
+    const ulong batch_size_mmax, // batch size of columns in generating matrices
+    const ulong d_alpha, // dimension of interlaced generating matrices
+    const ulong tmax, // rows of original generating matrices
+    const ulong tmax_alpha, // rows of interlaced generating matrices
+    const ulong alpha, // interlacing factor
+    __global const ulong *C_alpha, // interlaced generating matrices of size r*d_alpha*mmax*tmax_alpha
+    __global ulong *C // original generating matrices of size r*d*mmax*tmax
+){
+    ulong l0 = get_global_id(0)*batch_size_r;
+    ulong j0 = get_global_id(1)*batch_size_d;
+    ulong k0 = get_global_id(2)*batch_size_mmax;
+    ulong ll,l,j_alpha,kk,k,t_alpha,tt_alpha,t,jj,j;
+    for(ll=0; ll<batch_size_r; ll++){
+        l = l0+ll;
+        for(jj=0; jj<batch_size_d; jj++){
+            j = j0+jj;
+             for(kk=0; kk<batch_size_mmax; kk++){
+                k = k0+kk;
+                for(t=0; t<tmax; t++){
+                    j_alpha = j/alpha;
+                    tt_alpha = j%alpha;
+                    t_alpha = t*alpha+tt_alpha;
+                    C[l*d*mmax*tmax+j*mmax*tmax+k*tmax+t] = C_alpha[l*d_alpha*mmax*tmax_alpha+j_alpha*mmax*tmax_alpha+k*tmax_alpha+t_alpha];
+                }
+                if(k==(mmax-1)){
+                    break;
+                }
+            }
+            if(j==(d-1)){
                 break;
             }
         }

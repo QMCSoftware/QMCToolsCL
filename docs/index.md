@@ -380,7 +380,7 @@ array([[[60816, 32017, 19316, 21160],
 
 ```python
 >>> print(qmcseqcl.undo_interlace_b2.__doc__)
-Undo interlacing of generating matrices
+Undo interlacing of generating matrices in base 2
 
 Args:
     r (np.uint64): replications
@@ -394,7 +394,8 @@ Args:
     C (np.ndarray of np.uint64): original generating matrices of size r*d*mmax
 >>> C_lms_cp = np.empty((r,d,mmax),dtype=np.uint64)
 >>> time_perf,time_process = qmcseqcl.undo_interlace_b2(r,d,mmax,d_alpha,tmax,tmax_alpha,alpha,C_alpha,C_lms_cp,**kwargs)
->>> assert (C_lms_cp==C_lms).all()
+>>> print((C_lms_cp==C_lms).all())
+True
 ```
 
 ## generate Gray code or natural order 
@@ -1379,7 +1380,7 @@ array([[[0.58935547, 0.01401849],
         [0.87529134, 0.04236342]]])
 ```
 
-### nested uniform scramble 
+## nested uniform scramble 
 
 ```python 
 >>> r = np.uint64(1)
@@ -1513,4 +1514,120 @@ array([[[0.140625  , 0.99283646, 0.7772288 ],
         [0.41796875, 0.02240512, 0.35194624],
         [0.953125  , 0.4951989 , 0.0955776 ],
         [0.625     , 0.99969517, 0.92141824]]])
+```
+
+## digital interlacing 
+
+```python
+>>> print(qmcseqcl.interlace_gdn.__doc__)
+Interlace generating matrices or transpose of point sets to attain higher order digital nets
+
+Args:
+    r (np.uint64): replications
+    d_alpha (np.uint64): dimension of resulting generating matrices 
+    mmax (np.uint64): columns of generating matrices
+    d (np.uint64): dimension of original generating matrices
+    tmax (np.uint64): rows of original generating matrices
+    tmax_alpha (np.uint64): rows of interlaced generating matrices
+    alpha (np.uint64): interlacing factor
+    C (np.ndarray of np.uint64): original generating matrices of size r*d*mmax*tmax
+    C_alpha (np.ndarray of np.uint64): resulting interlaced generating matrices of size r*d_alpha*mmax*tmax_alpha
+>>> r = np.uint64(2)
+>>> d = np.uint64(6)
+>>> alpha = np.uint64(3)
+>>> d_alpha = np.uint64(d//alpha)
+>>> mmax = np.uint64(3)
+>>> tmax = np.uint64(4)
+>>> tmax_alpha = np.uint64(alpha*tmax)
+>>> C = rng.integers(0,5,(r,d,mmax,tmax),dtype=np.uint64)
+>>> C
+array([[[[0, 1, 2, 4],
+         [4, 2, 4, 3],
+         [4, 4, 0, 1]],
+
+        [[2, 0, 2, 0],
+         [0, 1, 1, 3],
+         [1, 3, 3, 1]],
+
+        [[1, 1, 3, 2],
+         [0, 1, 1, 4],
+         [2, 4, 2, 4]],
+
+        [[4, 1, 0, 3],
+         [1, 1, 4, 3],
+         [0, 2, 4, 4]],
+
+        [[4, 1, 4, 2],
+         [4, 0, 2, 3],
+         [1, 3, 1, 1]],
+
+        [[0, 3, 0, 1],
+         [0, 4, 4, 3],
+         [2, 3, 3, 3]]],
+
+
+       [[[0, 4, 3, 3],
+         [3, 2, 3, 2],
+         [0, 0, 4, 0]],
+
+        [[2, 2, 2, 1],
+         [0, 3, 0, 1],
+         [4, 4, 1, 3]],
+
+        [[3, 0, 3, 1],
+         [0, 2, 0, 3],
+         [1, 4, 1, 3]],
+
+        [[1, 3, 1, 0],
+         [4, 2, 0, 2],
+         [0, 4, 0, 1]],
+
+        [[3, 0, 1, 1],
+         [1, 4, 4, 0],
+         [1, 2, 3, 0]],
+
+        [[3, 0, 1, 4],
+         [0, 2, 4, 1],
+         [0, 0, 0, 4]]]], dtype=uint64)
+>>> C_alpha = np.empty((r,d_alpha,mmax,tmax_alpha),dtype=np.uint64)
+>>> time_perf,time_process = qmcseqcl.interlace_gdn(r,d_alpha,mmax,d,tmax,tmax_alpha,alpha,C,C_alpha)
+>>> C_alpha
+array([[[[0, 2, 1, 1, 0, 1, 2, 2, 3, 4, 0, 2],
+         [4, 0, 0, 2, 1, 1, 4, 1, 1, 3, 3, 4],
+         [4, 1, 2, 4, 3, 4, 0, 3, 2, 1, 1, 4]],
+
+        [[4, 4, 0, 1, 1, 3, 0, 4, 0, 3, 2, 1],
+         [1, 4, 0, 1, 0, 4, 4, 2, 4, 3, 3, 3],
+         [0, 1, 2, 2, 3, 3, 4, 1, 3, 4, 1, 3]]],
+
+
+       [[[0, 2, 3, 4, 2, 0, 3, 2, 3, 3, 1, 1],
+         [3, 0, 0, 2, 3, 2, 3, 0, 0, 2, 1, 3],
+         [0, 4, 1, 0, 4, 4, 4, 1, 1, 0, 3, 3]],
+
+        [[1, 3, 3, 3, 0, 0, 1, 1, 1, 0, 1, 4],
+         [4, 1, 0, 2, 4, 2, 0, 4, 4, 2, 0, 1],
+         [0, 1, 0, 4, 2, 0, 0, 3, 0, 1, 0, 4]]]], dtype=uint64)
+```
+
+## undo digital interlacing 
+
+```python 
+>>> print(qmcseqcl.undo_interlace_gdn.__doc__)
+Undo interlacing of generating matrices
+
+Args:
+    r (np.uint64): replications
+    d (np.uint64): dimension of resulting generating matrices 
+    mmax (np.uint64): columns in generating matrices
+    d_alpha (np.uint64): dimension of interlaced generating matrices
+    tmax (np.uint64): rows of original generating matrices
+    tmax_alpha (np.uint64): rows of interlaced generating matrices
+    alpha (np.uint64): interlacing factor
+    C_alpha (np.ndarray of np.uint64): interlaced generating matrices of size r*d_alpha*mmax*tmax_alpha
+    C (np.ndarray of np.uint64): original generating matrices of size r*d*mmax*tmax
+>>> C_cp = np.empty((r,d,mmax,tmax),dtype=np.uint64)
+>>> time_perf,time_process = qmcseqcl.undo_interlace_gdn(r,d,mmax,d_alpha,tmax,tmax_alpha,alpha,C_alpha,C_cp) 
+>>> print((C==C_cp).all())
+True
 ```
