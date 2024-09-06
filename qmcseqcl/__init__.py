@@ -49,13 +49,13 @@ Args:
         x[~negs] = x[~negs]+((1<<63))
     return x
 
-def random_uint64_permutations(rng, b, n):
+def random_uint64_permutations(rng, n, b):
     """Generate n permutations of 0,...,b-1 into a size (n,b) np.ndarray of np.uint64
 
 Args:
     rng (np.random._generator.Generator): random number generator with rng.permutation method
-    b (int): permute 0,...,b-1
-    n (int): number of permutations"""
+    n (int): number of permutations
+    b (int): permute 0,...,b-1"""
     x = np.empty((n,b),dtype=np.uint64)
     for i in range(n): 
         x[i] = rng.permutation(b) 
@@ -269,11 +269,10 @@ Args:
     return tdelta_perf,tdelta_process,
 
 class NUSNode(object):
-    def __init__(self, perm=None, xb_vec=None, left=None, right=None):
+    def __init__(self, perm=None, xb_vec=None, children=None):
         self.perm = perm
         self.xb_vec = xb_vec 
-        self.left = left 
-        self.right = right
+        self.children = children
 
 def nested_uniform_scramble_general_digital_net(
     r,
@@ -284,6 +283,7 @@ def nested_uniform_scramble_general_digital_net(
     tmax_new,
     rngs,
     root_nodes,
+    bases,
     xb,
     xrb):
     """Nested uniform scramble of general digital nets
@@ -307,76 +307,49 @@ Args:
         for j in range(d):
             rng = rngs[l,j]
             root_node = root_nodes[l,j]
+            b = bases[l,j]
             assert isinstance(root_node,NUSNode)
             if root_node.perm is None:
                 # initilize root nodes
                 assert root_node.xb_vec is None and root_node.left is None and root_node.right is None
                 root_node.xb_vec = np.zeros(tmax_new,dtype=np.uint64) 
-                root_node.perm = random_uint64_permutations(rng,)
+                root_node.perm = random_uint64_permutations(rng,tmax_new,b)
+                root_node.children = [None]*b
             for i in range(n):
-                _xb_new = xb[l%r_x,i,j]<<(tmax_new-tmax)
-                _xb = _xb_new
                 node = root_nodes[l,j]
-                t = tmax_new
-                shift = np.uint64(0)                 
-                while t>0:
-                    b = (_xb>>(t-1))&1 # leading bit of _xb
-                    ones_mask_tm1 = (2**(t-1)-1)
-                    _xb_next = _xb&ones_mask_tm1 # drop the leading bit of _xb 
-                    if node.xb is None: # this is not a leaf node, so node.shift_bits in [0,1]
-                        if node.shift_bits: shift += 2**(t-1) # add node.shift_bits to the shift
-                        if b==0: # looking to move left
-                            if node.left is None: # left node does not exist
-                                shift_bits = int(rng.integers(0,2**(t-1))) # get (t-1) random bits
-                                node.left = NUSNodeB2(shift_bits,_xb_next,None,None) # create the left node 
-                                shift += shift_bits # add the (t-1) random bits to the shift
-                                break
-                            else: # left node exists, so move there 
-                                node = node.left
-                        else: # b==1, looking to move right
-                            if node.right is None: # right node does not exist
-                                shift_bits = int(rng.integers(0,2**(t-1))) # get (t-1) random bits
-                                node.right = NUSNodeB2(shift_bits,_xb_next,None,None) # create the right node
-                                shift += shift_bits # add the (t-1) random bits to the shift
-                                break 
-                            else: # right node exists, so move there
-                                node = node.right
-                    elif node.xb==_xb: # this is a leaf node we have already seen before!
-                        shift += node.shift_bits
+                t = 0
+                perm = np.zeros(tmax_new,dtype=np.uint64)                
+                while t<(tmax_new-1):
+                    _xb = xb[l%r_x,i,j,t:]
+                    dig = _xb[0]
+                    if node.xb_vec is None: # this is not a leaf node, so node.perm is a single permutation
+                        perm[t] = node.perm[dig] # set the permuted value
+                        if node.children[dig] is None: # child in dig position does not exist
+                            node_perm = random_uint64_permutations(rng,tmax_new-t-1,b)
+                            node.children[dig] = NUSNode(node_perm,_xb[1:],[None]*b)
+                            perm[(t+1):] = node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xb[1:]] # digits in _xb[1:] index node_perm rows
+                            break
+                        else: # child in dig position exists, so move there 
+                            node = node.children[dig]
+                    elif (node.xb_vec==_xb).all(): # this is a leaf node we have already seen before!
+                        perm[t:] = node.perm[np.arange(tmax_new-t,dtype=np.uint64),_xb] # digits in _xb inde node_perm rows
                         break
-                    else: #  node.xb!=_xb, this is a leaf node where the _xb values don't match
-                        node_b = (node.xb>>(t-1))&1 # leading bit of node.xb
-                        node_xb_next = node.xb&ones_mask_tm1 # drop the leading bit of node.xb
-                        node_shift_bits_next = node.shift_bits&ones_mask_tm1 # drop the leading bit of node.shift_bits
-                        node_leading_shift_bit = (node.shift_bits>>(t-1))&1
-                        if node_leading_shift_bit: shift += 2**(t-1)
-                        if node_b==0 and b==1: # the node will move its contents left and the _xb will go right
-                            node.left = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None)  # create the left node from the current node
-                            node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
-                            # create the right node 
-                            shift_bits = int(rng.integers(0,2**(t-1))) # (t-1) random bits for the right node
-                            node.right = NUSNodeB2(shift_bits,_xb_next,None,None)
-                            shift += shift_bits
+                    else: # node.xb_vec!=_xb, this is a leaf node where the _xb values don't match
+                        node_dig = node.xb_vec[0]
+                        perm[t] = node.perm[0,dig]
+                        # move node contenst to the child in the dig position
+                        node.children[node_dig] = NUSNode(node.perm[1:],node.xb_vec[1:],[None]*b) 
+                        node.perm = node.perm[0]
+                        node.xb_vec = None
+                        if node_dig==dig: 
+                            node = node.children[dig] 
+                        else: # create child node in the dig position
+                            dig_node_perm = random_uint64_permutations(rng,tmax_new-t-1,b)
+                            node.children[dig] = NUSNode(dig_node_perm,_xb[1:],[None]*b) # create a new leaf node
+                            perm[(t+1):] = dig_node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xb[1:]] # digits in _xb[1:] index node_perm rows
                             break
-                        elif node_b==1 and b==0: # the node will move its contents right and the _xb will go left
-                            node.right = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None)  # create the right node from the current node
-                            node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
-                            # create the left node 
-                            shift_bits = int(rng.integers(0,2**(t-1))) # (t-1) random bits for the left node
-                            node.left = NUSNodeB2(shift_bits,_xb_next,None,None)
-                            shift += shift_bits
-                            break
-                        elif node_b==0 and b==0: # move the node contents and _xb to the left
-                            node.left = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None) 
-                            node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
-                            node = node.left
-                        elif node_b==1 and b==1: # move the node contents and _xb to the right 
-                            node.right = NUSNodeB2(node_shift_bits_next,node_xb_next,None,None) 
-                            node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
-                            node = node.right
-                    t -= 1
-                    _xb = _xb_next
-                xrb[l,i,j] = _xb_new^shift
+                    t += 1
+                xrb[l,i,j] = perm
     tdelta_process = time.process_time()-t0_process 
     tdelta_perf = time.perf_counter()-t0_perf
     return tdelta_perf,tdelta_process,
