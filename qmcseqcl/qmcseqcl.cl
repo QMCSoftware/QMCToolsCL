@@ -1,4 +1,4 @@
-__kernel void lattice_linear(
+__kernel void lat_gen_linear(
     // Lattice points in linear order
     const ulong r, // replications
     const ulong n, // points
@@ -37,7 +37,7 @@ __kernel void lattice_linear(
     }
 }
 
-__kernel void lattice_b2(
+__kernel void lat_gen_natural_gray(
     // Lattice points in Gray code or natural order
     const ulong r, // replications
     const ulong n, // points
@@ -113,7 +113,7 @@ __kernel void lattice_b2(
     }
 }
 
-__kernel void lattice_shift(
+__kernel void lat_shift_mod_1(
     // Shift mod 1 for lattice points
     const ulong r, // replications
     const ulong n, // points
@@ -153,7 +153,7 @@ __kernel void lattice_shift(
     }
 }
 
-__kernel void gen_mats_lsb_to_msb_b2(
+__kernel void dnb2_gmat_lsb_to_msb(
     // Convert base 2 generating matrices with integers stored in Least Significant Bit order to Most Significant Bit order
     const ulong r, // replications
     const ulong d, // dimension
@@ -203,7 +203,7 @@ __kernel void gen_mats_lsb_to_msb_b2(
     }
 }
 
-__kernel void linear_matrix_scramble_digital_net_b2(
+__kernel void dnb2_linear_matrix_scramble(
     // Linear matrix scrambling for base 2 generating matrices
     const ulong r, // replications
     const ulong d, // dimension
@@ -260,7 +260,7 @@ __kernel void linear_matrix_scramble_digital_net_b2(
     }
 }
 
-__kernel void digital_net_b2_binary(
+__kernel void dnb2_gen_natural_gray(
     // Binary representation of digital net in base 2 in either Gray code or natural order
     const ulong r, // replications
     const ulong n, // points
@@ -346,7 +346,7 @@ __kernel void digital_net_b2_binary(
     }
 }
 
-__kernel void digital_net_b2_digital_shift(
+__kernel void dnb2_digital_shift(
     // Digital shift base 2 digital net 
     const ulong r, // replications
     const ulong n, // points
@@ -387,7 +387,7 @@ __kernel void digital_net_b2_digital_shift(
     }
 }
 
-__kernel void digital_net_b2_from_binary(
+__kernel void dnb2_integer_to_float(
     // Convert base 2 binary digital net points to floats
     const ulong r, // replications
     const ulong n, // points
@@ -425,7 +425,7 @@ __kernel void digital_net_b2_from_binary(
     }
 }
 
-__kernel void interlace_b2(
+__kernel void dnb2_interlace(
     // Interlace generating matrices or transpose of point sets to attain higher order digital nets in base 2
     const ulong r, // replications
     const ulong d_alpha, // dimension of resulting generating matrices 
@@ -476,7 +476,7 @@ __kernel void interlace_b2(
     }
 }
 
-__kernel void undo_interlace_b2(
+__kernel void dnb2_undo_interlace(
     // Undo interlacing of generating matrices in base 2
     const ulong r, // replications
     const ulong d, // dimension of resulting generating matrices 
@@ -527,7 +527,7 @@ __kernel void undo_interlace_b2(
     }
 }
 
-__kernel void linear_matrix_scramble_generalized_digital_net(
+__kernel void gdn_linear_matrix_scramble(
     // Linear matrix scramble for generalized digital net 
     const ulong r, // replications 
     const ulong d, // dimension 
@@ -579,7 +579,7 @@ __kernel void linear_matrix_scramble_generalized_digital_net(
     }
 }
 
-__kernel void generalized_digital_net_digits(
+__kernel void gdn_gen_natural(
     // Generalized digital net where the base can be different for each dimension e.g. for the Halton sequence
     const ulong r, // replications
     const ulong n, // points
@@ -638,7 +638,7 @@ __kernel void generalized_digital_net_digits(
     }
 }
 
-__kernel void generalized_digital_net_digits_same_base(
+__kernel void gdn_gen_natural_same_base(
     // Generalized digital net with the same base for each dimension e.g. a digital net in base greater than 2
     const ulong r, // replications
     const ulong n, // points
@@ -716,7 +716,7 @@ __kernel void generalized_digital_net_digits_same_base(
     }
 }
                 
-__kernel void generalized_digital_net_digital_shift(
+__kernel void gdn_digital_shift(
     // Digital shift a generalized digital net
     const ulong r, // replications
     const ulong n, // points
@@ -767,7 +767,7 @@ __kernel void generalized_digital_net_digital_shift(
     }
 }
 
-__kernel void generalized_digital_net_permutation(
+__kernel void gdn_digital_permutation(
     // Permutation of digits for a generalized digital net
     const ulong r, // replications
     const ulong n, // points
@@ -818,7 +818,7 @@ __kernel void generalized_digital_net_permutation(
     }
 }
 
-__kernel void generalized_digital_net_from_digits(
+__kernel void gdn_integer_to_float(
     // Convert digits of generalized digital net to floats
     const ulong r, // replications
     const ulong n, // points
@@ -867,7 +867,7 @@ __kernel void generalized_digital_net_from_digits(
     }
 }
 
-__kernel void interlace_gdn(
+__kernel void gdn_interlace(
     // Interlace generating matrices or transpose of point sets to attain higher order digital nets
     const ulong r, // replications
     const ulong d_alpha, // dimension of resulting generating matrices 
@@ -912,7 +912,7 @@ __kernel void interlace_gdn(
     }
 }
 
-__kernel void undo_interlace_gdn(
+__kernel void gdn_undo_interlace(
     // Undo interlacing of generating matrices 
     const ulong r, // replications
     const ulong d, // dimension of resulting generating matrices 

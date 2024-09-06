@@ -53,7 +53,7 @@ To use the **OpenCL backend** supply the following keyword arguments to function
 ## linear order
 
 ```python
->>> print(qmcseqcl.lattice_linear.__doc__)
+>>> print(qmcseqcl.lat_gen_linear.__doc__)
 Lattice points in linear order
 
 Args:
@@ -70,7 +70,7 @@ Args:
 >>> n = np.uint64(8) 
 >>> d = np.uint64(g.shape[1])
 >>> x = np.empty((r,n,d),dtype=np.float64)
->>> time_perf,time_process = qmcseqcl.lattice_linear(r,n,d,g,x,**kwargs)
+>>> time_perf,time_process = qmcseqcl.lat_gen_linear(r,n,d,g,x,**kwargs)
 >>> x
 array([[[0.   , 0.   , 0.   , 0.   , 0.   ],
         [0.125, 0.625, 0.125, 0.625, 0.625],
@@ -94,7 +94,7 @@ array([[[0.   , 0.   , 0.   , 0.   , 0.   ],
 ## generate Gray code or natural order
 
 ```python 
->>> print(qmcseqcl.lattice_b2.__doc__)
+>>> print(qmcseqcl.lat_gen_natural_gray.__doc__)
 Lattice points in Gray code or natural order
 
 Args:
@@ -109,7 +109,7 @@ Args:
 >>> n = np.uint64(6) 
 >>> x = np.empty((r,n,d),dtype=np.float64)
 >>> gc = np.uint8(False)
->>> time_perf,time_process = qmcseqcl.lattice_b2(r,n,d,n_start,gc,g,x,**kwargs)
+>>> time_perf,time_process = qmcseqcl.lat_gen_natural_gray(r,n,d,n_start,gc,g,x,**kwargs)
 >>> x
 array([[[0.25 , 0.25 , 0.25 , 0.25 , 0.25 ],
         [0.75 , 0.75 , 0.75 , 0.75 , 0.75 ],
@@ -125,7 +125,7 @@ array([[[0.25 , 0.25 , 0.25 , 0.25 , 0.25 ],
         [0.375, 0.125, 0.125, 0.375, 0.375],
         [0.875, 0.625, 0.625, 0.875, 0.875]]])
 >>> gc = np.uint8(True)
->>> time_perf,time_process = qmcseqcl.lattice_b2(r,n,d,n_start,gc,g,x,**kwargs)
+>>> time_perf,time_process = qmcseqcl.lat_gen_natural_gray(r,n,d,n_start,gc,g,x,**kwargs)
 >>> x
 array([[[0.75 , 0.75 , 0.75 , 0.75 , 0.75 ],
         [0.25 , 0.25 , 0.25 , 0.25 , 0.25 ],
@@ -145,7 +145,7 @@ array([[[0.75 , 0.75 , 0.75 , 0.75 , 0.75 ],
 ## shift mod 1 
 
 ```python
->>> print(qmcseqcl.lattice_shift.__doc__)
+>>> print(qmcseqcl.lat_shift_mod_1.__doc__)
 Shift mod 1 for lattice points
 
 Args:
@@ -160,7 +160,7 @@ Args:
 >>> r = 2*r_x
 >>> shifts = rng.random((r,d))
 >>> xr = np.empty((r,n,d),dtype=np.float64)
->>> time_perf,time_process = qmcseqcl.lattice_shift(r,n,d,r_x,x,shifts,xr,**kwargs)
+>>> time_perf,time_process = qmcseqcl.lat_shift_mod_1(r,n,d,r_x,x,shifts,xr,**kwargs)
 >>> xr
 array([[[0.79386058, 0.33727432, 0.1191824 , 0.40212985, 0.44669968],
         [0.29386058, 0.83727432, 0.6191824 , 0.90212985, 0.94669968],
@@ -198,7 +198,7 @@ array([[[0.79386058, 0.33727432, 0.1191824 , 0.40212985, 0.44669968],
 convert generating matrices from least significant bit (LSB) order to most significant bit (MSB) order
 
 ```python
->>> print(qmcseqcl.gen_mats_lsb_to_msb_b2.__doc__)
+>>> print(qmcseqcl.dnb2_gmat_lsb_to_msb.__doc__)
 Convert base 2 generating matrices with integers stored in Least Significant Bit order to Most Significant Bit order
 
 Args:
@@ -220,7 +220,7 @@ Args:
 >>> tmax = 4
 >>> tmaxes = np.tile(np.uint64(tmax),r)
 >>> C = np.empty((d,mmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.gen_mats_lsb_to_msb_b2(r,d,mmax,tmaxes,C_lsb,C,**kwargs)
+>>> time_perf,time_process = qmcseqcl.dnb2_gmat_lsb_to_msb(r,d,mmax,tmaxes,C_lsb,C,**kwargs)
 >>> C
 array([[ 8,  4,  2,  1],
        [ 8, 12, 10, 15],
@@ -231,7 +231,7 @@ array([[ 8,  4,  2,  1],
 ## linear matrix scrambling (LMS)
 
 ```python
->>> print(qmcseqcl.linear_matrix_scramble_digital_net_b2.__doc__)
+>>> print(qmcseqcl.dnb2_linear_matrix_scramble.__doc__)
 Linear matrix scrambling for base 2 generating matrices
 
 Args:
@@ -331,7 +331,7 @@ l = 1
         1101
         0111
 >>> C_lms = np.empty((r,d,mmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.linear_matrix_scramble_digital_net_b2(r,d,mmax,r_C,tmax_new,S,C,C_lms,**kwargs)
+>>> time_perf,time_process = qmcseqcl.dnb2_linear_matrix_scramble(r,d,mmax,r_C,tmax_new,S,C,C_lms,**kwargs)
 >>> C_lms
 array([[[232,  96,  52,  30],
         [180, 245, 158, 192],
@@ -349,7 +349,7 @@ array([[[232,  96,  52,  30],
 Digital interlacing is used to create **higher order digital nets**.
 
 ```python
->>> print(qmcseqcl.interlace_b2.__doc__)
+>>> print(qmcseqcl.dnb2_interlace.__doc__)
 Interlace generating matrices or transpose of point sets to attain higher order digital nets in base 2
 
 Args:
@@ -367,7 +367,7 @@ Args:
 >>> tmax = tmax_new
 >>> tmax_alpha = min(alpha*tmax_new,64)
 >>> C_alpha = np.empty((r,d_alpha,mmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.interlace_b2(r,d_alpha,mmax,d,tmax,tmax_alpha,alpha,C_lms,C_alpha,**kwargs)
+>>> time_perf,time_process = qmcseqcl.dnb2_interlace(r,d_alpha,mmax,d,tmax,tmax_alpha,alpha,C_lms,C_alpha,**kwargs)
 >>> C_alpha
 array([[[60816, 32017, 19316, 21160],
         [53928, 60986,  9987, 38156]],
@@ -379,7 +379,7 @@ array([[[60816, 32017, 19316, 21160],
 ## undo digital interlacing 
 
 ```python
->>> print(qmcseqcl.undo_interlace_b2.__doc__)
+>>> print(qmcseqcl.dnb2_undo_interlace.__doc__)
 Undo interlacing of generating matrices in base 2
 
 Args:
@@ -393,7 +393,7 @@ Args:
     C_alpha (np.ndarray of np.uint64): interlaced generating matrices of size r*d_alpha*mmax
     C (np.ndarray of np.uint64): original generating matrices of size r*d*mmax
 >>> C_lms_cp = np.empty((r,d,mmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.undo_interlace_b2(r,d,mmax,d_alpha,tmax,tmax_alpha,alpha,C_alpha,C_lms_cp,**kwargs)
+>>> time_perf,time_process = qmcseqcl.dnb2_undo_interlace(r,d,mmax,d_alpha,tmax,tmax_alpha,alpha,C_alpha,C_lms_cp,**kwargs)
 >>> print((C_lms_cp==C_lms).all())
 True
 ```
@@ -401,7 +401,7 @@ True
 ## generate Gray code or natural order 
 
 ```python
->>> print(qmcseqcl.digital_net_b2_binary.__doc__)
+>>> print(qmcseqcl.dnb2_gen_natural_gray.__doc__)
 Binary representation of digital net in base 2 in either Gray code or natural order
 
 Args:
@@ -419,7 +419,7 @@ Args:
 >>> n = np.uint64(14)
 >>> xb = np.empty((r,n,d),dtype=np.uint64)
 >>> gc = np.uint8(False)
->>> time_perf,time_process = qmcseqcl.digital_net_b2_binary(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
+>>> time_perf,time_process = qmcseqcl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
 >>> xb
 array([[[32017, 60986],
         [36993, 15506],
@@ -451,7 +451,7 @@ array([[[32017, 60986],
         [27722, 19824],
         [33706, 34436]]], dtype=uint64)
 >>> gc = np.uint8(True)
->>> time_perf,time_process = qmcseqcl.digital_net_b2_binary(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
+>>> time_perf,time_process = qmcseqcl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
 >>> xb
 array([[[36993, 15506],
         [32017, 60986],
@@ -487,7 +487,7 @@ array([[[36993, 15506],
 ## digital shift 
 
 ```python
->>> print(qmcseqcl.digital_net_b2_digital_shift.__doc__)
+>>> print(qmcseqcl.dnb2_digital_shift.__doc__)
 Digital shift base 2 digital net
 
 Args:
@@ -518,7 +518,7 @@ array([[1440145505151606152, 5686212125327047696],
        [1319978926241325836, 1435914391012611701],
        [1035738700154284414, 5954637325829729870]], dtype=uint64)
 >>> xrb = np.empty((r,n,d),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.digital_net_b2_digital_shift(r,n,d,r_x,lshifts,xb,shiftsb,xrb,**kwargs)
+>>> time_perf,time_process = qmcseqcl.dnb2_digital_shift(r,n,d,r_x,lshifts,xb,shiftsb,xrb,**kwargs)
 >>> xrb
 array([[[ 9474848715357281672,  8249323263254281232],
         [ 7993164437952388488, 11588742386949504016],
@@ -584,7 +584,7 @@ array([[[ 9474848715357281672,  8249323263254281232],
 ## convert digits to doubles
 
 ```python 
->>> print(qmcseqcl.digital_net_b2_from_binary.__doc__)
+>>> print(qmcseqcl.dnb2_integer_to_float.__doc__)
 Convert base 2 binary digital net points to floats
 
 Args:
@@ -596,7 +596,7 @@ Args:
     x (np.ndarray of np.double): float digital net points of size r*n*d
 >>> x = np.empty((r,n,d),dtype=np.float64)
 >>> tmaxes_new = np.tile(tmax_new,r)
->>> time_perf,time_process = qmcseqcl.digital_net_b2_from_binary(r,n,d,tmaxes_new,xrb,x,**kwargs)
+>>> time_perf,time_process = qmcseqcl.dnb2_integer_to_float(r,n,d,tmaxes_new,xrb,x,**kwargs)
 >>> x
 array([[[0.51363258, 0.44719671],
         [0.43331031, 0.62822698],
@@ -676,7 +676,7 @@ array([[[0.51363258, 0.44719671],
 >>> mmax = np.uint64(C.shape[1])
 >>> tmax = np.uint64(np.ceil(np.log2(np.max(C))))
 >>> xb = np.empty((r,n,d),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.digital_net_b2_binary(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
+>>> time_perf,time_process = qmcseqcl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
 >>> print(qmcseqcl.nested_uniform_scramble_digital_net_b2.__doc__)
 Nested uniform scramble of digital net b2
 
@@ -727,7 +727,7 @@ Accommodates both Halton sequences and digital nets in any prime base
 ## Linear Matrix Scramble 
 
 ```python
->>> print(qmcseqcl.linear_matrix_scramble_generalized_digital_net.__doc__)
+>>> print(qmcseqcl.gdn_linear_matrix_scramble.__doc__)
 Linear matrix scramble for generalized digital net
 
 Args:
@@ -853,7 +853,7 @@ array([[[[1, 0, 0, 0, 0],
          [2, 5, 4, 2, 5],
          [5, 6, 4, 3, 3]]]], dtype=uint64)
 >>> C_lms = np.empty((r,d,mmax,tmax_new),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.linear_matrix_scramble_generalized_digital_net(r,d,mmax,r_C,r_b,tmax,tmax_new,bases,S,C,C_lms,**kwargs)
+>>> time_perf,time_process = qmcseqcl.gdn_linear_matrix_scramble(r,d,mmax,r_C,r_b,tmax,tmax_new,bases,S,C,C_lms,**kwargs)
 >>> C_lms 
 array([[[[1, 1, 0, 0, 0, 0, 1, 1, 1, 0],
          [0, 1, 0, 1, 1, 1, 0, 0, 1, 1],
@@ -910,7 +910,7 @@ array([[[[1, 1, 0, 0, 0, 0, 1, 1, 1, 0],
 ## generate natural order
 
 ```python
->>> print(qmcseqcl.generalized_digital_net_digits.__doc__)
+>>> print(qmcseqcl.gdn_gen_natural.__doc__)
 Generalized digital net where the base can be different for each dimension e.g. for the Halton sequence
 
 Args:
@@ -929,7 +929,7 @@ Args:
 >>> n_start = np.uint64(2)
 >>> n = np.uint64(6)
 >>> xdig = np.empty((r,n,d,tmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.generalized_digital_net_digits(r,n,d,r_b,mmax,tmax,n_start,bases,C,xdig,**kwargs)
+>>> time_perf,time_process = qmcseqcl.gdn_gen_natural(r,n,d,r_b,mmax,tmax,n_start,bases,C,xdig,**kwargs)
 >>> xdig
 array([[[[0, 1, 0, 1, 1, 1, 0, 0, 1, 1],
          [1, 1, 2, 1, 1, 1, 0, 0, 1, 2]],
@@ -1010,7 +1010,7 @@ array([[[[0, 1, 0, 1, 1, 1, 0, 0, 1, 1],
 ## digital shift 
 
 ```python
->>> print(qmcseqcl.generalized_digital_net_digital_shift.__doc__)
+>>> print(qmcseqcl.gdn_digital_shift.__doc__)
 Digital shift a generalized digital net
 
 Args:
@@ -1045,7 +1045,7 @@ array([[[1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0],
        [[0, 3, 3, 2, 2, 0, 2, 1, 3, 2, 4, 1],
         [2, 3, 2, 4, 1, 0, 2, 5, 4, 2, 4, 3]]], dtype=uint64)
 >>> xdig_new = np.empty((r,n,d,tmax_new),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.generalized_digital_net_digital_shift(r,n,d,r_x,r_b,tmax,tmax_new,bases,shifts,xdig,xdig_new,**kwargs)
+>>> time_perf,time_process = qmcseqcl.gdn_digital_shift(r,n,d,r_x,r_b,tmax,tmax_new,bases,shifts,xdig,xdig_new,**kwargs)
 >>> xdig_new
 array([[[[1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0],
          [2, 1, 2, 2, 1, 0, 1, 1, 1, 0, 2, 2]],
@@ -1126,7 +1126,7 @@ array([[[[1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0],
 ## digital permutation 
 
 ```python
->>> print(qmcseqcl.generalized_digital_net_permutation.__doc__)
+>>> print(qmcseqcl.gdn_digital_permutation.__doc__)
 Permutation of digits for a generalized digital net
 
 Args:
@@ -1255,7 +1255,7 @@ array([[[[1, 0, 0, 0, 0, 0, 0],
          [3, 4, 2, 6, 1, 5, 0],
          [2, 6, 1, 3, 0, 4, 5],
          [2, 4, 0, 6, 1, 5, 3]]]], dtype=uint64)
->>> time_perf,time_process = qmcseqcl.generalized_digital_net_permutation(r,n,d,r_x,r_b,tmax,tmax_new,bmax,perms,xdig,xdig_new,**kwargs)
+>>> time_perf,time_process = qmcseqcl.gdn_digital_permutation(r,n,d,r_x,r_b,tmax,tmax_new,bmax,perms,xdig,xdig_new,**kwargs)
 >>> xdig_new
 array([[[[1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0],
          [0, 0, 0, 1, 0, 1, 0, 1, 2, 2, 2, 1]],
@@ -1336,7 +1336,7 @@ array([[[[1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0],
 ## convert digits to doubles 
 
 ```python 
->>> print(qmcseqcl.generalized_digital_net_from_digits.__doc__)
+>>> print(qmcseqcl.gdn_integer_to_float.__doc__)
 Convert digits of generalized digital net to floats
 
 Args:
@@ -1349,7 +1349,7 @@ Args:
     xdig (np.ndarray of np.uint64): binary digital net points of size r*n*d*tmax
     x (np.ndarray of np.double): float digital net points of size r*n*d
 >>> x = np.empty((r,n,d),dtype=np.float64)
->>> time_perf,time_process = qmcseqcl.generalized_digital_net_from_digits(r,n,d,r_b,tmax_new,bases,xdig_new,x,**kwargs)
+>>> time_perf,time_process = qmcseqcl.gdn_integer_to_float(r,n,d,r_b,tmax_new,bases,xdig_new,x,**kwargs)
 >>> x
 array([[[0.72216797, 0.01401849],
         [0.48193359, 0.71223522],
@@ -1393,7 +1393,7 @@ array([[[0.72216797, 0.01401849],
 >>> tmax = mmax
 >>> C = np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(r,d,1,1))
 >>> xdig = np.empty((r,n,d,tmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.generalized_digital_net_digits(r,n,d,r_b,mmax,tmax,n_start,bases,C,xdig)
+>>> time_perf,time_process = qmcseqcl.gdn_gen_natural(r,n,d,r_b,mmax,tmax,n_start,bases,C,xdig)
 >>> r_x = r 
 >>> r = np.uint64(2) 
 >>> tmax_new = np.uint64(8)
@@ -1493,7 +1493,7 @@ array([[[[0, 0, 1, 0, 0, 1, 0, 0],
          [2, 2, 2, 2, 2, 2, 2, 1],
          [4, 3, 0, 0, 4, 2, 0, 4]]]], dtype=uint64)
 >>> xr = np.empty((r,n,d),dtype=np.float64) 
->>> time_perf,time_process = qmcseqcl.generalized_digital_net_from_digits(r,n,d,r_b,tmax_new,bases,xrdig,xr)
+>>> time_perf,time_process = qmcseqcl.gdn_integer_to_float(r,n,d,r_b,tmax_new,bases,xrdig,xr)
 >>> xr
 array([[[0.140625  , 0.99283646, 0.7772288 ],
         [0.66796875, 0.37524768, 0.22977792],
@@ -1519,7 +1519,7 @@ array([[[0.140625  , 0.99283646, 0.7772288 ],
 ## digital interlacing 
 
 ```python
->>> print(qmcseqcl.interlace_gdn.__doc__)
+>>> print(qmcseqcl.gdn_interlace.__doc__)
 Interlace generating matrices or transpose of point sets to attain higher order digital nets
 
 Args:
@@ -1590,7 +1590,7 @@ array([[[[0, 1, 2, 4],
          [0, 2, 4, 1],
          [0, 0, 0, 4]]]], dtype=uint64)
 >>> C_alpha = np.empty((r,d_alpha,mmax,tmax_alpha),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.interlace_gdn(r,d_alpha,mmax,d,tmax,tmax_alpha,alpha,C,C_alpha)
+>>> time_perf,time_process = qmcseqcl.gdn_interlace(r,d_alpha,mmax,d,tmax,tmax_alpha,alpha,C,C_alpha)
 >>> C_alpha
 array([[[[0, 2, 1, 1, 0, 1, 2, 2, 3, 4, 0, 2],
          [4, 0, 0, 2, 1, 1, 4, 1, 1, 3, 3, 4],
@@ -1613,7 +1613,7 @@ array([[[[0, 2, 1, 1, 0, 1, 2, 2, 3, 4, 0, 2],
 ## undo digital interlacing 
 
 ```python 
->>> print(qmcseqcl.undo_interlace_gdn.__doc__)
+>>> print(qmcseqcl.gdn_undo_interlace.__doc__)
 Undo interlacing of generating matrices
 
 Args:
@@ -1627,7 +1627,7 @@ Args:
     C_alpha (np.ndarray of np.uint64): interlaced generating matrices of size r*d_alpha*mmax*tmax_alpha
     C (np.ndarray of np.uint64): original generating matrices of size r*d*mmax*tmax
 >>> C_cp = np.empty((r,d,mmax,tmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.undo_interlace_gdn(r,d,mmax,d_alpha,tmax,tmax_alpha,alpha,C_alpha,C_cp) 
+>>> time_perf,time_process = qmcseqcl.gdn_undo_interlace(r,d,mmax,d_alpha,tmax,tmax_alpha,alpha,C_alpha,C_cp) 
 >>> print((C==C_cp).all())
 True
 ```
@@ -1635,7 +1635,7 @@ True
 ## generate natural order with the same base 
 
 ```python
->>> print(qmcseqcl.generalized_digital_net_digits_same_base.__doc__)
+>>> print(qmcseqcl.gdn_gen_natural_same_base.__doc__)
 Generalized digital net with the same base for each dimension e.g. a digital net in base greater than 2
 
 Args:
@@ -1667,7 +1667,7 @@ Args:
 >>> mmax = np.uint64(C.shape[2])
 >>> tmax = np.uint64(C.shape[3])
 >>> xdig = np.empty((r,n,d,tmax),dtype=np.uint64) 
->>> time_perf,time_process = qmcseqcl.generalized_digital_net_digits_same_base(r,n,d,mmax,tmax,n_start,b,C,xdig)
+>>> time_perf,time_process = qmcseqcl.gdn_gen_natural_same_base(r,n,d,mmax,tmax,n_start,b,C,xdig)
 >>> xdig
 array([[[[0, 0, 0, 0],
          [0, 0, 0, 0]],
