@@ -31,7 +31,7 @@ remake_dir(experiment_dir,force=args.force)
 df_c_perf,df_c_process = np.zeros((args.np2+1,args.dp2+1),dtype=np.float64),np.zeros((args.np2+1,args.dp2+1),dtype=np.float64) 
 df_cl_perf,df_cl_process = np.zeros((args.np2+1,args.dp2+1),dtype=np.float64),np.zeros((args.np2+1,args.dp2+1),dtype=np.float64)
 
-print("logging gs_n_pows2 from %d to %d and gs_d_pows2 from %d to %d"%(0,args.np2,0,args.dp2))
+print("logging gs_n_pows2 up to %d and gs_d_pows2 upto %d"%(args.np2,args.dp2))
 for i in range(args.np2+1):
     print("n_pows2 = %d: d_pows2 = "%gs_n_pows2[i],end='',flush=True)
     gs_n = gs_ns[i]

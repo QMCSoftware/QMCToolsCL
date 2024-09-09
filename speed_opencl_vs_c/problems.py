@@ -40,6 +40,13 @@ map_run_problem = {
     "halton": run_halton_problem,
 }
 
+def nd_gs_scheme(n,d):
+    return n,d
+
+map_gs_scheme = {
+    "nd": nd_gs_scheme
+}
+
 def setup_speed_tests(platform_id, device_id):
     kwargs_c = {"backend": "c"}
     platform = cl.get_platforms()[platform_id]
