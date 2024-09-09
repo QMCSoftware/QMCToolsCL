@@ -55,4 +55,6 @@ jobs:
       - name: Short Speed Tests
         shell: bash -l {0}
         run: |
+          pip install pandas 
+          pip install matplotlib 
           make shortspeedtests
