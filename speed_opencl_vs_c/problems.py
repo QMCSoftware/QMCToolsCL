@@ -3,10 +3,10 @@ import pyopencl as cl
 import numpy as np
 import pandas as pd 
 from matplotlib import pyplot
-import os 
+import os
+import shutil
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
-pyplot.style.use('seaborn-v0_8-whitegrid')
 pd.set_option('display.float_format', lambda x: '%.1e'%x)
 
 g_full = np.loadtxt("https://raw.githubusercontent.com/QMCSoftware/LDData/main/lattice/mps.exod2_base2_m20.txt",dtype=np.uint64,skiprows=6) 
@@ -66,67 +66,10 @@ kwargs_cl = {
     "queue": queue, 
 }
 
-# parameters
-d = 1000
-min_pow2 = 0
-max_pow2 = 12
-plot_min_pow2 = 6
-pows2 = np.arange(min_pow2,max_pow2+1)
-ns = 2**pows2
-problem_name = "halton"
-run_problem = map_run_problem[problem_name]
-#initilize dataframe 
-df = {}
-df["n"] = ns
-keys = [
-    "c_perf",
-    "cl_perf_n_d",
-    "cl_perf_n2_d",
-    "cl_perf_n_d2",
-    "cl_perf_n2_d2",
-    "c_process",
-    "cl_process_n_d",
-    "cl_process_n2_d",
-    "cl_process_n_d2",
-    "cl_process_n2_d2",
-]
-for key in keys: df[key] = np.zeros(max_pow2-min_pow2+1,dtype=np.float64) 
-# run experiments
-print("logging pow2 from %d to %d: "%(min_pow2,max_pow2),end='',flush=True)
-for i in range(max_pow2-min_pow2+1):
-    pow2 = pows2[i]
-    print("%d, "%pow2,end='',flush=True)
-    n = ns[i]
-    df["c_perf"][i],df["c_process"][i] = run_problem(n=n,d=d,kwargs=kwargs_c)
-    kwargs_cl["global_size"] = (1,n,d)
-    df["cl_perf_n_d"][i],df["cl_process_n_d"][i] = run_problem(n=n,d=d,kwargs=kwargs_cl)
-    kwargs_cl["global_size"] = (1,max(1,n//2),d)
-    df["cl_perf_n2_d"][i],df["cl_process_n2_d"][i] = run_problem(n=n,d=d,kwargs=kwargs_cl)
-    kwargs_cl["global_size"] = (1,n,max(1,d//2))
-    df["cl_perf_n_d2"][i],df["cl_process_n_d2"][i] = run_problem(n=n,d=d,kwargs=kwargs_cl)
-    kwargs_cl["global_size"] = (1,max(1,n//2),max(1,d//2))
-    df["cl_perf_n2_d2"][i],df["cl_process_n2_d2"][i] = run_problem(n=n,d=d,kwargs=kwargs_cl)
-print("\n")
-# save dataframe 
-df = pd.DataFrame(df)
-df.to_csv("%s/%s.csv"%(THISDIR,problem_name),index=False)
-# plot
-df = pd.read_csv("%s/%s.csv"%(THISDIR,problem_name))
-df = df.iloc[(plot_min_pow2-min_pow2):]
-fig,ax = pyplot.subplots(nrows=1,ncols=2,figsize=(12,5),sharey=True)
-for i,tag in enumerate(["process","perf"]):
-    ax[i].plot(df["n"],df["c_%s"%tag],marker="o",linestyle="solid",color="xkcd:green",label="C")
-    ax[i].plot(df["n"],df["cl_%s_n_d"%tag],marker="o",linestyle="solid",color="xkcd:blue",label="OpenCL(n,d)")
-    ax[i].plot(df["n"],df["cl_%s_n2_d"%tag],marker="o",linestyle="dashdot",color="xkcd:blue",label="OpenCL(n/2,d)")
-    ax[i].plot(df["n"],df["cl_%s_n_d2"%tag],marker="o",linestyle="dashed",color="xkcd:blue",label="OpenCL(n,d/2)")
-    ax[i].plot(df["n"],df["cl_%s_n2_d2"%tag],marker="o",linestyle="dotted",color="xkcd:blue",label="OpenCL(n/2,d/2)")
-    ax[i].set_xscale('log',base=2)
-    ax[i].set_yscale('log',base=10)
-    ax[i].set_xlabel(r"$n$ points")
-ax[0].legend(loc='lower center',bbox_to_anchor=(1.15,-0.25),frameon=False,shadow=True,ncol=5)
-ax[0].set_title("process time")
-ax[1].set_title("wall clock time")
-ax[0].set_ylabel(r"time [sec]")
-fig.suptitle(r"%s sequence with $d=%d$ dimensions"%(problem_name,d))
-fig.savefig("%s/%s.png"%(THISDIR,problem_name),dpi=256,bbox_inches="tight")
-
+def remake_dir(experiment_dir,force=False):
+    if os.path.isdir(experiment_dir):
+        if force:
+            shutil.rmtree(experiment_dir)
+        else:
+            raise Exception("existing experiment_dir = %s"%experiment_dir)
+    os.mkdir(experiment_dir) 
