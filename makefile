@@ -12,9 +12,9 @@ shortspeedtests:
 	rm -r -f nd_lattice.debug
 
 fullspeedtests:
-	python gs_run.py -q lattice -t full -m 11 -k 9 -s 1 -r 5 -p 1 -d 2
+	python gs_run.py -q lattice -t full -m 13 -k 9 -s 1 -r 1 -p 1 -d 2
 	python gs_parse.py -q lattice -t full
-	python nd_run.py -q lattice -t full -g nd -m 17 -k 9 -s 1 -r 5 -p 1 -d 2
+	python nd_run.py -q lattice -t full -g nd -m 19 -k 9 -s 1 -r 1 -p 1 -d 2
 	python nd_parse.py -q lattice -t full -m 7
 
 mkdocsserve:

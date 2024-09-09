@@ -33,7 +33,7 @@ df_cl_perf,df_cl_process = np.zeros((args.np2+1,args.dp2+1),dtype=np.float64),np
 
 print("logging gs_n_pows2 up to %d and gs_d_pows2 up to %d"%(args.np2,args.dp2))
 for i in range(args.np2+1):
-    print("n_pows2 = %d: d_pows2 = "%gs_n_pows2[i],end='',flush=True)
+    print("gs_n_pow2 = %d: gs_d_pow2 = "%gs_n_pows2[i],end='',flush=True)
     gs_n = gs_ns[i]
     for j in range(args.dp2+1):
         print("%d, "%gs_d_pows2[j],end='',flush=True)
