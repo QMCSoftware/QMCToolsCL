@@ -18,7 +18,6 @@ def print_opencl_device_info():
         for j,d in enumerate(devices):
             print("\n\tDevice %d -------------------------"%j)
             print("\t\tName:", d.name)
-            print("\t\tName:", d.name)
             print("\t\tVersion:", d.opencl_c_version)
             print("\t\tMax. Compute Units:", d.max_compute_units)
             print("\t\tLocal Memory Size:", d.local_mem_size/1024, "KB")
@@ -127,7 +126,9 @@ c_to_ctypes_map = {
     "char": "uint8",
 }
 
-with open("./qmcseqcl/qmcseqcl.cl","r") as f:
+THISDIR = os.path.dirname(os.path.realpath(__file__))
+
+with open("%s/qmcseqcl.cl"%THISDIR,"r") as f:
     code = f.read() 
 blocks = re.findall(r'(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
 for block in blocks:

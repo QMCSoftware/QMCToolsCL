@@ -13,7 +13,10 @@ d_max_pow2 = 9
 d_plot_min_pow2 = 0
 discard_trials = 1
 trials = 5
+platform_id = 1 
+device_id = 2
 
+experiment_dir = "%s/nd_%s.%s"%(THISDIR,problem_name,tag)
 run_problem = map_run_problem[problem_name]
 n_pows2 = np.arange(n_min_pow2,n_max_pow2+1)
 ns = 2**n_pows2
@@ -21,40 +24,39 @@ d_pows2 = np.arange(d_min_pow2,d_max_pow2+1)
 ds = 2**d_pows2
 d_mesh,n_mesh = np.meshgrid(ds,ns) 
 
-experiment_dir = "%s/nd_%s.%s"%(THISDIR,problem_name,tag)
-# remake_dir(experiment_dir,force=True)
 
-# df_c_perf,df_c_process = np.zeros_like(n_mesh,dtype=np.float64),np.zeros_like(n_mesh,dtype=np.float64) 
-# df_cl_perf,df_cl_process = np.zeros_like(n_mesh,dtype=np.float64),np.zeros_like(n_mesh,dtype=np.float64)
+kwargs_c,kwargs_cl = setup_speed_tests(platform_id,device_id)
+remake_dir(experiment_dir,force=True)
 
-# print("logging n_pows2 from %d to %d and d_pows2 from %d to %d"%(n_min_pow2,n_max_pow2,d_min_pow2,d_max_pow2))
-# for i in range(n_max_pow2-n_min_pow2+1):
-#     n_pow2= n_pows2[i]
-#     print("n_pows2 = %d: d_pows2 = "%n_pow2,end='',flush=True)
-#     n = ns[i]
-#     for j in range(d_max_pow2-d_min_pow2+1):
-#         d_pow2 = d_pows2[j]
-#         print("%d, "%d_pow2,end='',flush=True)
-#         d = ds[j]
-#         kwargs_cl["global_size"] = (1,n,d)
-#         for t in range(discard_trials+trials):
-#             c_perf,c_process = run_problem(n=n,d=d,kwargs=kwargs_c)
-#             cl_perf,cl_process = run_problem(n=n,d=d,kwargs=kwargs_cl)
-#             if t>=discard_trials:
-#                 df_c_perf[i,j] += c_perf 
-#                 df_c_process[i,j] += c_process
-#                 df_cl_perf[i,j] += cl_perf 
-#                 df_cl_process[i,j] += cl_process
-#     print()
-# df_c_perf /= trials
-# df_c_process /= trials
-# df_cl_perf /= trials 
-# df_cl_process /= trials
+df_c_perf,df_c_process = np.zeros_like(n_mesh,dtype=np.float64),np.zeros_like(n_mesh,dtype=np.float64) 
+df_cl_perf,df_cl_process = np.zeros_like(n_mesh,dtype=np.float64),np.zeros_like(n_mesh,dtype=np.float64)
 
-# pd.DataFrame(df_c_perf,index=ns,columns=ds).to_csv("%s/nd_%s.c_perf.csv"%(experiment_dir,problem_name))
-# pd.DataFrame(df_c_process,index=ns,columns=ds).to_csv("%s/nd_%s.c_process.csv"%(experiment_dir,problem_name))
-# pd.DataFrame(df_cl_perf,index=ns,columns=ds).to_csv("%s/nd_%s.cl_perf.csv"%(experiment_dir,problem_name))
-# pd.DataFrame(df_cl_process,index=ns,columns=ds).to_csv("%s/nd_%s.cl_process.csv"%(experiment_dir,problem_name))
+print("logging n_pows2 from %d to %d and d_pows2 from %d to %d"%(n_min_pow2,n_max_pow2,d_min_pow2,d_max_pow2))
+for i in range(n_max_pow2-n_min_pow2+1):
+    print("n_pows2 = %d: d_pows2 = "%n_pows2[i],end='',flush=True)
+    n = ns[i]
+    for j in range(d_max_pow2-d_min_pow2+1):
+        print("%d, "%d_pows2[j],end='',flush=True)
+        d = ds[j]
+        kwargs_cl["global_size"] = (1,n,d)
+        for t in range(discard_trials+trials):
+            c_perf,c_process = run_problem(n=n,d=d,kwargs=kwargs_c)
+            cl_perf,cl_process = run_problem(n=n,d=d,kwargs=kwargs_cl)
+            if t>=discard_trials:
+                df_c_perf[i,j] += c_perf 
+                df_c_process[i,j] += c_process
+                df_cl_perf[i,j] += cl_perf 
+                df_cl_process[i,j] += cl_process
+    print()
+df_c_perf /= trials
+df_c_process /= trials
+df_cl_perf /= trials
+df_cl_process /= trials
+
+pd.DataFrame(df_c_perf,index=ns,columns=ds).to_csv("%s/nd_%s.c_perf.csv"%(experiment_dir,problem_name))
+pd.DataFrame(df_c_process,index=ns,columns=ds).to_csv("%s/nd_%s.c_process.csv"%(experiment_dir,problem_name))
+pd.DataFrame(df_cl_perf,index=ns,columns=ds).to_csv("%s/nd_%s.cl_perf.csv"%(experiment_dir,problem_name))
+pd.DataFrame(df_cl_process,index=ns,columns=ds).to_csv("%s/nd_%s.cl_process.csv"%(experiment_dir,problem_name))
 
 df_c_perf = pd.read_csv("%s/nd_%s.c_perf.csv"%(experiment_dir,problem_name),index_col=0)
 df_c_process = pd.read_csv("%s/nd_%s.c_process.csv"%(experiment_dir,problem_name),index_col=0)
