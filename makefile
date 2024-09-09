@@ -4,11 +4,18 @@ doctests:
 	python -m pytest test.index.cl.txt
 
 shortspeedtests:
-	mkdir -p shortspeedtests
 	python gs_run.py --force True 
 	python gs_parse.py
+	rm -r -f gs_lattice.debug
 	python nd_run.py --force True
 	python nd_parse.py
+	rm -r -f nd_lattice.debug
+
+fullspeedtests:
+	python gs_run.py -q lattice -t full -m 11 -k 9 -s 1 -r 5 -p 1 -d 2
+	python gs_parse.py -q lattice -t full
+	python nd_run.py -q lattice -t full -g nd -m 17 -k 9 -s 1 -r 5 -p 1 -d 2
+	python nd_parse.py -q lattice -t full -m 7
 
 mkdocsserve:
 	mkdocs serve

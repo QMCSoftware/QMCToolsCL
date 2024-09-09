@@ -38,11 +38,15 @@ map_run_problem = {
     "halton": run_halton_problem,
 }
 
-def nd_gs_scheme(n,d):
+def nd_gs_scheme(n, d):
     return n,d
 
+def custom_gs_scheme(n, d):
+    return max(n//4,1),max(d//4,1)
+
 map_gs_scheme = {
-    "nd": nd_gs_scheme
+    "nd": nd_gs_scheme,
+    "custom": custom_gs_scheme,
 }
 
 def setup_speed_tests(platform_id, device_id):
