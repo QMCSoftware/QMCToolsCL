@@ -1,4 +1,4 @@
-from problems import *
+from _problems import *
 
 import numpy as np 
 import pandas as pd 
@@ -12,7 +12,7 @@ parser.add_argument('-m','--np2min',type=int,nargs='?',default=0,help='only plot
 parser.add_argument('-k','--dp2min',type=int,nargs='?',default=0,help='only plot d>=2^k')
 args = parser.parse_args()
 
-experiment_dir = "%s/nd_%s.%s"%(THISDIR,args.qrproblem,args.tag)
+experiment_dir = "nd_%s.%s"%(args.qrproblem,args.tag)
 
 df_c_perf = pd.read_csv("%s/nd_%s.c_perf.csv"%(experiment_dir,args.qrproblem),index_col=0)
 df_c_process = pd.read_csv("%s/nd_%s.c_process.csv"%(experiment_dir,args.qrproblem),index_col=0)

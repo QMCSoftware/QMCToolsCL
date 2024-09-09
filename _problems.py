@@ -4,8 +4,6 @@ import numpy as np
 import os
 import shutil
 
-THISDIR = os.path.dirname(os.path.realpath(__file__))
-
 def run_dnb2_problem(n, d, kwargs): 
     C_full = np.loadtxt("https://raw.githubusercontent.com/QMCSoftware/LDData/main/dnet/mps.sobol_Cs.txt",dtype=np.uint64,skiprows=7)
     assert d<=len(C_full) 
@@ -69,4 +67,4 @@ def remake_dir(experiment_dir,force=False):
             shutil.rmtree(experiment_dir)
         else:
             raise Exception("\nexisting experiment_dir = %s\nset --force True to overwrite"%experiment_dir)
-    os.mkdir(experiment_dir) 
+    os.system("mkdir -p %s"%experiment_dir) 

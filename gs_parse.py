@@ -1,4 +1,4 @@
-from problems import *
+from _problems import *
 
 import numpy as np 
 import pandas as pd 
@@ -10,7 +10,7 @@ parser.add_argument('-q','--qrproblem',type=str,nargs='?',default="lattice",help
 parser.add_argument('-t','--tag',type=str,nargs='?',default="debug",help='experiment tag')
 args = parser.parse_args()
 
-experiment_dir = "%s/gs_%s.%s"%(THISDIR,args.qrproblem,args.tag)
+experiment_dir = "gs_%s.%s"%(args.qrproblem,args.tag)
 df_c_perf = pd.read_csv("%s/gs_%s.c_perf.csv"%(experiment_dir,args.qrproblem),index_col=0)
 df_c_process = pd.read_csv("%s/gs_%s.c_process.csv"%(experiment_dir,args.qrproblem),index_col=0)
 df_cl_perf = pd.read_csv("%s/gs_%s.cl_perf.csv"%(experiment_dir,args.qrproblem),index_col=0)
