@@ -32,7 +32,7 @@ def random_tbit_uint64s(rng, t, shape):
     """Generate the desired shape of random integers with t bits
 
 Args:
-    rng (np.random._generator.Generator): random number generator with rng.integers method
+    rng (np.random._generator.Generator): random number generator
     t: (int): number of bits with 0 <= t <= 64
     shape (tuple of ints): shape of resulting integer array"""
     assert 0<=t<=64, "t must be between 0 and 64"
@@ -50,7 +50,7 @@ def random_uint64_permutations(rng, n, b):
     """Generate n permutations of 0,...,b-1 into a size (n,b) np.ndarray of np.uint64
 
 Args:
-    rng (np.random._generator.Generator): random number generator with rng.permutation method
+    rng (np.random._generator.Generator): random number generator
     n (int): number of permutations
     b (int): permute 0,...,b-1"""
     x = np.empty((n,b),dtype=np.uint64)
@@ -353,3 +353,100 @@ Args:
     tdelta_perf = time.perf_counter()-t0_perf
     return tdelta_perf,tdelta_process,
 
+def dnb2_get_linear_scramble_matrix(rng, r, d, tmax, tmax_new, print_mats):
+    """Return a scrambling matrix for linear matrix scrambling
+
+Args:
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications
+    d (np.uint64): dimension
+    tmax (np.uint64): bits in each integer
+    tmax_new (np.uint64): bits in each integer of the generating matrix after scrambling
+    print_mats (np.uint8): flag to print the resulting matrices"""
+    S = np.empty((r,d,tmax_new),dtype=np.uint64) 
+    for t in range(tmax_new):
+        S[:,:,t] = random_tbit_uint64s(rng,min(t,tmax),(r,d))
+    S[:,:,:tmax] <<= np.arange(tmax,0,-1,dtype=np.uint64)
+    S[:,:,:tmax] += np.uint64(1)<<np.arange(tmax-1,-1,-1,dtype=np.uint64)
+    if print_mats:
+        print("S with shape (r=%d, d=%d, tmax_new=%d)"%(r,d,tmax_new))
+        for l in range(r):
+            print("l = %d"%l)
+            for j in range(d): 
+                print("    j = %d"%j)
+                for t in range(tmax_new):
+                    b = bin(S[l,j,t])[2:]
+                    print("        "+"0"*(tmax-len(b))+b)
+    return S
+
+def gdn_get_linear_scramble_matrix(rng, r, d, tmax, tmax_new, r_b, bases):
+    """Return a scrambling matrix for linear matrix scrambling
+
+Args:
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications
+    d (np.uint64): dimension
+    tmax (np.uint64): bits in each integer
+    tmax_new (np.uint64): bits in each integer of the generating matrix after scrambling
+    r_b (np.uint64): replications of bases 
+    bases (np.ndarray of np.uint64): bases of size r_b*d"""
+    S = np.empty((r,d,tmax_new,tmax),dtype=np.uint64)
+    bases_2d = np.atleast_2d(bases)
+    lower_flag = np.tri(int(tmax_new),int(tmax),k=-1,dtype=np.bool)
+    n_lower_flags = lower_flag.sum()
+    diag_flag = np.eye(tmax_new,tmax,dtype=np.bool)
+    for l in range(r):
+        for j in range(d):
+            b = bases_2d[l%r_b,j]
+            Slj = np.zeros((tmax_new,tmax),dtype=np.uint64)
+            Slj[lower_flag] = rng.integers(0,b,n_lower_flags)
+            Slj[diag_flag] = rng.integers(1,b,tmax)
+            S[l,j] = Slj
+    return S
+
+def gdn_get_halton_generating_matrix(r,d,mmax):
+    """Return the identity matrices comprising the Halton generating matrices
+    
+Arg:
+    r (np.uint64): replications 
+    d (np.uint64): dimension 
+    mmax (np.uint64): maximum number rows and columns in each generating matrix"""
+    return np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(r,d,1,1))
+
+def gdn_get_digital_shifts(rng, r, d, tmax_new, r_b, bases):
+    """Return digital shifts for gdn
+
+Args: 
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications 
+    d (np.uint64): dimension 
+    tmax_new (np.uint64): number of bits in each shift 
+    r_b (np.uint64): replications of bases 
+    bases (np.ndarray of np.uint64): bases of size r_b*d"""
+    shifts = np.empty((r,d,tmax_new),dtype=np.uint64)
+    bases_2d = np.atleast_2d(bases)
+    for l in range(r):
+         for j in range(d):
+             b = bases_2d[l%r_b,j]
+             shifts[l,j] = rng.integers(0,b,tmax_new,dtype=np.uint64)
+    return shifts
+
+def gdn_get_permutations(rng, r, d, tmax_new, r_b, bases):
+    """Return permutations for gdn
+
+Args: 
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications 
+    d (np.uint64): dimension 
+    tmax_new (np.uint64): number of bits in each shift 
+    r_b (np.uint64): replications of bases 
+    bases (np.ndarray of np.uint64): bases of size r_b*d"""
+    bases_2d = np.atleast_2d(bases)
+    bmax = bases_2d.max()
+    perms = np.zeros((r,d,tmax_new,bmax),dtype=np.uint64)
+    for l in range(r):
+        for j in range(d):
+            b = bases_2d[l%r_b,j]
+            for t in range(tmax_new):
+                perms[l,j,t,:b] = rng.permutation(b)
+    return perms

@@ -31,8 +31,7 @@ jobs:
       - name: Doctests in C 
         shell: bash -l {0}
         run: |
-          python -m pytest doctests.c.pytest.txt
-          python -m pytest examples.c.pytest.txt
+          python -m pytest index.c.pytest.txt
       - name: Install PyOpenCL
         shell: bash -l {0}
         run: |
@@ -52,8 +51,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install pytest
-          python -m pytest doctests.cl.pytest.txt
-          python -m pytest examples.cl.pytest.txt
+          python -m pytest index.cl.pytest.txt
       - name: Short Speed Tests
         shell: bash -l {0}
         run: |
