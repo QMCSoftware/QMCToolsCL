@@ -3,7 +3,7 @@ import os
 
 skip_blocks = 2
 
-for fname in ["doctests","examples"]:
+for fname in ["index"]:
     with open("./docs/%s.md"%fname,"r") as f: 
         contents = f.read() 
         blocks = re.findall(r'(?<=```python).*?(?=\s?```)',contents,re.DOTALL)
