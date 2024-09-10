@@ -4,3 +4,8 @@ theme:
   name: mkdocs
   color_mode: auto
   user_color_mode_toggle: True
+nav:
+  - Home: index.md
+  - Use Cases: examples.md
+  - Doctests: doctests.md
+  - GitHub: https://github.com/QMCSoftware/QMCseqCL

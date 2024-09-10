@@ -1,7 +1,9 @@
-doctests:
+testdocs:
 	python prep_docs_doctests.py
-	python -m pytest test.index.c.txt
-	python -m pytest test.index.cl.txt
+	python -m pytest doctests.c.pytest.txt
+	python -m pytest doctests.cl.pytest.txt
+	python -m pytest examples.c.pytest.txt 
+	python -m pytest examples.cl.pytest.txt
 
 shortspeedtests:
 	python gs_run.py --force True 

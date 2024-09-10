@@ -12,5 +12,4 @@ qmcseqcl/*.c
 qmcseqcl.egg-info/*
 build/*
 
-test.index.c.txt
-test.index.cl.txt
+*.pytest.txt
