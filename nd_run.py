@@ -27,7 +27,7 @@ ds = 2**d_pows2
 d_mesh,n_mesh = np.meshgrid(ds,ns) 
 
 kwargs_c,kwargs_cl = setup_speed_tests(args.platform,args.device)
-remake_dir(experiment_dir,force=True)
+remake_dir(experiment_dir,force=args.force)
 
 df_c_perf,df_c_process = np.zeros((args.np2+1,args.dp2+1),dtype=np.float64),np.zeros((args.np2+1,args.dp2+1),dtype=np.float64)
 df_cl_perf,df_cl_process = np.zeros((args.np2+1,args.dp2+1),dtype=np.float64),np.zeros((args.np2+1,args.dp2+1),dtype=np.float64)

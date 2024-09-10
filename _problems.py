@@ -10,6 +10,9 @@ def run_dnb2_problem(n, d, kwargs):
     C = C_full[:d]
     mmax = C.shape[1] 
     xb = np.empty((n,d),dtype=np.uint64)
+    if kwargs["backend"]=="cl":
+        C = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=C)
+        xb = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xb)
     time_perf,time_process = qmcseqcl.dnb2_gen_natural_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint8(True),np.uint64(mmax),C,xb,**kwargs)
     return time_perf,time_process
 
@@ -18,6 +21,9 @@ def run_lat_problem(n, d, kwargs):
     assert d<=len(g_full) 
     g = g_full[:d] 
     x = np.empty((n,d),dtype=np.float64)
+    if kwargs["backend"]=="cl":
+        g = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=g)
+        x = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=x)
     time_perf,time_process = qmcseqcl.lat_gen_natural_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint8(True),g,x,**kwargs)
     return time_perf,time_process
 
@@ -28,13 +34,16 @@ def run_halton_problem(n, d, kwargs):
     mmax = 32
     assert np.log2(n)<mmax
     C = np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(1,d,1,1))
+    if kwargs["backend"]=="cl":
+        C = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=C)
+        xdig = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xdig)
     xdig = np.empty((n,d,mmax),dtype=np.uint64) 
     time_perf,time_process = qmcseqcl.gdn_gen_natural(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(1),np.uint64(mmax),np.uint64(mmax),np.uint64(0),primes,C,xdig,**kwargs)
     return time_perf,time_process
 
 map_run_problem = {
     "lattice": run_lat_problem,
-    "digital net base 2": run_dnb2_problem,
+    "digital_net_base_2": run_dnb2_problem,
     "halton": run_halton_problem,
 }
 
@@ -42,7 +51,7 @@ def nd_gs_scheme(n, d):
     return n,d
 
 def custom_gs_scheme(n, d):
-    return max(n//4,1),max(d//4,1)
+    return max(n//2,1),max(d//2,1)
 
 map_gs_scheme = {
     "nd": nd_gs_scheme,

@@ -11,11 +11,13 @@ shortspeedtests:
 	python nd_parse.py
 	rm -r -f nd_lattice.debug
 
-fullspeedtests:
-	python gs_run.py -q lattice -t full -m 13 -k 9 -s 1 -r 1 -p 1 -d 2
-	python gs_parse.py -q lattice -t full
-	python nd_run.py -q lattice -t full -g nd -m 19 -k 9 -s 1 -r 1 -p 1 -d 2
-	python nd_parse.py -q lattice -t full -m 7
+speedtestgs:
+	python gs_run.py -q digital_net_base_2 -t full -m 12 -k 10 -s 1 -r 1 -p 1 -d 2 -f True
+	python gs_parse.py -q digital_net_base_2 -t full -c cool -x k -y k -z k
+
+speedtestnd:
+	python nd_run.py -q digital_net_base_2 -t full -g custom -m 17 -k 9 -s 1 -r 1 -p 1 -d 2 -f True
+	python nd_parse.py -q digital_net_base_2 -t full -m 7 -c cool -x k -y k -z k
 
 mkdocsserve:
 	mkdocs serve

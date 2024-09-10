@@ -22,7 +22,7 @@ __kernel void lat_gen_linear(
             j = j0+jj;
             for(ll=0; ll<batch_size_r; ll++){
                 l = l0+ll;
-                x[l*n*d+i*d+j] = fmod(g[l*d+j]*ifrac,1);
+                x[l*n*d+i*d+j] = (double)(fmod((double)(g[l*d+j]*ifrac),(double)(1.)));
                 if(l==(r-1)){
                     break;
                 }
@@ -88,7 +88,7 @@ __kernel void lat_gen_natural_gray(
             }
             for(ll=0; ll<batch_size_r; ll++){
                 l = l0+ll;
-                x[l*n*d+idx] = fmod(g[l*d+j]*ifrac,1);
+                x[l*n*d+idx] = (double)(fmod((double)(g[l*d+j]*ifrac),(double)(1.)));
                 if(l==(r-1)){
                     break;
                 }
@@ -138,7 +138,7 @@ __kernel void lat_shift_mod_1(
             for(jj=0; jj<batch_size_d; jj++){
                 j = j0+jj;
                 idx = l*n*d+i*d+j;
-                xr[idx] = fmod(x[(idx)%nelem_x]+shifts[l*d+j],1);
+                xr[idx] = (double)(fmod((double)(x[(idx)%nelem_x]+shifts[l*d+j]),(double)(1.)));
                 if(j==(d-1)){
                     break;
                 }
