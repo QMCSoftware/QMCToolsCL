@@ -1719,7 +1719,6 @@ Args:
 >>> d2 = np.uint64(1)
 >>> x = np.array([1,0,1,0,0,1,1,0],dtype=np.double)
 >>> n_half = np.uint64(len(x)//2)
->>> y_true = np.array([4,2,0,-2,0,2,0,2],dtype=np.double)
 >>> time_perf,time_process = qmcseqcl.fwht(d1,d2,n_half,x,**kwargs)
 >>> x
 array([ 4.,  2.,  0., -2.,  0.,  2.,  0.,  2.])
