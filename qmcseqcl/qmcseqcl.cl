@@ -956,3 +956,55 @@ __kernel void gdn_undo_interlace(
         }
     }
 }
+
+__kernel void fwht(
+    // In place Fast Walsh-Hadamard Transform
+    const ulong d1, // first dimenion
+    const ulong d2, // second dimension
+    const ulong n_half, // half of the last dimenion along which FWHT is performed
+    const ulong batch_size_d1, // batch size first dimension 
+    const ulong batch_size_d2, // batch size second dimension
+    const ulong batch_size_n_half, // batch size for half of the last dimension
+    __global double *x // array of size d1*d2*2n_half on which to perform FWHT in place
+){
+    ulong j10 = get_global_id(0)*batch_size_d1;
+    ulong j20 = get_global_id(1)*batch_size_d2;
+    ulong i0 = get_global_id(2)*batch_size_n_half;
+    ulong ii,i,i1,i2,jj1,jj2,j1,j2,k,s,f,idx;
+    double a1,a2;
+    ulong n = 2*n_half;
+    ulong m = (ulong)(log2((double)n)); // n = 2^m
+    for(k=0; k<m; k++){
+        s = m-k-1; // shift
+        f = 1<<s; 
+        for(ii=0; ii<batch_size_n_half; ii++){
+            i = i0+ii;
+            if((i>>s)&1){
+                i2 = i+n_half;
+                i1 = i2^f;
+            }
+            else{
+                i1 = i;
+                i2 = i1^f;
+            }
+            for(jj1=0; jj1<batch_size_d1; jj1++){
+                j1 = j10+jj1;
+                for(jj2=0; jj2<batch_size_d2; jj2++){
+                    j2 = j20+jj2;
+                    idx = j1*d2*n+j2*n;
+                    a1 = x[idx+i1];
+                    a2 = x[idx+i2];
+                    x[idx+i1] = a1+a2;
+                    x[idx+i2] = a1-a2;
+                    if(j2==(d2-1)){
+                        break;
+                    }
+                }
+                if(j1==(d1-1)){
+                    break;
+                }
+            }
+        }
+        barrier(CLK_LOCAL_MEM_FENCE);
+    }
+}

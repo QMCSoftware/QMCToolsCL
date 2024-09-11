@@ -1704,6 +1704,42 @@ array([[[[0, 0, 0, 0],
          [2, 1, 1, 2]]]], dtype=uint64)
 ```
 
+# Fast Walsh-Hadamard Transform 
+
+```python 
+>>> print(qmcseqcl.fwht.__doc__)
+In place Fast Walsh-Hadamard Transform
+
+Args:
+    d1 (np.uint64): first dimenion
+    d2 (np.uint64): second dimension
+    n_half (np.uint64): half of the last dimenion along which FWHT is performed
+    x (np.ndarray of np.double): array of size d1*d2*2n_half on which to perform FWHT in place
+>>> d1 = np.uint64(1) 
+>>> d2 = np.uint64(1)
+>>> x = np.array([1,0,1,0,0,1,1,0],dtype=np.double)
+>>> n_half = np.uint64(len(x)//2)
+>>> y_true = np.array([4,2,0,-2,0,2,0,2],dtype=np.double)
+>>> time_perf,time_process = qmcseqcl.fwht(d1,d2,n_half,x,**kwargs)
+>>> x
+array([ 4.,  2.,  0., -2.,  0.,  2.,  0.,  2.])
+```
+
+```python 
+d1 = np.uint(5) 
+d2 = np.uint(7) 
+n_half = np.uint(2**7) 
+x = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
+y_sympy = np.empty_like(x,dtype=np.double) 
+for i in range(d1):
+    for j in range(d2): 
+        y_sympy[i,j] = np.array(sympy.fwht(x[i,j]),dtype=np.double)
+qmcseqcl.fwht(d1,d2,n_half,x)
+np.allclose(x,y_sympy,atol=1e-8)
+True
+```
+
 # Issues 
 
-- When using natural order for lattices or digital nets in base 2, it is required that `n_start` and `n_start+n` are either 0 or powers of 2
+- `lat_gen_linear` requires `n_start` and `n_start+n` are either 0 or powers of 2
+- `fwht` requires `n_half` and `global_size[2]` are powers of 2
