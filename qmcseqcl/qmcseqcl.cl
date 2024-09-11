@@ -971,9 +971,9 @@ __kernel void fwht_1d_b2(
     ulong j20 = get_global_id(1)*batch_size_d2;
     ulong i0 = get_global_id(2)*batch_size_n_half;
     ulong ii,i,i1,i2,jj1,jj2,j1,j2,k,s,f,idx;
-    double a1,a2;
+    double x1,x2;
     ulong n = 2*n_half;
-    ulong m = (ulong)(log2((double)n)); // n = 2^m
+    ulong m = (ulong)(log2((double)n));
     for(k=0; k<m; k++){
         s = m-k-1;
         f = 1<<s; 
@@ -992,10 +992,10 @@ __kernel void fwht_1d_b2(
                 for(jj2=0; jj2<batch_size_d2; jj2++){
                     j2 = j20+jj2;
                     idx = j1*d2*n+j2*n;
-                    a1 = x[idx+i1];
-                    a2 = x[idx+i2];
-                    x[idx+i1] = a1+a2;
-                    x[idx+i2] = a1-a2;
+                    x1 = x[idx+i1];
+                    x2 = x[idx+i2];
+                    x[idx+i1] = x1+x2;
+                    x[idx+i2] = x1-x2;
                     if(j2==(d2-1)){
                         break;
                     }
@@ -1020,19 +1020,19 @@ __kernel void fft_1d_b2(
     const ulong batch_size_d1, // batch size first dimension 
     const ulong batch_size_d2, // batch size second dimension
     const ulong batch_size_n_half, // batch size for half of the last dimension
-    __global double *x // array of size d1*d2*2n_half on which to perform FFT in place
+    __global double *xr, // real array of size d1*d2*2n_half on which to perform FFT in place
+    __global double *xi // imaginary array of size d1*d2*2n_half on which to perform FFT in place
 ){
     ulong j10 = get_global_id(0)*batch_size_d1;
     ulong j20 = get_global_id(1)*batch_size_d2;
     ulong i0 = get_global_id(2)*batch_size_n_half;
-    ulong ii,i,i1,i2,t,l,jj1,jj2,j1,j2,k,s,f,idx;
-    double a1,a2;
+    ulong ii,i,i1,i2,t,jj1,jj2,j1,j2,k,s,f,idx;
+    double xr1,xr2,xi1,xi2,yr,yi,v,cosv,sinv;
     ulong n = 2*n_half;
-    ulong m = (ulong)(log2((double)n)); // n = 2^m
+    ulong m = (ulong)(log2((double)n)); 
     for(k=0; k<m; k++){
         s = m-k-1;
         f = 1<<s; 
-        l = 1<<(s+1);
         printf("k = %lu\n",k);
         for(ii=0; ii<batch_size_n_half; ii++){
             i = i0+ii;
@@ -1050,11 +1050,21 @@ __kernel void fft_1d_b2(
                 for(jj2=0; jj2<batch_size_d2; jj2++){
                     j2 = j20+jj2;
                     idx = j1*d2*n+j2*n;
-                    a1 = x[idx+i1];
-                    a2 = x[idx+i2];
-                    printf("\ti1 = %lu\ti2 = %lu\tW_%lu^%lu\n",i1,i2,l,t);
-                    x[idx+i1] = a1+a2;
-                    x[idx+i2] = a1-a2;
+                    xr1 = xr[idx+i1];
+                    xr2 = xr[idx+i2];
+                    xi1 = xi[idx+i1];
+                    xi2 = xi[idx+i2];
+                    xr[idx+i1] = xr1+xr2;
+                    xi[idx+i1] = xi1+xi2;
+                    yr = xr1-xr2;
+                    yi = xi1-xi2;
+                    v = 2*M_PI*t/(2*f);
+                    cosv = cos(v);
+                    sinv = sin(v);
+                    printf("\ti1 = %lu\ti2 = %lu\tW_%lu^%lu\tcosv = %lf\tsinv = %lf\n",i1,i2,2*f,t,cosv,sinv);
+                    xr[idx+i2] = yr*cosv-yi*sinv;
+                    xi[idx+i2] = yr*sinv+yi*cosv;
+                    // can disregard most of the bottom of the graph for real valued inputs 
                     if(j2==(d2-1)){
                         break;
                     }
