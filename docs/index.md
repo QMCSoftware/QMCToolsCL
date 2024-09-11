@@ -1707,6 +1707,15 @@ array([[[[0, 0, 0, 0],
 # Fast Walsh-Hadamard Transform 
 
 ```python 
+>>> if kwargs["backend"]=="CL":
+...     kwargs_fwht = kwargs.copy()
+...     kwargs_fwht["global_size"] = (2,2,2)
+...     kwargs_fwht["local_size"] = (1,1,2)
+... else: # kwargs["backend"]=="C"
+...     kwargs_fwht = kwargs 
+```
+
+```python 
 >>> print(qmcseqcl.fwht.__doc__)
 In place Fast Walsh-Hadamard Transform
 
@@ -1719,7 +1728,7 @@ Args:
 >>> d2 = np.uint64(1)
 >>> x = np.array([1,0,1,0,0,1,1,0],dtype=np.double)
 >>> n_half = np.uint64(len(x)//2)
->>> time_perf,time_process = qmcseqcl.fwht(d1,d2,n_half,x,**kwargs)
+>>> time_perf,time_process = qmcseqcl.fwht(d1,d2,n_half,x,**kwargs_fwht)
 >>> x
 array([ 4.,  2.,  0., -2.,  0.,  2.,  0.,  2.])
 ```
@@ -1734,7 +1743,7 @@ y_sympy = np.empty_like(x,dtype=np.double)
 for i in range(d1):
     for j in range(d2): 
         y_sympy[i,j] = np.array(sympy.fwht(x[i,j]),dtype=np.double)
-qmcseqcl.fwht(d1,d2,n_half,x)
+qmcseqcl.fwht(d1,d2,n_half,x,**kwargs_fwht)
 np.allclose(x,y_sympy,atol=1e-8)
 True
 ```
