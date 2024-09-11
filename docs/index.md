@@ -1730,6 +1730,7 @@ d1 = np.uint(5)
 d2 = np.uint(7) 
 n_half = np.uint(2**7) 
 x = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
+import sympy
 y_sympy = np.empty_like(x,dtype=np.double) 
 for i in range(d1):
     for j in range(d2): 
