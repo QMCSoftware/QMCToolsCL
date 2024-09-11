@@ -1004,6 +1004,9 @@ __kernel void fwht(
                     break;
                 }
             }
+            if(i==(n_half-1)){
+                break;
+            }
         }
         barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
     }

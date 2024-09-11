@@ -1706,6 +1706,8 @@ array([[[[0, 0, 0, 0],
 
 # Fast Walsh-Hadamard Transform 
 
+FWHT requires the use of a single work group for the final dimension i.e. it is required that `global_size[2]==local_size[2]`
+
 ```python 
 >>> if kwargs["backend"]=="CL":
 ...     kwargs_fwht = kwargs.copy()

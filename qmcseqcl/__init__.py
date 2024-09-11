@@ -56,7 +56,7 @@ def _parse_kwargs_backend_queue_program(kwargs):
 
 def _preprocess_fwht(*args_device,kwargs):
     if kwargs["local_size"] is None or kwargs["local_size"][2]!=kwargs["global_size"][2]:
-        raise Exception("fwht requires local_size is not None and local_size[2]=global_size[2]")
+        raise Exception("fwht requires local_size is not None and local_size[2] = %d equals global_size[2] = %d"%(kwargs["local_size"][2],kwargs["global_size"][2]))
 
 def opencl_c_func(func):
     func_name = func.__name__
@@ -77,11 +77,12 @@ def opencl_c_func(func):
             program = kwargs["program"] if "program" in kwargs else get_qmcseqcl_program_from_context(kwargs["context"])
             assert "global_size" in kwargs 
             kwargs["global_size"] = [min(kwargs["global_size"][i],args[i]) for i in range(3)]
+            batch_size = [np.uint64(np.ceil(args[i]/kwargs["global_size"][i])) for i in range(3)]
+            kwargs["global_size"] = [np.uint64(np.ceil(args[i]/batch_size[i])) for i in range(3)]
             if "local_size" not in kwargs:
                 kwargs["local_size"] = None
             cl_func = getattr(program,func_name)
             args_device = [cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=arg) if isinstance(arg,np.ndarray) else arg for arg in args]
-            batch_size = [np.uint64(np.ceil(args[i]/kwargs["global_size"][i])) for i in range(3)]
             args_device = args_device[:3]+batch_size+args_device[3:] # repeat the first 3 args to the batch sizes
             try:
                 eval('_preprocess_%s(*args_device,kwargs=kwargs)'%func_name)
