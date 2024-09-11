@@ -41,6 +41,7 @@ jobs:
             conda install pocl -y
             conda install ocl_icd_wrapper_apple -y 
           elif [ "$RUNNER_OS" == "Linux" ]; then
+            conda install intel-opencl-rt -y
             conda install ocl-icd-system -y 
           else # "$RUNNER_OS" == "Windows"
             conda install intel-opencl-rt -y
