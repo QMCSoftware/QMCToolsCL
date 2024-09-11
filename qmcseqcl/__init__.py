@@ -461,27 +461,3 @@ Args:
     tdelta_process = time.process_time()-t0_process 
     tdelta_perf = time.perf_counter()-t0_perf
     return tdelta_perf,tdelta_process,
-
-def rfft(x, **kwargs):
-    """FFT (fast fourier transform)
-Arg:
-    x (np.ndarray of np.float64): 
-    """
-    _parse_kwargs_backend_queue_program(kwargs)
-    if kwargs["backend"]=="c":
-        y = np.fft.rfft(x)
-    else: # kwargs["backend"]=="cl"
-        import pyopencl as cl
-        import pyopencl.array
-        try:
-            import pyvkfft.opencl
-        except:
-            raise ImportError("install pyvkfft to access these capabilities in QMCseqCL")
-        x_d = cl.array.to_device(kwargs["queue"],x.astype(np.complex64))
-        y_d = cl.array.empty_like(x_d)
-        app = pyvkfft.opencl.VkFFTApp(x_d.shape,x_d.dtype,queue=kwargs["queue"],ndim=x_d.ndim,inplace=False,norm=0)
-        kwargs["queue"].finish()
-        assert False
-
-        app.fft(x_d,y_d)
-    return y
