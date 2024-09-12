@@ -52,7 +52,10 @@ def _parse_kwargs_backend_queue_program(kwargs):
             device = platform.get_devices()[kwargs["device_id"] if "device_id" in kwargs else 0]
             kwargs["context"] = cl.Context([device])
         if "queue" not in kwargs:
-            kwargs["queue"] = cl.CommandQueue(kwargs["context"],properties=cl.command_queue_properties.PROFILING_ENABLE)
+            if "profile" in kwargs and kwargs["profile"]:
+                kwargs["queue"] = cl.CommandQueue(kwargs["context"],properties=cl.command_queue_properties.PROFILING_ENABLE)
+            else:
+                kwargs["queue"] = cl.CommandQueue(kwargs["context"])
 
 def _preprocess_fwht(*args_device,kwargs):
     if kwargs["local_size"] is None or kwargs["local_size"][2]!=kwargs["global_size"][2]:
@@ -78,23 +81,27 @@ def opencl_c_func(func):
         else: # kwargs["backend"]=="cl"
             import pyopencl as cl
             t0_perf = time.perf_counter()
-            program = kwargs["program"] if "program" in kwargs else get_qmcpytoolscl_program_from_context(kwargs["context"])
+            if "program" not in kwargs:
+                kwargs["program"] =  get_qmcpytoolscl_program_from_context(kwargs["context"])
             assert "global_size" in kwargs 
             kwargs["global_size"] = [min(kwargs["global_size"][i],args[i]) for i in range(3)]
             batch_size = [np.uint64(np.ceil(args[i]/kwargs["global_size"][i])) for i in range(3)]
             kwargs["global_size"] = [np.uint64(np.ceil(args[i]/batch_size[i])) for i in range(3)]
             if "local_size" not in kwargs:
                 kwargs["local_size"] = None
-            cl_func = getattr(program,func_name)
+            cl_func = getattr(kwargs["program"],func_name)
             args_device = [cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=arg) if isinstance(arg,np.ndarray) else arg for arg in args]
             args_device = args_device[:3]+batch_size+args_device[3:] # repeat the first 3 args to the batch sizes
             try:
                 eval('_preprocess_%s(*args_device,kwargs=kwargs)'%func_name)
             except NameError: pass
             event = cl_func(kwargs["queue"],kwargs["global_size"],kwargs["local_size"],*args_device)
-            if "wait" in kwargs and kwargs["wait"]:
+            if "wait" not in kwargs or kwargs["wait"]:
                 event.wait()
-                tdelta_process = (event.profile.end - event.profile.start)*1e-9
+                try:
+                    tdelta_process = (event.profile.end - event.profile.start)*1e-9
+                except cl._cl.RuntimeError:
+                    tdelta_process = -1
             else:
                 tdelta_process = -1
             if isinstance(args[-1],np.ndarray):
