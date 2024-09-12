@@ -58,6 +58,10 @@ def _preprocess_fwht(*args_device,kwargs):
     if kwargs["local_size"] is None or kwargs["local_size"][2]!=kwargs["global_size"][2]:
         raise Exception("fwht requires local_size is not None and local_size[2] = %d equals global_size[2] = %d"%(kwargs["local_size"][2],kwargs["global_size"][2]))
 
+overwrite_args = {
+    "rfft_1d_radix2": 2, 
+}
+
 def opencl_c_func(func):
     func_name = func.__name__
     def wrapped_func(*args, **kwargs):
@@ -94,7 +98,9 @@ def opencl_c_func(func):
             else:
                 tdelta_process = -1
             if isinstance(args[-1],np.ndarray):
-                cl.enqueue_copy(kwargs["queue"],args[-1],args_device[-1])
+                num_overwrite_args = overwrite_args[func_name] if func_name in overwrite_args else 1
+                for i in range(-1,-1-num_overwrite_args,-1):
+                    cl.enqueue_copy(kwargs["queue"],args[i],args_device[i])
             tdelta_perf = time.perf_counter()-t0_perf
             return tdelta_perf,tdelta_process
     wrapped_func.__doc__ = func.__doc__

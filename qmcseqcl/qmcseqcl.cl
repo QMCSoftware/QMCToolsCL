@@ -1020,10 +1020,10 @@ __kernel void rfft_1d_radix2(
     const ulong batch_size_d1, // batch size first dimension 
     const ulong batch_size_d2, // batch size second dimension
     const ulong batch_size_n_half, // batch size for half of the last dimension
-    __global double *xr, // real array of size d1*d2*n on which to perform FFT in place
-    __global double *xi, // imaginary array of size d1*d2*n on which to perform FFT in place
     __global double *twiddler, // size n vector used to store real twiddle factors
-    __global double *twiddlei // size n vector used to store imaginary twiddle factors 
+    __global double *twiddlei, // size n vector used to store imaginary twiddle factors 
+    __global double *xr, // real array of size d1*d2*n on which to perform FFT in place
+    __global double *xi // imaginary array of size d1*d2*n on which to perform FFT in place
 ){
     ulong j10 = get_global_id(0)*batch_size_d1;
     ulong j20 = get_global_id(1)*batch_size_d2;
