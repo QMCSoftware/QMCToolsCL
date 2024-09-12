@@ -1,10 +1,10 @@
 import setuptools
 from setuptools import Extension
 
-cl_file = "./qmcseqcl/qmcseqcl.cl"
+cl_file = "./qmcpytoolscl/qmcpytoolscl.cl"
 with open(cl_file,"r") as f:
     cl_content = f.read()
-c_content = '#include "qmcseqcl.h"\n\n'+cl_content 
+c_content = '#include "qmcpytoolscl.h"\n\n'+cl_content 
 c_content = c_content.replace("__kernel void","EXPORT void")
 c_content = c_content.replace("__global ","")
 c_content = c_content.replace("ulong","unsigned long long")
@@ -18,7 +18,7 @@ with open(cl_file[:-1],"w") as f:
     f.write(c_content)
 
 setuptools.setup(
-    name = "qmcseqcl",
+    name = "qmcpytoolscl",
     version = "1.0",
     install_requires = [
         'numpy >= 1.17.0',
@@ -26,12 +26,12 @@ setuptools.setup(
     python_requires = ">=3.5",
     include_package_data=True,
     packages = [
-        'qmcseqcl',
+        'qmcpytoolscl',
     ],
     ext_modules = [
         Extension(
-            name = 'qmcseqcl.c_lib',
-            sources = ["./qmcseqcl/qmcseqcl.c"]
+            name = 'qmcpytoolscl.c_lib',
+            sources = ["./qmcpytoolscl/qmcpytoolscl.c"]
         )
     ],
 )

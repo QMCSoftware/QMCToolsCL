@@ -28,10 +28,10 @@ def print_opencl_device_info():
             print("\t\tMax Work-group Dims:(", dim[0], " ".join(map(str, dim[1:])), ")")
         print()
 
-def get_qmcseqcl_program_from_context(context):
+def get_qmcpytoolscl_program_from_context(context):
     import pyopencl as cl
     FILEDIR = os.path.dirname(os.path.realpath(__file__))
-    with open(FILEDIR+"/qmcseqcl.cl","r") as kernel_file:
+    with open(FILEDIR+"/qmcpytoolscl.cl","r") as kernel_file:
         kernelsource = kernel_file.read()
     program = cl.Program(context,kernelsource).build()
     return program
@@ -46,7 +46,7 @@ def _parse_kwargs_backend_queue_program(kwargs):
         try:
             import pyopencl as cl
         except:
-            raise ImportError("install pyopencl to access these capabilities in QMCseqCL")
+            raise ImportError("install pyopencl to access these capabilities in QMCPyToolsCL")
         if "context" not in kwargs:
             platform = cl.get_platforms()[kwargs["platform_id"] if "platform_id" in kwargs else 0]
             device = platform.get_devices()[kwargs["device_id"] if "device_id" in kwargs else 0]
@@ -78,7 +78,7 @@ def opencl_c_func(func):
         else: # kwargs["backend"]=="cl"
             import pyopencl as cl
             t0_perf = time.perf_counter()
-            program = kwargs["program"] if "program" in kwargs else get_qmcseqcl_program_from_context(kwargs["context"])
+            program = kwargs["program"] if "program" in kwargs else get_qmcpytoolscl_program_from_context(kwargs["context"])
             assert "global_size" in kwargs 
             kwargs["global_size"] = [min(kwargs["global_size"][i],args[i]) for i in range(3)]
             batch_size = [np.uint64(np.ceil(args[i]/kwargs["global_size"][i])) for i in range(3)]
@@ -116,7 +116,7 @@ c_to_ctypes_map = {
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 
-with open("%s/qmcseqcl.cl"%THISDIR,"r") as f:
+with open("%s/qmcpytoolscl.cl"%THISDIR,"r") as f:
     code = f.read() 
 blocks = re.findall(r'(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
 for block in blocks:

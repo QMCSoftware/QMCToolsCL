@@ -1,1 +1,1 @@
-include qmcseqcl/qmcseqcl.h
+include qmcpytoolscl/qmcpytoolscl.h

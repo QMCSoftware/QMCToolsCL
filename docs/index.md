@@ -1,27 +1,30 @@
-<h1>Quasi-Monte Carlo Sequences in OpenCL & C</h1>
+# Quasi-Monte Carlo Python Tools in OpenCL & C
 
-The `QMCSeqCL` package provides a Python interface to functions in **OpenCL** and **C** for generating **Quasi-Monte Carlo (QMC) sequences**. Point generation and randomization routines are written as OpenCL kernels. By replacing a few code snippets, these OpenCL kernels are automatically translated to C functions. Python functions provide access to both the OpenCL kernels and C functions in a unified interface. Code is available on <a href="https://github.com/QMCSoftware/QMCseqCL" target="_blank">GitHub</a>. 
+The `QMCPyToolsCL` package provides a Python interface to tools in **OpenCL** and **C** for performing **Quasi-Monte Carlo (QMC)**. Routines are written as OpenCL kernels. By replacing a few code snippets, these OpenCL kernels are automatically translated to C functions. Python functions provide access to both the OpenCL kernels and C functions in a unified interface. Code is available on <a href="https://github.com/QMCSoftware/QMCPyToolsCL" target="_blank">GitHub</a>. 
 
-# Installation 
+[TOC]
+
+## Installation 
 
 For now, install from source via 
 
 ```
-git clone https://github.com/QMCSoftware/QMCseqCL.git
-cd QMCseqCL
+git clone https://github.com/QMCSoftware/QMCPyToolsCL.git
+cd QMCPyToolsCL
+pip install numpy
 pip install -e . 
 ```
 
-To use OpenCL features, please install <a href="https://pypi.org/project/pyopencl/" target="_blank">PyOpenCL</a>.
+To use OpenCL features, please install <a href="https://pypi.org/project/pyopencl/" target="_blank">PyOpenCL</a>. Commands used to install PyOpenCL on Linux, MacOS, and Windows for our automated tests can be found <a href="https://github.com/QMCSoftware/QMCPyToolsCL/blob/main/.github/workflows/doctests.yml" target="_blank">here</a>. Note that Apple has deprecated support for OpenCL (see <a href="https://developer.apple.com/opencl/" target="_blank">this post</a>), but installation is still possible in many cases. If you cannot install PyOpenCL, the C backend to this package will still work independently. 
 
-<h1>Full Doctests for QMCseqCL</h1>
+<h1>Full Doctests for QMCPyToolsCL</h1>
 
-# Setup for OpenCL vs C 
+## Setup for OpenCL vs C 
 
 Let's start by importing the relevant packages 
 
 ```python
->>> import qmcseqcl
+>>> import qmcpytoolscl
 >>> import numpy as np
 ```
 
@@ -44,17 +47,17 @@ To use the **OpenCL backend** supply the following keyword arguments to function
 ```python
 >>> kwargs = {
 ...     "backend": "CL",
-...     "wait": True, # required for accurate timing
-...     "global_size": (2,2,2), # global size 
+...     "wait": True, ## required for accurate timing
+...     "global_size": (2,2,2), ## global size 
 ... }
 ```
 
-# Lattice Sequences
+## Lattice Sequences
 
-## linear order
+### linear order
 
 ```python
->>> print(qmcseqcl.lat_gen_linear.__doc__)
+>>> print(qmcpytoolscl.lat_gen_linear.__doc__)
 Lattice points in linear order
 
 Args:
@@ -71,7 +74,7 @@ Args:
 >>> n = np.uint64(8) 
 >>> d = np.uint64(g.shape[1])
 >>> x = np.empty((r,n,d),dtype=np.float64)
->>> time_perf,time_process = qmcseqcl.lat_gen_linear(r,n,d,g,x,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.lat_gen_linear(r,n,d,g,x,**kwargs)
 >>> x
 array([[[0.   , 0.   , 0.   , 0.   , 0.   ],
         [0.125, 0.625, 0.125, 0.625, 0.625],
@@ -92,10 +95,10 @@ array([[[0.   , 0.   , 0.   , 0.   , 0.   ],
         [0.875, 0.625, 0.625, 0.875, 0.875]]])
 ```
 
-## generate Gray code or natural order
+### generate Gray code or natural order
 
 ```python 
->>> print(qmcseqcl.lat_gen_natural_gray.__doc__)
+>>> print(qmcpytoolscl.lat_gen_natural_gray.__doc__)
 Lattice points in Gray code or natural order
 
 Args:
@@ -110,7 +113,7 @@ Args:
 >>> n = np.uint64(6) 
 >>> x = np.empty((r,n,d),dtype=np.float64)
 >>> gc = np.uint8(False)
->>> time_perf,time_process = qmcseqcl.lat_gen_natural_gray(r,n,d,n_start,gc,g,x,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.lat_gen_natural_gray(r,n,d,n_start,gc,g,x,**kwargs)
 >>> x
 array([[[0.25 , 0.25 , 0.25 , 0.25 , 0.25 ],
         [0.75 , 0.75 , 0.75 , 0.75 , 0.75 ],
@@ -126,7 +129,7 @@ array([[[0.25 , 0.25 , 0.25 , 0.25 , 0.25 ],
         [0.375, 0.125, 0.125, 0.375, 0.375],
         [0.875, 0.625, 0.625, 0.875, 0.875]]])
 >>> gc = np.uint8(True)
->>> time_perf,time_process = qmcseqcl.lat_gen_natural_gray(r,n,d,n_start,gc,g,x,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.lat_gen_natural_gray(r,n,d,n_start,gc,g,x,**kwargs)
 >>> x
 array([[[0.75 , 0.75 , 0.75 , 0.75 , 0.75 ],
         [0.25 , 0.25 , 0.25 , 0.25 , 0.25 ],
@@ -143,10 +146,10 @@ array([[[0.75 , 0.75 , 0.75 , 0.75 , 0.75 ],
         [0.125, 0.375, 0.375, 0.125, 0.125]]])
 ```
 
-## shift mod 1 
+### shift mod 1 
 
 ```python
->>> print(qmcseqcl.lat_shift_mod_1.__doc__)
+>>> print(qmcpytoolscl.lat_shift_mod_1.__doc__)
 Shift mod 1 for lattice points
 
 Args:
@@ -161,7 +164,7 @@ Args:
 >>> r = 2*r_x
 >>> shifts = rng.random((r,d))
 >>> xr = np.empty((r,n,d),dtype=np.float64)
->>> time_perf,time_process = qmcseqcl.lat_shift_mod_1(r,n,d,r_x,x,shifts,xr,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.lat_shift_mod_1(r,n,d,r_x,x,shifts,xr,**kwargs)
 >>> xr
 array([[[0.79386058, 0.33727432, 0.1191824 , 0.40212985, 0.44669968],
         [0.29386058, 0.83727432, 0.6191824 , 0.90212985, 0.94669968],
@@ -192,14 +195,14 @@ array([[[0.79386058, 0.33727432, 0.1191824 , 0.40212985, 0.44669968],
         [0.68769008, 0.42326852, 0.08808655, 0.93483568, 0.97883675]]])
 ```
 
-# Digital Net Base 2 
+## Digital Net Base 2 
 
-## LSB to MSB integer representations 
+### LSB to MSB integer representations 
 
 convert generating matrices from least significant bit (LSB) order to most significant bit (MSB) order
 
 ```python
->>> print(qmcseqcl.dnb2_gmat_lsb_to_msb.__doc__)
+>>> print(qmcpytoolscl.dnb2_gmat_lsb_to_msb.__doc__)
 Convert base 2 generating matrices with integers stored in Least Significant Bit order to Most Significant Bit order
 
 Args:
@@ -221,7 +224,7 @@ Args:
 >>> tmax = 4
 >>> tmaxes = np.tile(np.uint64(tmax),r)
 >>> C = np.empty((d,mmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.dnb2_gmat_lsb_to_msb(r,d,mmax,tmaxes,C_lsb,C,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.dnb2_gmat_lsb_to_msb(r,d,mmax,tmaxes,C_lsb,C,**kwargs)
 >>> C
 array([[ 8,  4,  2,  1],
        [ 8, 12, 10, 15],
@@ -229,10 +232,10 @@ array([[ 8,  4,  2,  1],
        [ 8, 12,  2,  5]], dtype=uint64)
 ```
 
-## linear matrix scrambling (LMS)
+### linear matrix scrambling (LMS)
 
 ```python
->>> print(qmcseqcl.dnb2_linear_matrix_scramble.__doc__)
+>>> print(qmcpytoolscl.dnb2_linear_matrix_scramble.__doc__)
 Linear matrix scrambling for base 2 generating matrices
 
 Args:
@@ -247,7 +250,7 @@ Args:
 >>> r_C = r 
 >>> r = 2*r_C
 >>> tmax_new = np.uint64(6)
->>> print(qmcseqcl.dnb2_get_linear_scramble_matrix.__doc__)
+>>> print(qmcpytoolscl.dnb2_get_linear_scramble_matrix.__doc__)
 Return a scrambling matrix for linear matrix scrambling
 
 Args:
@@ -258,7 +261,7 @@ Args:
     tmax_new (np.uint64): bits in each integer of the generating matrix after scrambling
     print_mats (np.uint8): flag to print the resulting matrices
 >>> print_mats = np.uint8(True)
->>> S = qmcseqcl.dnb2_get_linear_scramble_matrix(rng,r,d,tmax,tmax_new,print_mats)
+>>> S = qmcpytoolscl.dnb2_get_linear_scramble_matrix(rng,r,d,tmax,tmax_new,print_mats)
 S with shape (r=2, d=4, tmax_new=6)
 l = 0
     j = 0
@@ -319,7 +322,7 @@ l = 1
         1000
         0000
 >>> C_lms = np.empty((r,d,mmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.dnb2_linear_matrix_scramble(r,d,mmax,r_C,tmax_new,S,C,C_lms,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.dnb2_linear_matrix_scramble(r,d,mmax,r_C,tmax_new,S,C,C_lms,**kwargs)
 >>> C_lms
 array([[[61, 16, 13,  5],
         [60, 43, 49, 33],
@@ -332,12 +335,12 @@ array([[[61, 16, 13,  5],
         [34, 58, 12, 28]]], dtype=uint64)
 ```
 
-## digital interlacing 
+### digital interlacing 
 
 Digital interlacing is used to create **higher order digital nets**.
 
 ```python
->>> print(qmcseqcl.dnb2_interlace.__doc__)
+>>> print(qmcpytoolscl.dnb2_interlace.__doc__)
 Interlace generating matrices or transpose of point sets to attain higher order digital nets in base 2
 
 Args:
@@ -355,7 +358,7 @@ Args:
 >>> tmax = tmax_new
 >>> tmax_alpha = min(alpha*tmax_new,64)
 >>> C_alpha = np.empty((r,d_alpha,mmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.dnb2_interlace(r,d_alpha,mmax,d,tmax,tmax_alpha,alpha,C_lms,C_alpha,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.dnb2_interlace(r,d_alpha,mmax,d,tmax,tmax_alpha,alpha,C_lms,C_alpha,**kwargs)
 >>> C_alpha
 array([[[4082, 1605, 1443, 1059],
         [3440, 3698,  709, 2330]],
@@ -364,10 +367,10 @@ array([[[4082, 1605, 1443, 1059],
         [3086, 4068,  600, 2418]]], dtype=uint64)
 ``` 
 
-## undo digital interlacing 
+### undo digital interlacing 
 
 ```python
->>> print(qmcseqcl.dnb2_undo_interlace.__doc__)
+>>> print(qmcpytoolscl.dnb2_undo_interlace.__doc__)
 Undo interlacing of generating matrices in base 2
 
 Args:
@@ -381,15 +384,15 @@ Args:
     C_alpha (np.ndarray of np.uint64): interlaced generating matrices of size r*d_alpha*mmax
     C (np.ndarray of np.uint64): original generating matrices of size r*d*mmax
 >>> C_lms_cp = np.empty((r,d,mmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.dnb2_undo_interlace(r,d,mmax,d_alpha,tmax,tmax_alpha,alpha,C_alpha,C_lms_cp,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.dnb2_undo_interlace(r,d,mmax,d_alpha,tmax,tmax_alpha,alpha,C_alpha,C_lms_cp,**kwargs)
 >>> print((C_lms_cp==C_lms).all())
 True
 ```
 
-## generate Gray code or natural order 
+### generate Gray code or natural order 
 
 ```python
->>> print(qmcseqcl.dnb2_gen_natural_gray.__doc__)
+>>> print(qmcpytoolscl.dnb2_gen_natural_gray.__doc__)
 Binary representation of digital net in base 2 in either Gray code or natural order
 
 Args:
@@ -407,7 +410,7 @@ Args:
 >>> n = np.uint64(14)
 >>> xb = np.empty((r,n,d),dtype=np.uint64)
 >>> gc = np.uint8(False)
->>> time_perf,time_process = qmcseqcl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
 >>> xb
 array([[[1605, 3698],
         [2487,  770],
@@ -439,7 +442,7 @@ array([[[1605, 3698],
         [1668, 1230],
         [2715, 2240]]], dtype=uint64)
 >>> gc = np.uint8(True)
->>> time_perf,time_process = qmcseqcl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
 >>> xb
 array([[[2487,  770],
         [1605, 3698],
@@ -472,10 +475,10 @@ array([[[2487,  770],
         [1320, 2418]]], dtype=uint64)
 ```
 
-## digital shift 
+### digital shift 
 
 ```python
->>> print(qmcseqcl.dnb2_digital_shift.__doc__)
+>>> print(qmcpytoolscl.dnb2_digital_shift.__doc__)
 Digital shift base 2 digital net
 
 Args:
@@ -492,21 +495,21 @@ Args:
 >>> lshifts = np.tile(tmax_new-tmax,r) 
 >>> r_x = r 
 >>> r = 2*r_x
->>> print(qmcseqcl.random_tbit_uint64s.__doc__)
+>>> print(qmcpytoolscl.random_tbit_uint64s.__doc__)
 Generate the desired shape of random integers with t bits
 
 Args:
     rng (np.random._generator.Generator): random number generator
     t: (int): number of bits with 0 <= t <= 64
     shape (tuple of ints): shape of resulting integer array
->>> shiftsb = qmcseqcl.random_tbit_uint64s(rng,tmax_new,(r,d))
+>>> shiftsb = qmcpytoolscl.random_tbit_uint64s(rng,tmax_new,(r,d))
 >>> shiftsb
 array([[ 5310653692329262186, 13368902947290702765],
        [14338104955770306630,   858526716083693676],
        [ 8506091904275275003, 16209688535125722604],
        [17447177601860792486,  9021077006476608718]], dtype=uint64)
 >>> xrb = np.empty((r,n,d),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.dnb2_digital_shift(r,n,d,r_x,lshifts,xb,shiftsb,xrb,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.dnb2_digital_shift(r,n,d,r_x,lshifts,xb,shiftsb,xrb,**kwargs)
 >>> xrb
 array([[[15187047675152759914,  9919145632724902829],
         [ 3306551858149391466,  6820669089094001581],
@@ -569,10 +572,10 @@ array([[[15187047675152759914,  9919145632724902829],
         [11574483687769665702, 16866347557356012750]]], dtype=uint64)
 ```
 
-## convert digits to doubles
+### convert digits to doubles
 
 ```python 
->>> print(qmcseqcl.dnb2_integer_to_float.__doc__)
+>>> print(qmcpytoolscl.dnb2_integer_to_float.__doc__)
 Convert base 2 binary digital net points to floats
 
 Args:
@@ -584,7 +587,7 @@ Args:
     x (np.ndarray of np.double): float digital net points of size r*n*d
 >>> x = np.empty((r,n,d),dtype=np.float64)
 >>> tmaxes_new = np.tile(tmax_new,r)
->>> time_perf,time_process = qmcseqcl.dnb2_integer_to_float(r,n,d,tmaxes_new,xrb,x,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.dnb2_integer_to_float(r,n,d,tmaxes_new,xrb,x,**kwargs)
 >>> x
 array([[[0.8232915 , 0.53771796],
         [0.17924854, 0.36974921],
@@ -647,7 +650,7 @@ array([[[0.8232915 , 0.53771796],
         [0.62745402, 0.91432653]]])
 ```
 
-## nested uniform scrambling 
+### nested uniform scrambling 
 
 ```python
 >>> r = np.uint64(1) 
@@ -664,8 +667,8 @@ array([[[0.8232915 , 0.53771796],
 >>> mmax = np.uint64(C.shape[1])
 >>> tmax = np.uint64(np.ceil(np.log2(np.max(C))))
 >>> xb = np.empty((r,n,d),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
->>> print(qmcseqcl.dnb2_nested_uniform_scramble.__doc__)
+>>> time_perf,time_process = qmcpytoolscl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
+>>> print(qmcpytoolscl.dnb2_nested_uniform_scramble.__doc__)
 Nested uniform scramble of digital net b2
 
 Args: 
@@ -685,9 +688,9 @@ Args:
 >>> base_seed_seq = np.random.SeedSequence(7)
 >>> seeds = base_seed_seq.spawn(r*d)
 >>> rngs = np.array([np.random.Generator(np.random.SFC64(seed)) for seed in seeds]).reshape(r,d)
->>> root_nodes = np.array([qmcseqcl.NUSNode_dnb2() for i in range(r*d)]).reshape(r,d)
+>>> root_nodes = np.array([qmcpytoolscl.NUSNode_dnb2() for i in range(r*d)]).reshape(r,d)
 >>> xrb = np.zeros((r,n,d),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.dnb2_nested_uniform_scramble(r,n,d,r_x,tmax,tmax_new,rngs,root_nodes,xb,xrb)
+>>> time_perf,time_process = qmcpytoolscl.dnb2_nested_uniform_scramble(r,n,d,r_x,tmax,tmax_new,rngs,root_nodes,xb,xrb)
 >>> xrb
 array([[[ 94,  54, 235,  30],
         [174, 243,  26, 129],
@@ -708,14 +711,14 @@ array([[[ 94,  54, 235,  30],
         [138,  93, 139, 230]]], dtype=uint64)
 ```
 
-# Generalized Digital Net 
+## Generalized Digital Net 
 
 Accommodates both Halton sequences and digital nets in any prime base
 
-## Linear Matrix Scramble 
+### linear Matrix Scramble 
 
 ```python
->>> print(qmcseqcl.gdn_linear_matrix_scramble.__doc__)
+>>> print(qmcpytoolscl.gdn_linear_matrix_scramble.__doc__)
 Linear matrix scramble for generalized digital net
 
 Args:
@@ -735,17 +738,17 @@ Args:
 >>> d = np.uint64(bases.shape[1]) 
 >>> mmax = np.uint64(5)
 >>> tmax = mmax
->>> print(qmcseqcl.gdn_get_halton_generating_matrix.__doc__)
+>>> print(qmcpytoolscl.gdn_get_halton_generating_matrix.__doc__)
 Return the identity matrices comprising the Halton generating matrices
 
 Arg:
     r (np.uint64): replications 
     d (np.uint64): dimension 
     mmax (np.uint64): maximum number rows and columns in each generating matrix
->>> C = qmcseqcl.gdn_get_halton_generating_matrix(r_C,d,mmax)
+>>> C = qmcpytoolscl.gdn_get_halton_generating_matrix(r_C,d,mmax)
 >>> tmax_new = np.uint64(2*tmax)
 >>> r = np.uint64(2*r_C)
->>> print(qmcseqcl.gdn_get_linear_scramble_matrix.__doc__)
+>>> print(qmcpytoolscl.gdn_get_linear_scramble_matrix.__doc__)
 Return a scrambling matrix for linear matrix scrambling
 
 Args:
@@ -756,7 +759,7 @@ Args:
     tmax_new (np.uint64): bits in each integer of the generating matrix after scrambling
     r_b (np.uint64): replications of bases 
     bases (np.ndarray of np.uint64): bases of size r_b*d
->>> S = qmcseqcl.gdn_get_linear_scramble_matrix(rng,r,d,tmax,tmax_new,r_b,bases)
+>>> S = qmcpytoolscl.gdn_get_linear_scramble_matrix(rng,r,d,tmax,tmax_new,r_b,bases)
 >>> S
 array([[[[1, 0, 0, 0, 0],
          [1, 1, 0, 0, 0],
@@ -849,7 +852,7 @@ array([[[[1, 0, 0, 0, 0],
          [0, 2, 5, 5, 6],
          [1, 1, 1, 2, 0]]]], dtype=uint64)
 >>> C_lms = np.empty((r,d,mmax,tmax_new),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.gdn_linear_matrix_scramble(r,d,mmax,r_C,r_b,tmax,tmax_new,bases,S,C,C_lms,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.gdn_linear_matrix_scramble(r,d,mmax,r_C,r_b,tmax,tmax_new,bases,S,C,C_lms,**kwargs)
 >>> C_lms 
 array([[[[1, 1, 0, 0, 1, 1, 0, 1, 1, 1],
          [0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
@@ -903,10 +906,10 @@ array([[[[1, 1, 0, 0, 1, 1, 0, 1, 1, 1],
          [0, 0, 0, 0, 3, 3, 3, 6, 6, 0]]]], dtype=uint64)
 ```
 
-## generate natural order
+### generate natural order
 
 ```python
->>> print(qmcseqcl.gdn_gen_natural.__doc__)
+>>> print(qmcpytoolscl.gdn_gen_natural.__doc__)
 Generalized digital net where the base can be different for each dimension e.g. for the Halton sequence
 
 Args:
@@ -925,7 +928,7 @@ Args:
 >>> n_start = np.uint64(2)
 >>> n = np.uint64(6)
 >>> xdig = np.empty((r,n,d,tmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.gdn_gen_natural(r,n,d,r_b,mmax,tmax,n_start,bases,C,xdig,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.gdn_gen_natural(r,n,d,r_b,mmax,tmax,n_start,bases,C,xdig,**kwargs)
 >>> xdig
 array([[[[0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
          [1, 0, 2, 1, 1, 1, 1, 1, 0, 1]],
@@ -1003,10 +1006,10 @@ array([[[[0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
          [0, 5, 2, 4, 3, 6, 1, 6, 2, 1]]]], dtype=uint64)
 ```
 
-## digital shift 
+### digital shift 
 
 ```python
->>> print(qmcseqcl.gdn_digital_shift.__doc__)
+>>> print(qmcpytoolscl.gdn_digital_shift.__doc__)
 Digital shift a generalized digital net
 
 Args:
@@ -1023,7 +1026,7 @@ Args:
     xdig_new (np.ndarray of np.uint64): float digital net points of size r*n*d*tmax_new
 >>> r_x = r
 >>> tmax_new = np.uint64(12)
->>> print(qmcseqcl.gdn_get_digital_shifts.__doc__)
+>>> print(qmcpytoolscl.gdn_get_digital_shifts.__doc__)
 Return digital shifts for gdn
 
 Args: 
@@ -1033,7 +1036,7 @@ Args:
     tmax_new (np.uint64): number of bits in each shift 
     r_b (np.uint64): replications of bases 
     bases (np.ndarray of np.uint64): bases of size r_b*d
->>> shifts = qmcseqcl.gdn_get_digital_shifts(rng,r,d,tmax_new,r_b,bases)
+>>> shifts = qmcpytoolscl.gdn_get_digital_shifts(rng,r,d,tmax_new,r_b,bases)
 >>> shifts
 array([[[0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1],
         [1, 2, 0, 2, 2, 0, 0, 0, 1, 0, 0, 1]],
@@ -1047,7 +1050,7 @@ array([[[0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1],
        [[0, 4, 1, 0, 2, 2, 2, 2, 1, 1, 1, 1],
         [5, 5, 1, 3, 0, 4, 5, 4, 3, 0, 3, 2]]], dtype=uint64)
 >>> xdig_new = np.empty((r,n,d,tmax_new),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.gdn_digital_shift(r,n,d,r_x,r_b,tmax,tmax_new,bases,shifts,xdig,xdig_new,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.gdn_digital_shift(r,n,d,r_x,r_b,tmax,tmax_new,bases,shifts,xdig,xdig_new,**kwargs)
 >>> xdig_new
 array([[[[0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
          [2, 2, 2, 0, 0, 1, 1, 1, 1, 1, 0, 1]],
@@ -1125,10 +1128,10 @@ array([[[[0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
          [5, 3, 3, 0, 3, 3, 6, 3, 5, 1, 3, 2]]]], dtype=uint64)
 ```
 
-## digital permutation 
+### digital permutation 
 
 ```python
->>> print(qmcseqcl.gdn_digital_permutation.__doc__)
+>>> print(qmcpytoolscl.gdn_digital_permutation.__doc__)
 Permutation of digits for a generalized digital net
 
 Args:
@@ -1143,7 +1146,7 @@ Args:
     perms (np.ndarray of np.uint64): permutations of size r*d*tmax_new*bmax
     xdig (np.ndarray of np.uint64): binary digital net points of size r_x*n*d*tmax
     xdig_new (np.ndarray of np.uint64): float digital net points of size r*n*d*tmax_new
->>> print(qmcseqcl.gdn_get_permutations.__doc__)
+>>> print(qmcpytoolscl.gdn_get_permutations.__doc__)
 Return permutations for gdn
 
 Args: 
@@ -1153,7 +1156,7 @@ Args:
     tmax_new (np.uint64): number of bits in each shift 
     r_b (np.uint64): replications of bases 
     bases (np.ndarray of np.uint64): bases of size r_b*d
->>> perms = qmcseqcl.gdn_get_permutations(rng,r,d,tmax_new,r_b,bases)
+>>> perms = qmcpytoolscl.gdn_get_permutations(rng,r,d,tmax_new,r_b,bases)
 >>> perms
 array([[[[1, 0, 0, 0, 0, 0, 0],
          [0, 1, 0, 0, 0, 0, 0],
@@ -1262,7 +1265,7 @@ array([[[[1, 0, 0, 0, 0, 0, 0],
          [3, 4, 2, 6, 1, 5, 0],
          [2, 6, 1, 3, 0, 4, 5]]]], dtype=uint64)
 >>> bmax = bases.max().astype(np.uint64)
->>> time_perf,time_process = qmcseqcl.gdn_digital_permutation(r,n,d,r_x,r_b,tmax,tmax_new,bmax,perms,xdig,xdig_new,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.gdn_digital_permutation(r,n,d,r_x,r_b,tmax,tmax_new,bmax,perms,xdig,xdig_new,**kwargs)
 >>> xdig_new
 array([[[[1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1],
          [1, 1, 2, 1, 2, 0, 0, 0, 1, 1, 2, 2]],
@@ -1340,10 +1343,10 @@ array([[[[1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1],
          [1, 6, 1, 6, 6, 3, 6, 2, 0, 2, 3, 2]]]], dtype=uint64)
 ```
 
-## convert digits to doubles 
+### convert digits to doubles 
 
 ```python 
->>> print(qmcseqcl.gdn_integer_to_float.__doc__)
+>>> print(qmcpytoolscl.gdn_integer_to_float.__doc__)
 Convert digits of generalized digital net to floats
 
 Args:
@@ -1356,7 +1359,7 @@ Args:
     xdig (np.ndarray of np.uint64): binary digital net points of size r*n*d*tmax
     x (np.ndarray of np.double): float digital net points of size r*n*d
 >>> x = np.empty((r,n,d),dtype=np.float64)
->>> time_perf,time_process = qmcseqcl.gdn_integer_to_float(r,n,d,r_b,tmax_new,bases,xdig_new,x,**kwargs)
+>>> time_perf,time_process = qmcpytoolscl.gdn_integer_to_float(r,n,d,r_b,tmax_new,bases,xdig_new,x,**kwargs)
 >>> x
 array([[[0.97290039, 0.53917744],
         [0.20629883, 0.03632388],
@@ -1387,7 +1390,7 @@ array([[[0.97290039, 0.53917744],
         [0.92209603, 0.27111067]]])
 ```
 
-## nested uniform scramble 
+### nested uniform scramble 
 
 ```python 
 >>> r = np.uint64(1)
@@ -1400,16 +1403,16 @@ array([[[0.97290039, 0.53917744],
 >>> tmax = mmax
 >>> C = np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(r,d,1,1))
 >>> xdig = np.empty((r,n,d,tmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.gdn_gen_natural(r,n,d,r_b,mmax,tmax,n_start,bases,C,xdig)
+>>> time_perf,time_process = qmcpytoolscl.gdn_gen_natural(r,n,d,r_b,mmax,tmax,n_start,bases,C,xdig)
 >>> r_x = r 
 >>> r = np.uint64(2) 
 >>> tmax_new = np.uint64(8)
 >>> base_seed_seq = np.random.SeedSequence(7)
 >>> seeds = base_seed_seq.spawn(r*d)
 >>> rngs = np.array([np.random.Generator(np.random.SFC64(seed)) for seed in seeds]).reshape(r,d)
->>> root_nodes = np.array([qmcseqcl.NUSNode_gdn() for i in range(r*d)]).reshape(r,d)
+>>> root_nodes = np.array([qmcpytoolscl.NUSNode_gdn() for i in range(r*d)]).reshape(r,d)
 >>> xrdig = np.zeros((r,n,d,tmax_new),dtype=np.uint64)
->>> print(qmcseqcl.gdn_nested_uniform_scramble.__doc__)
+>>> print(qmcpytoolscl.gdn_nested_uniform_scramble.__doc__)
 Nested uniform scramble of general digital nets
 
 Args: 
@@ -1425,7 +1428,7 @@ Args:
     bases (np.ndarray of np.uint64): array of bases of size r*d
     xdig (np.ndarray of np.uint64): array of unrandomized points of size r*n*d*tmax
     xrdig (np.ndarray of np.uint64): array to store scrambled points of size r*n*d*tmax_new
->>> time_perf,time_process = qmcseqcl.gdn_nested_uniform_scramble(r,n,d,r_x,r_b,tmax,tmax_new,rngs,root_nodes,bases,xdig,xrdig)
+>>> time_perf,time_process = qmcpytoolscl.gdn_nested_uniform_scramble(r,n,d,r_x,r_b,tmax,tmax_new,rngs,root_nodes,bases,xdig,xrdig)
 >>> xrdig 
 array([[[[0, 0, 1, 0, 0, 1, 0, 0],
          [2, 2, 2, 2, 1, 0, 2, 1],
@@ -1500,7 +1503,7 @@ array([[[[0, 0, 1, 0, 0, 1, 0, 0],
          [2, 2, 2, 2, 2, 2, 2, 1],
          [4, 3, 0, 0, 4, 2, 0, 4]]]], dtype=uint64)
 >>> xr = np.empty((r,n,d),dtype=np.float64) 
->>> time_perf,time_process = qmcseqcl.gdn_integer_to_float(r,n,d,r_b,tmax_new,bases,xrdig,xr)
+>>> time_perf,time_process = qmcpytoolscl.gdn_integer_to_float(r,n,d,r_b,tmax_new,bases,xrdig,xr)
 >>> xr
 array([[[0.140625  , 0.99283646, 0.7772288 ],
         [0.66796875, 0.37524768, 0.22977792],
@@ -1523,10 +1526,10 @@ array([[[0.140625  , 0.99283646, 0.7772288 ],
         [0.625     , 0.99969517, 0.92141824]]])
 ```
 
-## digital interlacing 
+### digital interlacing 
 
 ```python
->>> print(qmcseqcl.gdn_interlace.__doc__)
+>>> print(qmcpytoolscl.gdn_interlace.__doc__)
 Interlace generating matrices or transpose of point sets to attain higher order digital nets
 
 Args:
@@ -1597,7 +1600,7 @@ array([[[[0, 4, 4, 0],
          [2, 3, 0, 3],
          [0, 1, 4, 0]]]], dtype=uint64)
 >>> C_alpha = np.empty((r,d_alpha,mmax,tmax_alpha),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.gdn_interlace(r,d_alpha,mmax,d,tmax,tmax_alpha,alpha,C,C_alpha)
+>>> time_perf,time_process = qmcpytoolscl.gdn_interlace(r,d_alpha,mmax,d,tmax,tmax_alpha,alpha,C,C_alpha)
 >>> C_alpha
 array([[[[0, 2, 1, 4, 4, 1, 4, 3, 3, 0, 4, 1],
          [0, 4, 3, 2, 0, 3, 4, 1, 1, 0, 2, 1],
@@ -1617,10 +1620,10 @@ array([[[[0, 2, 1, 4, 4, 1, 4, 3, 3, 0, 4, 1],
          [3, 0, 0, 1, 1, 1, 0, 1, 4, 4, 1, 0]]]], dtype=uint64)
 ```
 
-## undo digital interlacing 
+### undo digital interlacing 
 
 ```python 
->>> print(qmcseqcl.gdn_undo_interlace.__doc__)
+>>> print(qmcpytoolscl.gdn_undo_interlace.__doc__)
 Undo interlacing of generating matrices
 
 Args:
@@ -1634,15 +1637,15 @@ Args:
     C_alpha (np.ndarray of np.uint64): interlaced generating matrices of size r*d_alpha*mmax*tmax_alpha
     C (np.ndarray of np.uint64): original generating matrices of size r*d*mmax*tmax
 >>> C_cp = np.empty((r,d,mmax,tmax),dtype=np.uint64)
->>> time_perf,time_process = qmcseqcl.gdn_undo_interlace(r,d,mmax,d_alpha,tmax,tmax_alpha,alpha,C_alpha,C_cp) 
+>>> time_perf,time_process = qmcpytoolscl.gdn_undo_interlace(r,d,mmax,d_alpha,tmax,tmax_alpha,alpha,C_alpha,C_cp) 
 >>> print((C==C_cp).all())
 True
 ```
 
-## generate natural order with the same base 
+### generate natural order with the same base 
 
 ```python
->>> print(qmcseqcl.gdn_gen_natural_same_base.__doc__)
+>>> print(qmcpytoolscl.gdn_gen_natural_same_base.__doc__)
 Generalized digital net with the same base for each dimension e.g. a digital net in base greater than 2
 
 Args:
@@ -1674,7 +1677,7 @@ Args:
 >>> mmax = np.uint64(C.shape[2])
 >>> tmax = np.uint64(C.shape[3])
 >>> xdig = np.empty((r,n,d,tmax),dtype=np.uint64) 
->>> time_perf,time_process = qmcseqcl.gdn_gen_natural_same_base(r,n,d,mmax,tmax,n_start,b,C,xdig)
+>>> time_perf,time_process = qmcpytoolscl.gdn_gen_natural_same_base(r,n,d,mmax,tmax,n_start,b,C,xdig)
 >>> xdig
 array([[[[0, 0, 0, 0],
          [0, 0, 0, 0]],
@@ -1704,7 +1707,7 @@ array([[[[0, 0, 0, 0],
          [2, 1, 1, 2]]]], dtype=uint64)
 ```
 
-# Fast Transforms
+## Fast Transforms
 
 Fast transforms require the use of a single work group for the final dimension i.e. it is required that `global_size[2]==local_size[2]`
 
@@ -1713,14 +1716,14 @@ Fast transforms require the use of a single work group for the final dimension i
 ...     kwargs_ft = kwargs.copy()
 ...     kwargs_ft["global_size"] = (2,2,2)
 ...     kwargs_ft["local_size"] = (1,1,2)
-... else: # kwargs["backend"]=="C"
+... else: ## kwargs["backend"]=="C"
 ...     kwargs_ft = kwargs 
 ```
 
-## Fast Fourier Transform
+### fast Fourier transform
 
 ```python 
->>> print(qmcseqcl.rfft_1d_radix2.__doc__)
+>>> print(qmcpytoolscl.rfft_1d_radix2.__doc__)
 Fast Fourier Transform for real valued inputs.
 FFT is done in place along the last dimension where the size is required to be a power of 2.
 Follows a decimation-in-time procedure described in https://www.cmlab.csie.ntu.edu.tw/cml/dsp/training/coding/transform/fft.html.
@@ -1742,7 +1745,7 @@ Args:
 >>> twiddler = np.empty_like(xr,dtype=np.double)
 >>> twiddlei = np.empty_like(xr,dtype=np.double)
 >>> n_half = np.uint64(len(xr)//2)
->>> time_perf,time_process = qmcseqcl.rfft_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
+>>> time_perf,time_process = qmcpytoolscl.rfft_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
 >>> y = xr+1j*xi
 >>> y
 array([ 4.        +0.j        ,  0.29289322+0.70710678j,
@@ -1760,16 +1763,16 @@ array([ 4.        +0.j        ,  0.29289322+0.70710678j,
 >>> twiddler = np.empty_like(xr,dtype=np.double)
 >>> twiddlei = np.empty_like(xr,dtype=np.double)
 >>> y_np = np.fft.fft(xr)
->>> time_perf,time_process = qmcseqcl.rfft_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
+>>> time_perf,time_process = qmcpytoolscl.rfft_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
 >>> y = xr+1j*xi
 >>> np.allclose(y,y_np,atol=1e-8)
 True
 ```
 
-## Fast Walsh-Hadamard Transform
+### fast Walsh-Hadamard transform
 
 ```python 
->>> print(qmcseqcl.fwht_1d_radix2.__doc__)
+>>> print(qmcpytoolscl.fwht_1d_radix2.__doc__)
 Fast Walsh-Hadamard Transform for real valued inputs.
 FWHT is done in place along the last dimension where the size is required to be a power of 2.
 Follows the divide-and-conquer algorithm described in https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform
@@ -1783,7 +1786,7 @@ Args:
 >>> d2 = np.uint64(1)
 >>> x = np.array([1,0,1,0,0,1,1,0],dtype=np.double)
 >>> n_half = np.uint64(len(x)//2)
->>> time_perf,time_process = qmcseqcl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_ft)
+>>> time_perf,time_process = qmcpytoolscl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_ft)
 >>> x
 array([ 4.,  2.,  0., -2.,  0.,  2.,  0.,  2.])
 ```
@@ -1798,12 +1801,12 @@ array([ 4.,  2.,  0., -2.,  0.,  2.,  0.,  2.])
 >>> for i in range(d1):
 ...     for j in range(d2): 
 ...         y_sympy[i,j] = np.array(sympy.fwht(x[i,j]),dtype=np.double)
->>> time_perf,time_process = qmcseqcl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_ft)
+>>> time_perf,time_process = qmcpytoolscl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_ft)
 >>> np.allclose(x,y_sympy,atol=1e-8)
 True
 ```
 
-# Issues 
+## Issues 
 
 - `lat_gen_linear` requires `n_start` and `n_start+n` are either 0 or powers of 2
 - `fwht` requires `n_half` and `global_size[2]` are powers of 2

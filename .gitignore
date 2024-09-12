@@ -8,8 +8,8 @@ raw.githubusercontent.com/*
 *.pyc
 *.so 
 *.DS_Store
-qmcseqcl/*.c
-qmcseqcl.egg-info/*
+qmcpytoolscl/*.c
+qmcpytoolscl.egg-info/*
 build/*
 
 *.pytest.txt

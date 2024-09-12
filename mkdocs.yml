@@ -1,9 +1,17 @@
-site_name: QMCseqCL
+site_name: QMCPyToolsCL
+markdown_extensions:
+    - toc
+    - attr_list
 theme:
+  name: material
   navigation_depth: 5
-  name: mkdocs
   color_mode: auto
   user_color_mode_toggle: True
+  features:
+    - navigation.expand
+    - toc.follow
+    - navigation.sections
+    - toc.integrate
   icon:
     admonition:
       note: octicons/tag-16
@@ -18,8 +26,6 @@ theme:
       bug: octicons/bug-16
       example: octicons/beaker-16
       quote: octicons/quote-16
-nav:
-  - Home: index.md
 markdown_extensions:
   - admonition
   - pymdownx.details

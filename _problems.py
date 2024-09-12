@@ -1,4 +1,4 @@
-import qmcseqcl 
+import qmcpytoolscl 
 import pyopencl as cl
 import numpy as np
 import os
@@ -13,7 +13,7 @@ def run_dnb2_problem(n, d, kwargs):
     if kwargs["backend"]=="cl":
         C = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=C)
         xb = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xb)
-    time_perf,time_process = qmcseqcl.dnb2_gen_natural_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint8(True),np.uint64(mmax),C,xb,**kwargs)
+    time_perf,time_process = qmcpytoolscl.dnb2_gen_natural_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint8(True),np.uint64(mmax),C,xb,**kwargs)
     return time_perf,time_process
 
 def run_lat_problem(n, d, kwargs):
@@ -24,7 +24,7 @@ def run_lat_problem(n, d, kwargs):
     if kwargs["backend"]=="cl":
         g = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=g)
         x = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=x)
-    time_perf,time_process = qmcseqcl.lat_gen_natural_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint8(True),g,x,**kwargs)
+    time_perf,time_process = qmcpytoolscl.lat_gen_natural_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint8(True),g,x,**kwargs)
     return time_perf,time_process
 
 def run_halton_problem(n, d, kwargs):
@@ -38,7 +38,7 @@ def run_halton_problem(n, d, kwargs):
         C = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=C)
         xdig = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xdig)
     xdig = np.empty((n,d,mmax),dtype=np.uint64) 
-    time_perf,time_process = qmcseqcl.gdn_gen_natural(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(1),np.uint64(mmax),np.uint64(mmax),np.uint64(0),primes,C,xdig,**kwargs)
+    time_perf,time_process = qmcpytoolscl.gdn_gen_natural(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(1),np.uint64(mmax),np.uint64(mmax),np.uint64(0),primes,C,xdig,**kwargs)
     return time_perf,time_process
 
 map_run_problem = {
@@ -64,7 +64,7 @@ def setup_speed_tests(platform_id, device_id):
     device = platform.get_devices()[device_id]
     print("\nPlatform: %s\nDevice: %s\n"%(platform.name,device.name))
     context = cl.Context([device])
-    program = qmcseqcl.get_qmcseqcl_program_from_context(context)
+    program = qmcpytoolscl.get_qmcpytoolscl_program_from_context(context)
     queue = cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
     kwargs_cl = {
         "backend": "cl", 

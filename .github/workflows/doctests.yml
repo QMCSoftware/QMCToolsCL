@@ -20,7 +20,7 @@ jobs:
           pip install numpy
           pip install pytest
           pip install sympy
-      - name: Install QMCseqCL 
+      - name: Install QMCPyToolsCL 
         shell: bash -l {0}
         run: |
           pip install -e .
@@ -49,7 +49,7 @@ jobs:
       - name: PyOpenCL Device Info
         shell: bash -l {0}
         run: |
-          python -c "import qmcseqcl; qmcseqcl.print_opencl_device_info()"
+          python -c "import qmcpytoolscl; qmcpytoolscl.print_opencl_device_info()"
       - name: Doctests with PyOpenCL
         shell: bash -l {0}
         run: |
