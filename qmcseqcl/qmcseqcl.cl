@@ -1021,16 +1021,65 @@ __kernel void fft_1d_b2(
     const ulong batch_size_d2, // batch size second dimension
     const ulong batch_size_n_half, // batch size for half of the last dimension
     __global double *xr, // real array of size d1*d2*2n_half on which to perform FFT in place
-    __global double *xi // imaginary array of size d1*d2*2n_half on which to perform FFT in place
+    __global double *xi, // imaginary array of size d1*d2*2n_half on which to perform FFT in place
+    __global double *twiddle // twiddle factors
 ){
     ulong j10 = get_global_id(0)*batch_size_d1;
     ulong j20 = get_global_id(1)*batch_size_d2;
     ulong i0 = get_global_id(2)*batch_size_n_half;
-    ulong ii,i,i1,i2,t,jj1,jj2,j1,j2,k,s,f,idx;
+    ulong b1,b2,ii,i,i1,i2,i1cp,i2cp,t,jj1,jj2,j1,j2,k,s,f,idx;
     double xr1,xr2,xi1,xi2,yr,yi,v,cosv,sinv;
     ulong n = 2*n_half;
     ulong m = (ulong)(log2((double)n));
-    for(k=0; k<m; k++){
+    ulong bigone = 1;
+    for(ii=0; ii<batch_size_n_half; ii++){
+        i1 = 2*(i0+ii);
+        i1cp = i1;
+        i2 = i1+1;
+        i2cp = i2;
+        b1 = 0; 
+        k = 0;
+        while(i1cp>0){
+            if(i1cp&1){
+                b1 += (bigone<<(m-k-1));
+            }
+            i1cp >>= 1;
+            k += 1;
+        }
+        b2 = 0;
+        k = 0;
+        while(i2cp>0){
+            if(i2cp&1){
+                b2 += (bigone<<(m-k-1));
+            }
+            i2cp >>= 1;
+            k += 1;
+        }
+        for(jj1=0; jj1<batch_size_d1; jj1++){
+            j1 = j10+jj1;
+            for(jj2=0; jj2<batch_size_d2; jj2++){
+                j2 = j20+jj2;
+                idx = j1*d2*n+j2*n;
+                xr1 = twiddle[idx+b1];
+                xr2 = twiddle[idx+b2];
+                xr[idx+i1] = xr1+xr2;
+                xr[idx+i2] = xr1-xr2;
+                printf("i1 = %lu\ti2 = %lu\tb1 = %lu\tb2 = %lu\txr1 = %lf\txr2 = %lf\n",i1,i2,b1,b2,xr1,xr2);
+                if(j2==(d2-1)){
+                    break;
+                }
+            }
+            if(j1==(d1-1)){
+                break;
+            }
+        }
+        if(i1==(n-2)){
+            break;
+        }
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
+    printf("\n");
+    for(k=1; k<m; k++){
         s = k;//m-k-1;
         f = 1<<s; 
         printf("k = %lu\n",k);
