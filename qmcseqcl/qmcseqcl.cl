@@ -957,7 +957,7 @@ __kernel void gdn_undo_interlace(
     }
 }
 
-__kernel void fwht_1d_b2(
+__kernel void fwht_1d_radix2(
     // In place, vectorized 1 dimensional Fast Walsh-Hadamard Transform where the size of the last dimension is a power of 2
     const ulong d1, // first dimenion
     const ulong d2, // second dimension
@@ -1012,7 +1012,7 @@ __kernel void fwht_1d_b2(
     }
 }
 
-__kernel void fft_1d_b2(
+__kernel void rfft_1d_radix2(
     // In place, vectorized 1 dimensional Fast Fourier Transform where the size of the last dimension is a power of 2
     const ulong d1, // first dimenion
     const ulong d2, // second dimension

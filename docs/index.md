@@ -1718,7 +1718,7 @@ FWHT requires the use of a single work group for the final dimension i.e. it is 
 ```
 
 ```python 
->>> print(qmcseqcl.fwht_1d_b2.__doc__)
+>>> print(qmcseqcl.fwht_1d_radix2.__doc__)
 In place, vectorized 1 dimensional Fast Walsh-Hadamard Transform where the size of the last dimension is a power of 2
 
 Args:
@@ -1730,7 +1730,7 @@ Args:
 >>> d2 = np.uint64(1)
 >>> x = np.array([1,0,1,0,0,1,1,0],dtype=np.double)
 >>> n_half = np.uint64(len(x)//2)
->>> time_perf,time_process = qmcseqcl.fwht_1d_b2(d1,d2,n_half,x,**kwargs_fwht)
+>>> time_perf,time_process = qmcseqcl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_fwht)
 >>> x
 array([ 4.,  2.,  0., -2.,  0.,  2.,  0.,  2.])
 ```
@@ -1745,7 +1745,7 @@ y_sympy = np.empty_like(x,dtype=np.double)
 for i in range(d1):
     for j in range(d2): 
         y_sympy[i,j] = np.array(sympy.fwht(x[i,j]),dtype=np.double)
-qmcseqcl.fwht_1d_b2(d1,d2,n_half,x,**kwargs_fwht)
+qmcseqcl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_fwht)
 np.allclose(x,y_sympy,atol=1e-8)
 True
 ```
