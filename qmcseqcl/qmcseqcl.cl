@@ -1029,9 +1029,9 @@ __kernel void fft_1d_b2(
     ulong ii,i,i1,i2,t,jj1,jj2,j1,j2,k,s,f,idx;
     double xr1,xr2,xi1,xi2,yr,yi,v,cosv,sinv;
     ulong n = 2*n_half;
-    ulong m = (ulong)(log2((double)n)); 
+    ulong m = (ulong)(log2((double)n));
     for(k=0; k<m; k++){
-        s = m-k-1;
+        s = k;//m-k-1;
         f = 1<<s; 
         printf("k = %lu\n",k);
         for(ii=0; ii<batch_size_n_half; ii++){
@@ -1054,16 +1054,16 @@ __kernel void fft_1d_b2(
                     xr2 = xr[idx+i2];
                     xi1 = xi[idx+i1];
                     xi2 = xi[idx+i2];
-                    xr[idx+i1] = xr1+xr2;
-                    xi[idx+i1] = xi1+xi2;
-                    yr = xr1-xr2;
-                    yi = xi1-xi2;
-                    v = 2*M_PI*t/(2*f);
+                    v = -2*M_PI*t/(2*f);
                     cosv = cos(v);
                     sinv = sin(v);
+                    yr = xr2*cosv-xi2*sinv;
+                    yi = xr2*sinv+xi2*cosv;
                     printf("\ti1 = %lu\ti2 = %lu\tW_%lu^%lu\tcosv = %lf\tsinv = %lf\n",i1,i2,2*f,t,cosv,sinv);
-                    xr[idx+i2] = yr*cosv-yi*sinv;
-                    xi[idx+i2] = yr*sinv+yi*cosv;
+                    xr[idx+i1] = xr1+yr;
+                    xi[idx+i1] = xi1+yi;
+                    xr[idx+i2] = xr1-yr;
+                    xi[idx+i2] = xi1-yi;
                     // can disregard most of the bottom of the graph for real valued inputs 
                     if(j2==(d2-1)){
                         break;
