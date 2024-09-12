@@ -1016,21 +1016,23 @@ __kernel void fft_1d_b2(
     // In place, vectorized 1 dimensional Fast Fourier Transform where the size of the last dimension is a power of 2
     const ulong d1, // first dimenion
     const ulong d2, // second dimension
-    const ulong n_half, // half of the last dimenion along which FFT is performed
+    const ulong n_half, // half of the last dimenion of size n = 2n_half along which FFT is performed
     const ulong batch_size_d1, // batch size first dimension 
     const ulong batch_size_d2, // batch size second dimension
     const ulong batch_size_n_half, // batch size for half of the last dimension
-    __global double *xr, // real array of size d1*d2*2n_half on which to perform FFT in place
-    __global double *xi, // imaginary array of size d1*d2*2n_half on which to perform FFT in place
-    __global double *twiddle // twiddle factors
+    __global double *xr, // real array of size d1*d2*n on which to perform FFT in place
+    __global double *xi, // imaginary array of size d1*d2*n on which to perform FFT in place
+    __global double *twiddler, // size n vector used to store real twiddle factors
+    __global double *twiddlei // size n vector used to store imaginary twiddle factors 
 ){
     ulong j10 = get_global_id(0)*batch_size_d1;
     ulong j20 = get_global_id(1)*batch_size_d2;
     ulong i0 = get_global_id(2)*batch_size_n_half;
-    ulong b1,b2,ii,i,i1,i2,i1cp,i2cp,t,jj1,jj2,j1,j2,k,s,f,idx;
+    ulong b1,b2,ii,i,i1,i2,i1cp,i2cp,t,jj1,jj2,j1,j2,k,f,idx;
     double xr1,xr2,xi1,xi2,yr,yi,v,cosv,sinv;
     ulong n = 2*n_half;
     ulong m = (ulong)(log2((double)n));
+    // first step where indices are bit reversed and combined without weights, result stored in xi 
     ulong bigone = 1;
     for(ii=0; ii<batch_size_n_half; ii++){
         i1 = 2*(i0+ii);
@@ -1060,11 +1062,10 @@ __kernel void fft_1d_b2(
             for(jj2=0; jj2<batch_size_d2; jj2++){
                 j2 = j20+jj2;
                 idx = j1*d2*n+j2*n;
-                xr1 = twiddle[idx+b1];
-                xr2 = twiddle[idx+b2];
-                xr[idx+i1] = xr1+xr2;
-                xr[idx+i2] = xr1-xr2;
-                printf("i1 = %lu\ti2 = %lu\tb1 = %lu\tb2 = %lu\txr1 = %lf\txr2 = %lf\n",i1,i2,b1,b2,xr1,xr2);
+                xr1 = xr[idx+b1];
+                xr2 = xr[idx+b2];
+                xi[idx+i1] = xr1+xr2;
+                xi[idx+i2] = xr1-xr2;
                 if(j2==(d2-1)){
                     break;
                 }
@@ -1078,14 +1079,37 @@ __kernel void fft_1d_b2(
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
-    printf("\n");
+    // copy xi into xr, set all of xi equal to 0, and initialize twiddle factors
+    for(ii=0; ii<batch_size_n_half; ii++){
+        i1 = 2*(i0+ii);
+        i2 = i1+1;
+        for(jj1=0; jj1<batch_size_d1; jj1++){
+            j1 = j10+jj1;
+            for(jj2=0; jj2<batch_size_d2; jj2++){
+                j2 = j20+jj2;
+                idx = j1*d2*n+j2*n;
+                xr[idx+i1] = xi[idx+i1];
+                xr[idx+i2] = xi[idx+i2];
+                xi[idx+i1] = 0;
+                xi[idx+i2] = 0;
+                if(j2==(d2-1)){
+                    break;
+                }
+            }
+            if(j1==(d1-1)){
+                break;
+            }
+        }
+        if(i1==(n-2)){
+            break;
+        }
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
     for(k=1; k<m; k++){
-        s = k;//m-k-1;
-        f = 1<<s; 
-        printf("k = %lu\n",k);
+        f = 1<<k; 
         for(ii=0; ii<batch_size_n_half; ii++){
             i = i0+ii;
-            if((i>>s)&1){
+            if((i>>k)&1){
                 i2 = i+n_half;
                 i1 = i2^f;
             }
@@ -1108,7 +1132,6 @@ __kernel void fft_1d_b2(
                     sinv = sin(v);
                     yr = xr2*cosv-xi2*sinv;
                     yi = xr2*sinv+xi2*cosv;
-                    printf("\ti1 = %lu\ti2 = %lu\tW_%lu^%lu\tcosv = %lf\tsinv = %lf\n",i1,i2,2*f,t,cosv,sinv);
                     xr[idx+i1] = xr1+yr;
                     xi[idx+i1] = xi1+yi;
                     xr[idx+i2] = xr1-yr;
@@ -1126,7 +1149,6 @@ __kernel void fft_1d_b2(
                 break;
             }
         }
-        printf("\n");
         barrier(CLK_LOCAL_MEM_FENCE);
     }
 }
