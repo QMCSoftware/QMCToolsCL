@@ -1028,8 +1028,8 @@ __kernel void fft_1d_b2(
     ulong j10 = get_global_id(0)*batch_size_d1;
     ulong j20 = get_global_id(1)*batch_size_d2;
     ulong i0 = get_global_id(2)*batch_size_n_half;
-    ulong b1,b2,ii,i,i1,i2,i1cp,i2cp,t,jj1,jj2,j1,j2,k,f,idx;
-    double xr1,xr2,xi1,xi2,yr,yi,v,cosv,sinv;
+    ulong b1,b2,ii,i,i1,i2,i1cp,i2cp,t,jj1,jj2,j1,j2,k,s,f,idx;
+    double xr1,xr2,xi1,xi2,yr,yi,v1,v2,cosv,sinv;
     ulong n = 2*n_half;
     ulong m = (ulong)(log2((double)n));
     // first step where indices are bit reversed and combined without weights, result stored in xi 
@@ -1100,12 +1100,20 @@ __kernel void fft_1d_b2(
                 break;
             }
         }
+        v1 = -2*M_PI*i1/n;
+        twiddler[i1] = cos(v1);
+        twiddlei[i1] = sin(v1);
+        v2 = -2*M_PI*i2/n;
+        twiddler[i2] = cos(v2);
+        twiddlei[i2] = sin(v2);
         if(i1==(n-2)){
             break;
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
+    // remaining butterflies
     for(k=1; k<m; k++){
+        s = m-k-1;
         f = 1<<k; 
         for(ii=0; ii<batch_size_n_half; ii++){
             i = i0+ii;
@@ -1117,7 +1125,9 @@ __kernel void fft_1d_b2(
                 i1 = i;
                 i2 = i1^f;
             }
-            t = i1%f;
+            t = (i1%f)*(bigone<<s);
+            cosv = twiddler[t];
+            sinv = twiddlei[t];
             for(jj1=0; jj1<batch_size_d1; jj1++){
                 j1 = j10+jj1;
                 for(jj2=0; jj2<batch_size_d2; jj2++){
@@ -1127,9 +1137,6 @@ __kernel void fft_1d_b2(
                     xr2 = xr[idx+i2];
                     xi1 = xi[idx+i1];
                     xi2 = xi[idx+i2];
-                    v = -2*M_PI*t/(2*f);
-                    cosv = cos(v);
-                    sinv = sin(v);
                     yr = xr2*cosv-xi2*sinv;
                     yi = xr2*sinv+xi2*cosv;
                     xr[idx+i1] = xr1+yr;
