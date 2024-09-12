@@ -1030,6 +1030,7 @@ __kernel void fft_1d_b2(
     ulong i0 = get_global_id(2)*batch_size_n_half;
     ulong b1,b2,ii,i,i1,i2,i1cp,i2cp,t,jj1,jj2,j1,j2,k,s,f,idx;
     double xr1,xr2,xi1,xi2,yr,yi,v1,v2,cosv,sinv;
+    double PI = acos(-1.);
     ulong n = 2*n_half;
     ulong m = (ulong)(log2((double)n));
     // first step where indices are bit reversed and combined without weights, result stored in xi 
@@ -1100,10 +1101,10 @@ __kernel void fft_1d_b2(
                 break;
             }
         }
-        v1 = -2*M_PI*i1/n;
+        v1 = -2*PI*i1/n;
         twiddler[i1] = cos(v1);
         twiddlei[i1] = sin(v1);
-        v2 = -2*M_PI*i2/n;
+        v2 = -2*PI*i2/n;
         twiddler[i2] = cos(v2);
         twiddlei[i2] = sin(v2);
         if(i1==(n-2)){
