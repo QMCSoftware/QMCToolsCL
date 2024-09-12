@@ -958,7 +958,9 @@ __kernel void gdn_undo_interlace(
 }
 
 __kernel void fwht_1d_radix2(
-    // In place, vectorized 1 dimensional Fast Walsh-Hadamard Transform where the size of the last dimension is a power of 2
+    // Fast Walsh-Hadamard Transform for real valued inputs.
+    // FWHT is done in place along the last dimension where the size is required to be a power of 2. 
+    // Follows the divide-and-conquer algorithm described in https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform
     const ulong d1, // first dimenion
     const ulong d2, // second dimension
     const ulong n_half, // half of the last dimenion along which FWHT is performed
@@ -1013,7 +1015,11 @@ __kernel void fwht_1d_radix2(
 }
 
 __kernel void rfft_1d_radix2(
-    // In place, vectorized 1 dimensional Fast Fourier Transform where the size of the last dimension is a power of 2
+    // Fast Fourier Transform for real valued inputs.
+    // FFT is done in place along the last dimension where the size is required to be a power of 2. 
+    // Follows a decimation-in-time procedure described in https://www.cmlab.csie.ntu.edu.tw/cml/dsp/training/coding/transform/fft.html. 
+    // Since we are performing a real fft, the last n/2-1 componenets are conjugates of componenets n/2-1,...,1 when indexing from 0. 
+    // A future implementation may exploit this symmetry.
     const ulong d1, // first dimenion
     const ulong d2, // second dimension
     const ulong n_half, // half of the last dimenion of size n = 2n_half along which FFT is performed

@@ -1704,22 +1704,75 @@ array([[[[0, 0, 0, 0],
          [2, 1, 1, 2]]]], dtype=uint64)
 ```
 
-# Fast Walsh-Hadamard Transform 
+# Fast Transforms
 
-FWHT requires the use of a single work group for the final dimension i.e. it is required that `global_size[2]==local_size[2]`
+Fast transforms require the use of a single work group for the final dimension i.e. it is required that `global_size[2]==local_size[2]`
 
 ```python 
 >>> if kwargs["backend"]=="CL":
-...     kwargs_fwht = kwargs.copy()
-...     kwargs_fwht["global_size"] = (2,2,2)
-...     kwargs_fwht["local_size"] = (1,1,2)
+...     kwargs_ft = kwargs.copy()
+...     kwargs_ft["global_size"] = (2,2,2)
+...     kwargs_ft["local_size"] = (1,1,2)
 ... else: # kwargs["backend"]=="C"
-...     kwargs_fwht = kwargs 
+...     kwargs_ft = kwargs 
 ```
+
+## Fast Fourier Transform
+
+```python 
+>>> print(qmcseqcl.rfft_1d_radix2.__doc__)
+Fast Fourier Transform for real valued inputs.
+FFT is done in place along the last dimension where the size is required to be a power of 2.
+Follows a decimation-in-time procedure described in https://www.cmlab.csie.ntu.edu.tw/cml/dsp/training/coding/transform/fft.html.
+Since we are performing a real fft, the last n/2-1 componenets are conjugates of componenets n/2-1,...,1 when indexing from 0.
+A future implementation may exploit this symmetry.
+
+Args:
+    d1 (np.uint64): first dimenion
+    d2 (np.uint64): second dimension
+    n_half (np.uint64): half of the last dimenion of size n = 2n_half along which FFT is performed
+    twiddler (np.ndarray of np.double): size n vector used to store real twiddle factors
+    twiddlei (np.ndarray of np.double): size n vector used to store imaginary twiddle factors 
+    xr (np.ndarray of np.double): real array of size d1*d2*n on which to perform FFT in place
+    xi (np.ndarray of np.double): imaginary array of size d1*d2*n on which to perform FFT in place
+>>> d1 = np.uint64(1) 
+>>> d2 = np.uint64(1)
+>>> xr = np.array([1,0,1,0,0,1,1,0],dtype=np.double)
+>>> xi = np.empty_like(xr,dtype=np.double)
+>>> twiddler = np.empty_like(xr,dtype=np.double)
+>>> twiddlei = np.empty_like(xr,dtype=np.double)
+>>> n_half = np.uint64(len(xr)//2)
+>>> time_perf,time_process = qmcseqcl.rfft_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
+>>> y = xr+1j*xi
+>>> y
+array([ 4.        +0.j        ,  0.29289322+0.70710678j,
+       -1.        -1.j        ,  1.70710678+0.70710678j,
+        2.        +0.j        ,  1.70710678-0.70710678j,
+       -1.        +1.j        ,  0.29289322-0.70710678j])
+```
+
+```python
+>>> d1 = np.uint(5) 
+>>> d2 = np.uint(7) 
+>>> n_half = np.uint(2**7) 
+>>> xr = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
+>>> xi = np.empty_like(xr,dtype=np.double)
+>>> twiddler = np.empty_like(xr,dtype=np.double)
+>>> twiddlei = np.empty_like(xr,dtype=np.double)
+>>> y_np = np.fft.fft(xr)
+>>> time_perf,time_process = qmcseqcl.rfft_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
+>>> y = xr+1j*xi
+>>> np.allclose(y,y_np,atol=1e-8)
+True
+```
+
+## Fast Walsh-Hadamard Transform
 
 ```python 
 >>> print(qmcseqcl.fwht_1d_radix2.__doc__)
-In place, vectorized 1 dimensional Fast Walsh-Hadamard Transform where the size of the last dimension is a power of 2
+Fast Walsh-Hadamard Transform for real valued inputs.
+FWHT is done in place along the last dimension where the size is required to be a power of 2.
+Follows the divide-and-conquer algorithm described in https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform
 
 Args:
     d1 (np.uint64): first dimenion
@@ -1730,23 +1783,23 @@ Args:
 >>> d2 = np.uint64(1)
 >>> x = np.array([1,0,1,0,0,1,1,0],dtype=np.double)
 >>> n_half = np.uint64(len(x)//2)
->>> time_perf,time_process = qmcseqcl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_fwht)
+>>> time_perf,time_process = qmcseqcl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_ft)
 >>> x
 array([ 4.,  2.,  0., -2.,  0.,  2.,  0.,  2.])
 ```
 
 ```python 
-d1 = np.uint(5) 
-d2 = np.uint(7) 
-n_half = np.uint(2**7) 
-x = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
-import sympy
-y_sympy = np.empty_like(x,dtype=np.double) 
-for i in range(d1):
-    for j in range(d2): 
-        y_sympy[i,j] = np.array(sympy.fwht(x[i,j]),dtype=np.double)
-qmcseqcl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_fwht)
-np.allclose(x,y_sympy,atol=1e-8)
+>>> d1 = np.uint(5) 
+>>> d2 = np.uint(7) 
+>>> n_half = np.uint(2**7) 
+>>> x = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
+>>> import sympy
+>>> y_sympy = np.empty_like(x,dtype=np.double) 
+>>> for i in range(d1):
+...     for j in range(d2): 
+...         y_sympy[i,j] = np.array(sympy.fwht(x[i,j]),dtype=np.double)
+>>> time_perf,time_process = qmcseqcl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_ft)
+>>> np.allclose(x,y_sympy,atol=1e-8)
 True
 ```
 

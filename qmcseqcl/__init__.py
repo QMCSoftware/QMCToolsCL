@@ -122,12 +122,17 @@ blocks = re.findall(r'(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
 for block in blocks:
     lines = block.replace("(","").splitlines()
     name = lines[0]
-    desc = lines[1].split("// ")[1].strip()
+    desc = [] 
+    si = 1
+    while lines[si].strip()[:2]=="//":
+        desc += [lines[si].split("// ")[1].strip()]
+        si += 1
+    desc = "\n".join(desc)
     args = []
     doc_args = []
-    for i in range(2,len(lines)):
-        input,var_desc = lines[i].split(" // ")
-        var_type,var = input.replace(",","").split(" ")[-2:]
+    for i in range(si,len(lines)):
+        var_input,var_desc = lines[i].split(" // ")
+        var_type,var = var_input.replace(",","").split(" ")[-2:]
         if var_type not in c_to_ctypes_map:
                 raise Exception("var_type %s not found in map"%var_type)
         c_var_type = c_to_ctypes_map[var_type]
