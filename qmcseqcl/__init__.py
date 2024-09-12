@@ -28,6 +28,125 @@ def print_opencl_device_info():
             print("\t\tMax Work-group Dims:(", dim[0], " ".join(map(str, dim[1:])), ")")
         print()
 
+def get_qmcseqcl_program_from_context(context):
+    import pyopencl as cl
+    FILEDIR = os.path.dirname(os.path.realpath(__file__))
+    with open(FILEDIR+"/qmcseqcl.cl","r") as kernel_file:
+        kernelsource = kernel_file.read()
+    program = cl.Program(context,kernelsource).build()
+    return program
+
+def _parse_kwargs_backend_queue_program(kwargs):
+    if "backend" in kwargs: 
+        kwargs["backend"] = kwargs["backend"].lower()
+        assert kwargs["backend"] in ["cl","c"] 
+    else: 
+        kwargs["backend"] = "c"
+    if kwargs["backend"]=="cl":
+        try:
+            import pyopencl as cl
+        except:
+            raise ImportError("install pyopencl to access these capabilities in QMCseqCL")
+        if "context" not in kwargs:
+            platform = cl.get_platforms()[kwargs["platform_id"] if "platform_id" in kwargs else 0]
+            device = platform.get_devices()[kwargs["device_id"] if "device_id" in kwargs else 0]
+            kwargs["context"] = cl.Context([device])
+        if "queue" not in kwargs:
+            kwargs["queue"] = cl.CommandQueue(kwargs["context"],properties=cl.command_queue_properties.PROFILING_ENABLE)
+
+def _preprocess_fwht(*args_device,kwargs):
+    if kwargs["local_size"] is None or kwargs["local_size"][2]!=kwargs["global_size"][2]:
+        raise Exception("fwht requires local_size is not None and local_size[2] = %d equals global_size[2] = %d"%(kwargs["local_size"][2],kwargs["global_size"][2]))
+
+overwrite_args = {
+    "rfft_1d_radix2": 2, 
+}
+
+def opencl_c_func(func):
+    func_name = func.__name__
+    def wrapped_func(*args, **kwargs):
+        _parse_kwargs_backend_queue_program(kwargs)
+        args = list(args)
+        if kwargs["backend"]=="c":
+            t0_perf = time.perf_counter()
+            t0_process = time.process_time()
+            args = args[:3]+args[:3]+args[3:] # repeat the first 3 args to the batch sizes
+            eval("%s_c(*args)"%func_name)
+            tdelta_process = time.process_time()-t0_process 
+            tdelta_perf = time.perf_counter()-t0_perf 
+            return tdelta_perf,tdelta_process
+        else: # kwargs["backend"]=="cl"
+            import pyopencl as cl
+            t0_perf = time.perf_counter()
+            program = kwargs["program"] if "program" in kwargs else get_qmcseqcl_program_from_context(kwargs["context"])
+            assert "global_size" in kwargs 
+            kwargs["global_size"] = [min(kwargs["global_size"][i],args[i]) for i in range(3)]
+            batch_size = [np.uint64(np.ceil(args[i]/kwargs["global_size"][i])) for i in range(3)]
+            kwargs["global_size"] = [np.uint64(np.ceil(args[i]/batch_size[i])) for i in range(3)]
+            if "local_size" not in kwargs:
+                kwargs["local_size"] = None
+            cl_func = getattr(program,func_name)
+            args_device = [cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=arg) if isinstance(arg,np.ndarray) else arg for arg in args]
+            args_device = args_device[:3]+batch_size+args_device[3:] # repeat the first 3 args to the batch sizes
+            try:
+                eval('_preprocess_%s(*args_device,kwargs=kwargs)'%func_name)
+            except NameError: pass
+            event = cl_func(kwargs["queue"],kwargs["global_size"],kwargs["local_size"],*args_device)
+            if "wait" in kwargs and kwargs["wait"]:
+                event.wait()
+                tdelta_process = (event.profile.end - event.profile.start)*1e-9
+            else:
+                tdelta_process = -1
+            if isinstance(args[-1],np.ndarray):
+                num_overwrite_args = overwrite_args[func_name] if func_name in overwrite_args else 1
+                for i in range(-1,-1-num_overwrite_args,-1):
+                    cl.enqueue_copy(kwargs["queue"],args[i],args_device[i])
+            tdelta_perf = time.perf_counter()-t0_perf
+            return tdelta_perf,tdelta_process
+    wrapped_func.__doc__ = func.__doc__
+    return wrapped_func
+
+c_lib = ctypes.CDLL(glob.glob(os.path.dirname(os.path.abspath(__file__))+"/c_lib*")[0], mode=ctypes.RTLD_GLOBAL)
+
+c_to_ctypes_map = {
+    "ulong": "uint64",
+    "double": "double",
+    "char": "uint8",
+}
+
+THISDIR = os.path.dirname(os.path.realpath(__file__))
+
+with open("%s/qmcseqcl.cl"%THISDIR,"r") as f:
+    code = f.read() 
+blocks = re.findall(r'(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
+for block in blocks:
+    lines = block.replace("(","").splitlines()
+    name = lines[0]
+    desc = [] 
+    si = 1
+    while lines[si].strip()[:2]=="//":
+        desc += [lines[si].split("// ")[1].strip()]
+        si += 1
+    desc = "\n".join(desc)
+    args = []
+    doc_args = []
+    for i in range(si,len(lines)):
+        var_input,var_desc = lines[i].split(" // ")
+        var_type,var = var_input.replace(",","").split(" ")[-2:]
+        if var_type not in c_to_ctypes_map:
+                raise Exception("var_type %s not found in map"%var_type)
+        c_var_type = c_to_ctypes_map[var_type]
+        if var[0]!="*":
+            doc_args += ["%s (np.%s): %s"%(var,c_var_type,var_desc)]
+            args += ["ctypes.c_%s"%c_var_type]
+        else:
+            doc_args += ["%s (np.ndarray of np.%s): %s"%(var[1:],c_var_type,var_desc)]
+            args += ["np.ctypeslib.ndpointer(ctypes.c_%s,flags='C_CONTIGUOUS')"%c_var_type]
+    doc_args = doc_args[:3]+doc_args[6:] # skip batch size args
+    exec("%s_c = c_lib.%s"%(name,name)) 
+    exec("%s_c.argtypes = [%s]"%(name,','.join(args)))
+    exec('@opencl_c_func\ndef %s():\n    """%s\n\nArgs:\n    %s"""\n    pass'%(name,desc.strip(),"\n    ".join(doc_args)))
+
 def random_tbit_uint64s(rng, t, shape):
     """Generate the desired shape of random integers with t bits
 
@@ -57,102 +176,103 @@ Args:
     for i in range(n): 
         x[i] = rng.permutation(b) 
     return x
+def dnb2_get_linear_scramble_matrix(rng, r, d, tmax, tmax_new, print_mats):
+    """Return a scrambling matrix for linear matrix scrambling
 
-def get_qmcseqcl_program_from_context(context):
-    import pyopencl as cl
-    FILEDIR = os.path.dirname(os.path.realpath(__file__))
-    with open(FILEDIR+"/qmcseqcl.cl","r") as kernel_file:
-        kernelsource = kernel_file.read()
-    program = cl.Program(context,kernelsource).build()
-    return program
+Args:
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications
+    d (np.uint64): dimension
+    tmax (np.uint64): bits in each integer
+    tmax_new (np.uint64): bits in each integer of the generating matrix after scrambling
+    print_mats (np.uint8): flag to print the resulting matrices"""
+    S = np.empty((r,d,tmax_new),dtype=np.uint64) 
+    for t in range(tmax_new):
+        S[:,:,t] = random_tbit_uint64s(rng,min(t,tmax),(r,d))
+    S[:,:,:tmax] <<= np.arange(tmax,0,-1,dtype=np.uint64)
+    S[:,:,:tmax] += np.uint64(1)<<np.arange(tmax-1,-1,-1,dtype=np.uint64)
+    if print_mats:
+        print("S with shape (r=%d, d=%d, tmax_new=%d)"%(r,d,tmax_new))
+        for l in range(r):
+            print("l = %d"%l)
+            for j in range(d): 
+                print("    j = %d"%j)
+                for t in range(tmax_new):
+                    b = bin(S[l,j,t])[2:]
+                    print("        "+"0"*(tmax-len(b))+b)
+    return S
 
-def opencl_c_func(func):
-    func_name = func.__name__
-    def wrapped_func(*args, **kwargs):
-        if "backend" in kwargs: 
-            assert kwargs["backend"].lower() in ["cl","c"] 
-            backend = kwargs["backend"].lower()
-        else: 
-            backend = "c"
-        args = list(args)
-        if backend=="c":
-            t0_perf = time.perf_counter()
-            t0_process = time.process_time()
-            args = args[:3]+args[:3]+args[3:] # repeat the first 3 args to the batch sizes
-            eval("%s_c(*args)"%func_name)
-            tdelta_process = time.process_time()-t0_process 
-            tdelta_perf = time.perf_counter()-t0_perf 
-            return tdelta_perf,tdelta_process
-        else: # backend=="cl"
-            t0_perf = time.perf_counter()
-            try:
-                import pyopencl as cl
-            except:
-                raise ImportError("install pyopencl to access these capabilities in QMCseqCL")
-            if "context" in kwargs:
-                context = kwargs["context"]
-            else:
-                platform = cl.get_platforms()[kwargs["platform_id"] if "platform_id" in kwargs else 0]
-                device = platform.get_devices()[kwargs["device_id"] if "device_id" in kwargs else 0]
-                context = cl.Context([device])
-            program = kwargs["program"] if "program" in kwargs else get_qmcseqcl_program_from_context(context)
-            queue = kwargs["queue"] if "queue" in kwargs else cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
-            assert "global_size" in kwargs 
-            global_size = kwargs["global_size"]
-            global_size = [min(global_size[i],args[i]) for i in range(3)]
-            local_size = kwargs["local_size"] if "local_size" in kwargs else None
-            cl_func = getattr(program,func_name)
-            args_device = [cl.Buffer(context,cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=arg) if isinstance(arg,np.ndarray) else arg for arg in args]
-            batch_size = [np.uint64(np.ceil(args[i]/global_size[i])) for i in range(3)]
-            args_device = args_device[:3]+batch_size+args_device[3:] # repeat the first 3 args to the batch sizes
-            event = cl_func(queue,global_size,local_size,*args_device)
-            if "wait" in kwargs and kwargs["wait"]:
-                event.wait()
-                tdelta_process = (event.profile.end - event.profile.start)*1e-9
-            else:
-                tdelta_process = -1
-            if isinstance(args[-1],np.ndarray):
-                cl.enqueue_copy(queue,args[-1],args_device[-1])
-            tdelta_perf = time.perf_counter()-t0_perf
-            return tdelta_perf,tdelta_process
-    wrapped_func.__doc__ = func.__doc__
-    return wrapped_func
+def gdn_get_linear_scramble_matrix(rng, r, d, tmax, tmax_new, r_b, bases):
+    """Return a scrambling matrix for linear matrix scrambling
 
-c_lib = ctypes.CDLL(glob.glob(os.path.dirname(os.path.abspath(__file__))+"/c_lib*")[0], mode=ctypes.RTLD_GLOBAL)
+Args:
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications
+    d (np.uint64): dimension
+    tmax (np.uint64): bits in each integer
+    tmax_new (np.uint64): bits in each integer of the generating matrix after scrambling
+    r_b (np.uint64): replications of bases 
+    bases (np.ndarray of np.uint64): bases of size r_b*d"""
+    S = np.empty((r,d,tmax_new,tmax),dtype=np.uint64)
+    bases_2d = np.atleast_2d(bases)
+    lower_flag = np.tri(int(tmax_new),int(tmax),k=-1,dtype=np.bool)
+    n_lower_flags = lower_flag.sum()
+    diag_flag = np.eye(tmax_new,tmax,dtype=np.bool)
+    for l in range(r):
+        for j in range(d):
+            b = bases_2d[l%r_b,j]
+            Slj = np.zeros((tmax_new,tmax),dtype=np.uint64)
+            Slj[lower_flag] = rng.integers(0,b,n_lower_flags)
+            Slj[diag_flag] = rng.integers(1,b,tmax)
+            S[l,j] = Slj
+    return S
 
-c_to_ctypes_map = {
-    "ulong": "uint64",
-    "double": "double",
-    "char": "uint8",
-}
+def gdn_get_halton_generating_matrix(r,d,mmax):
+    """Return the identity matrices comprising the Halton generating matrices
+    
+Arg:
+    r (np.uint64): replications 
+    d (np.uint64): dimension 
+    mmax (np.uint64): maximum number rows and columns in each generating matrix"""
+    return np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(r,d,1,1))
 
-THISDIR = os.path.dirname(os.path.realpath(__file__))
+def gdn_get_digital_shifts(rng, r, d, tmax_new, r_b, bases):
+    """Return digital shifts for gdn
 
-with open("%s/qmcseqcl.cl"%THISDIR,"r") as f:
-    code = f.read() 
-blocks = re.findall(r'(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
-for block in blocks:
-    lines = block.replace("(","").splitlines()
-    name = lines[0]
-    desc = lines[1].split("// ")[1].strip()
-    args = []
-    doc_args = []
-    for i in range(2,len(lines)):
-        input,var_desc = lines[i].split(" // ")
-        var_type,var = input.replace(",","").split(" ")[-2:]
-        if var_type not in c_to_ctypes_map:
-                raise Exception("var_type %s not found in map"%var_type)
-        c_var_type = c_to_ctypes_map[var_type]
-        if var[0]!="*":
-            doc_args += ["%s (np.%s): %s"%(var,c_var_type,var_desc)]
-            args += ["ctypes.c_%s"%c_var_type]
-        else:
-            doc_args += ["%s (np.ndarray of np.%s): %s"%(var[1:],c_var_type,var_desc)]
-            args += ["np.ctypeslib.ndpointer(ctypes.c_%s,flags='C_CONTIGUOUS')"%c_var_type]
-    doc_args = doc_args[:3]+doc_args[6:] # skip batch size args
-    exec("%s_c = c_lib.%s"%(name,name)) 
-    exec("%s_c.argtypes = [%s]"%(name,','.join(args)))
-    exec('@opencl_c_func\ndef %s():\n    """%s\n\nArgs:\n    %s"""\n    pass'%(name,desc.strip(),"\n    ".join(doc_args)))
+Args: 
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications 
+    d (np.uint64): dimension 
+    tmax_new (np.uint64): number of bits in each shift 
+    r_b (np.uint64): replications of bases 
+    bases (np.ndarray of np.uint64): bases of size r_b*d"""
+    shifts = np.empty((r,d,tmax_new),dtype=np.uint64)
+    bases_2d = np.atleast_2d(bases)
+    for l in range(r):
+         for j in range(d):
+             b = bases_2d[l%r_b,j]
+             shifts[l,j] = rng.integers(0,b,tmax_new,dtype=np.uint64)
+    return shifts
+
+def gdn_get_permutations(rng, r, d, tmax_new, r_b, bases):
+    """Return permutations for gdn
+
+Args: 
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications 
+    d (np.uint64): dimension 
+    tmax_new (np.uint64): number of bits in each shift 
+    r_b (np.uint64): replications of bases 
+    bases (np.ndarray of np.uint64): bases of size r_b*d"""
+    bases_2d = np.atleast_2d(bases)
+    bmax = bases_2d.max()
+    perms = np.zeros((r,d,tmax_new,bmax),dtype=np.uint64)
+    for l in range(r):
+        for j in range(d):
+            b = bases_2d[l%r_b,j]
+            for t in range(tmax_new):
+                perms[l,j,t,:b] = rng.permutation(b)
+    return perms
 
 class NUSNode_dnb2(object):
     def __init__(self, shift_bits=None, xb=None, left_b2=None, right_b2=None):
@@ -352,101 +472,3 @@ Args:
     tdelta_process = time.process_time()-t0_process 
     tdelta_perf = time.perf_counter()-t0_perf
     return tdelta_perf,tdelta_process,
-
-def dnb2_get_linear_scramble_matrix(rng, r, d, tmax, tmax_new, print_mats):
-    """Return a scrambling matrix for linear matrix scrambling
-
-Args:
-    rng (np.random._generator.Generator): random number generator
-    r (np.uint64): replications
-    d (np.uint64): dimension
-    tmax (np.uint64): bits in each integer
-    tmax_new (np.uint64): bits in each integer of the generating matrix after scrambling
-    print_mats (np.uint8): flag to print the resulting matrices"""
-    S = np.empty((r,d,tmax_new),dtype=np.uint64) 
-    for t in range(tmax_new):
-        S[:,:,t] = random_tbit_uint64s(rng,min(t,tmax),(r,d))
-    S[:,:,:tmax] <<= np.arange(tmax,0,-1,dtype=np.uint64)
-    S[:,:,:tmax] += np.uint64(1)<<np.arange(tmax-1,-1,-1,dtype=np.uint64)
-    if print_mats:
-        print("S with shape (r=%d, d=%d, tmax_new=%d)"%(r,d,tmax_new))
-        for l in range(r):
-            print("l = %d"%l)
-            for j in range(d): 
-                print("    j = %d"%j)
-                for t in range(tmax_new):
-                    b = bin(S[l,j,t])[2:]
-                    print("        "+"0"*(tmax-len(b))+b)
-    return S
-
-def gdn_get_linear_scramble_matrix(rng, r, d, tmax, tmax_new, r_b, bases):
-    """Return a scrambling matrix for linear matrix scrambling
-
-Args:
-    rng (np.random._generator.Generator): random number generator
-    r (np.uint64): replications
-    d (np.uint64): dimension
-    tmax (np.uint64): bits in each integer
-    tmax_new (np.uint64): bits in each integer of the generating matrix after scrambling
-    r_b (np.uint64): replications of bases 
-    bases (np.ndarray of np.uint64): bases of size r_b*d"""
-    S = np.empty((r,d,tmax_new,tmax),dtype=np.uint64)
-    bases_2d = np.atleast_2d(bases)
-    lower_flag = np.tri(int(tmax_new),int(tmax),k=-1,dtype=np.bool)
-    n_lower_flags = lower_flag.sum()
-    diag_flag = np.eye(tmax_new,tmax,dtype=np.bool)
-    for l in range(r):
-        for j in range(d):
-            b = bases_2d[l%r_b,j]
-            Slj = np.zeros((tmax_new,tmax),dtype=np.uint64)
-            Slj[lower_flag] = rng.integers(0,b,n_lower_flags)
-            Slj[diag_flag] = rng.integers(1,b,tmax)
-            S[l,j] = Slj
-    return S
-
-def gdn_get_halton_generating_matrix(r,d,mmax):
-    """Return the identity matrices comprising the Halton generating matrices
-    
-Arg:
-    r (np.uint64): replications 
-    d (np.uint64): dimension 
-    mmax (np.uint64): maximum number rows and columns in each generating matrix"""
-    return np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(r,d,1,1))
-
-def gdn_get_digital_shifts(rng, r, d, tmax_new, r_b, bases):
-    """Return digital shifts for gdn
-
-Args: 
-    rng (np.random._generator.Generator): random number generator
-    r (np.uint64): replications 
-    d (np.uint64): dimension 
-    tmax_new (np.uint64): number of bits in each shift 
-    r_b (np.uint64): replications of bases 
-    bases (np.ndarray of np.uint64): bases of size r_b*d"""
-    shifts = np.empty((r,d,tmax_new),dtype=np.uint64)
-    bases_2d = np.atleast_2d(bases)
-    for l in range(r):
-         for j in range(d):
-             b = bases_2d[l%r_b,j]
-             shifts[l,j] = rng.integers(0,b,tmax_new,dtype=np.uint64)
-    return shifts
-
-def gdn_get_permutations(rng, r, d, tmax_new, r_b, bases):
-    """Return permutations for gdn
-
-Args: 
-    rng (np.random._generator.Generator): random number generator
-    r (np.uint64): replications 
-    d (np.uint64): dimension 
-    tmax_new (np.uint64): number of bits in each shift 
-    r_b (np.uint64): replications of bases 
-    bases (np.ndarray of np.uint64): bases of size r_b*d"""
-    bases_2d = np.atleast_2d(bases)
-    bmax = bases_2d.max()
-    perms = np.zeros((r,d,tmax_new,bmax),dtype=np.uint64)
-    for l in range(r):
-        for j in range(d):
-            b = bases_2d[l%r_b,j]
-            for t in range(tmax_new):
-                perms[l,j,t,:b] = rng.permutation(b)
-    return perms

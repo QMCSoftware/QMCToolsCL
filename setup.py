@@ -11,6 +11,9 @@ c_content = c_content.replace("ulong","unsigned long long")
 c_content = c_content.replace("get_global_id(0)","0")
 c_content = c_content.replace("get_global_id(1)","0")
 c_content = c_content.replace("get_global_id(2)","0")
+c_content = c_content.replace("barrier(CLK_LOCAL_MEM_FENCE);","")
+c_content = c_content.replace("barrier(CLK_GLOBAL_MEM_FENCE);","")
+c_content = c_content.replace("barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);","")
 with open(cl_file[:-1],"w") as f:
     f.write(c_content)
 

@@ -19,7 +19,7 @@ jobs:
         run: |
           pip install numpy
           pip install pytest
-          conda env export
+          pip install sympy
       - name: Install QMCseqCL 
         shell: bash -l {0}
         run: |
@@ -40,7 +40,10 @@ jobs:
           if [ "$RUNNER_OS" == "macOS" ]; then
             conda install pocl -y
             conda install ocl_icd_wrapper_apple -y 
-          else
+          elif [ "$RUNNER_OS" == "Linux" ]; then
+            conda install intel-opencl-rt -y
+            conda install ocl-icd-system -y 
+          else # "$RUNNER_OS" == "Windows"
             conda install intel-opencl-rt -y
           fi
       - name: PyOpenCL Device Info
@@ -51,6 +54,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install pytest
+          pip install sympy
           python -m pytest index.cl.pytest.txt
       - name: Short Speed Tests
         shell: bash -l {0}

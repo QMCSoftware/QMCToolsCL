@@ -956,3 +956,213 @@ __kernel void gdn_undo_interlace(
         }
     }
 }
+
+__kernel void fwht_1d_radix2(
+    // Fast Walsh-Hadamard Transform for real valued inputs.
+    // FWHT is done in place along the last dimension where the size is required to be a power of 2. 
+    // Follows the divide-and-conquer algorithm described in https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform
+    const ulong d1, // first dimenion
+    const ulong d2, // second dimension
+    const ulong n_half, // half of the last dimenion along which FWHT is performed
+    const ulong batch_size_d1, // batch size first dimension 
+    const ulong batch_size_d2, // batch size second dimension
+    const ulong batch_size_n_half, // batch size for half of the last dimension
+    __global double *x // array of size d1*d2*2n_half on which to perform FWHT in place
+){
+    ulong j10 = get_global_id(0)*batch_size_d1;
+    ulong j20 = get_global_id(1)*batch_size_d2;
+    ulong i0 = get_global_id(2)*batch_size_n_half;
+    ulong ii,i,i1,i2,jj1,jj2,j1,j2,k,s,f,idx;
+    double x1,x2;
+    ulong n = 2*n_half;
+    ulong m = (ulong)(log2((double)n));
+    for(k=0; k<m; k++){
+        s = m-k-1;
+        f = 1<<s; 
+        for(ii=0; ii<batch_size_n_half; ii++){
+            i = i0+ii;
+            if((i>>s)&1){
+                i2 = i+n_half;
+                i1 = i2^f;
+            }
+            else{
+                i1 = i;
+                i2 = i1^f;
+            }
+            for(jj1=0; jj1<batch_size_d1; jj1++){
+                j1 = j10+jj1;
+                for(jj2=0; jj2<batch_size_d2; jj2++){
+                    j2 = j20+jj2;
+                    idx = j1*d2*n+j2*n;
+                    x1 = x[idx+i1];
+                    x2 = x[idx+i2];
+                    x[idx+i1] = x1+x2;
+                    x[idx+i2] = x1-x2;
+                    if(j2==(d2-1)){
+                        break;
+                    }
+                }
+                if(j1==(d1-1)){
+                    break;
+                }
+            }
+            if(i==(n_half-1)){
+                break;
+            }
+        }
+        barrier(CLK_LOCAL_MEM_FENCE);
+    }
+}
+
+__kernel void rfft_1d_radix2(
+    // Fast Fourier Transform for real valued inputs.
+    // FFT is done in place along the last dimension where the size is required to be a power of 2. 
+    // Follows a decimation-in-time procedure described in https://www.cmlab.csie.ntu.edu.tw/cml/dsp/training/coding/transform/fft.html. 
+    // Since we are performing a real fft, the last n/2-1 componenets are conjugates of componenets n/2-1,...,1 when indexing from 0. 
+    // A future implementation may exploit this symmetry.
+    const ulong d1, // first dimenion
+    const ulong d2, // second dimension
+    const ulong n_half, // half of the last dimenion of size n = 2n_half along which FFT is performed
+    const ulong batch_size_d1, // batch size first dimension 
+    const ulong batch_size_d2, // batch size second dimension
+    const ulong batch_size_n_half, // batch size for half of the last dimension
+    __global double *twiddler, // size n vector used to store real twiddle factors
+    __global double *twiddlei, // size n vector used to store imaginary twiddle factors 
+    __global double *xr, // real array of size d1*d2*n on which to perform FFT in place
+    __global double *xi // imaginary array of size d1*d2*n on which to perform FFT in place
+){
+    ulong j10 = get_global_id(0)*batch_size_d1;
+    ulong j20 = get_global_id(1)*batch_size_d2;
+    ulong i0 = get_global_id(2)*batch_size_n_half;
+    ulong b1,b2,ii,i,i1,i2,i1cp,i2cp,t,jj1,jj2,j1,j2,k,s,f,idx;
+    double xr1,xr2,xi1,xi2,yr,yi,v1,v2,cosv,sinv;
+    double PI = acos(-1.);
+    ulong n = 2*n_half;
+    ulong m = (ulong)(log2((double)n));
+    // first step where indices are bit reversed and combined without weights, result stored in xi 
+    ulong bigone = 1;
+    for(ii=0; ii<batch_size_n_half; ii++){
+        i1 = 2*(i0+ii);
+        i1cp = i1;
+        i2 = i1+1;
+        i2cp = i2;
+        b1 = 0; 
+        k = 0;
+        while(i1cp>0){
+            if(i1cp&1){
+                b1 += (bigone<<(m-k-1));
+            }
+            i1cp >>= 1;
+            k += 1;
+        }
+        b2 = 0;
+        k = 0;
+        while(i2cp>0){
+            if(i2cp&1){
+                b2 += (bigone<<(m-k-1));
+            }
+            i2cp >>= 1;
+            k += 1;
+        }
+        for(jj1=0; jj1<batch_size_d1; jj1++){
+            j1 = j10+jj1;
+            for(jj2=0; jj2<batch_size_d2; jj2++){
+                j2 = j20+jj2;
+                idx = j1*d2*n+j2*n;
+                xr1 = xr[idx+b1];
+                xr2 = xr[idx+b2];
+                xi[idx+i1] = xr1+xr2;
+                xi[idx+i2] = xr1-xr2;
+                if(j2==(d2-1)){
+                    break;
+                }
+            }
+            if(j1==(d1-1)){
+                break;
+            }
+        }
+        if(i1==(n-2)){
+            break;
+        }
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
+    // copy xi into xr, set all of xi equal to 0, and initialize twiddle factors
+    for(ii=0; ii<batch_size_n_half; ii++){
+        i1 = 2*(i0+ii);
+        i2 = i1+1;
+        for(jj1=0; jj1<batch_size_d1; jj1++){
+            j1 = j10+jj1;
+            for(jj2=0; jj2<batch_size_d2; jj2++){
+                j2 = j20+jj2;
+                idx = j1*d2*n+j2*n;
+                xr[idx+i1] = xi[idx+i1];
+                xr[idx+i2] = xi[idx+i2];
+                xi[idx+i1] = 0;
+                xi[idx+i2] = 0;
+                if(j2==(d2-1)){
+                    break;
+                }
+            }
+            if(j1==(d1-1)){
+                break;
+            }
+        }
+        v1 = -2*PI*i1/n;
+        twiddler[i1] = cos(v1);
+        twiddlei[i1] = sin(v1);
+        v2 = -2*PI*i2/n;
+        twiddler[i2] = cos(v2);
+        twiddlei[i2] = sin(v2);
+        if(i1==(n-2)){
+            break;
+        }
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
+    // remaining butterflies
+    for(k=1; k<m; k++){
+        s = m-k-1;
+        f = 1<<k; 
+        for(ii=0; ii<batch_size_n_half; ii++){
+            i = i0+ii;
+            if((i>>k)&1){
+                i2 = i+n_half;
+                i1 = i2^f;
+            }
+            else{
+                i1 = i;
+                i2 = i1^f;
+            }
+            t = (i1%f)*(bigone<<s);
+            cosv = twiddler[t];
+            sinv = twiddlei[t];
+            for(jj1=0; jj1<batch_size_d1; jj1++){
+                j1 = j10+jj1;
+                for(jj2=0; jj2<batch_size_d2; jj2++){
+                    j2 = j20+jj2;
+                    idx = j1*d2*n+j2*n;
+                    xr1 = xr[idx+i1];
+                    xr2 = xr[idx+i2];
+                    xi1 = xi[idx+i1];
+                    xi2 = xi[idx+i2];
+                    yr = xr2*cosv-xi2*sinv;
+                    yi = xr2*sinv+xi2*cosv;
+                    xr[idx+i1] = xr1+yr;
+                    xi[idx+i1] = xi1+yi;
+                    xr[idx+i2] = xr1-yr;
+                    xi[idx+i2] = xi1-yi;
+                    // can disregard most of the bottom of the graph for real valued inputs 
+                    if(j2==(d2-1)){
+                        break;
+                    }
+                }
+                if(j1==(d1-1)){
+                    break;
+                }
+            }
+            if(i==(n_half-1)){
+                break;
+            }
+        }
+        barrier(CLK_LOCAL_MEM_FENCE);
+    }
+}
