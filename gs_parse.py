@@ -9,9 +9,9 @@ parser = argparse.ArgumentParser(prog='Global Size Experiment')
 parser.add_argument('-q','--qrproblem',type=str,nargs='?',default="lattice",help='quasi-random problem type in %s'%list(map_run_problem.keys()))
 parser.add_argument('-t','--tag',type=str,nargs='?',default="debug",help='experiment tag')
 parser.add_argument('-c','--cmap',type=str,nargs='?',default="gist_yarg",help='colormap from matplotlib.cm')
-parser.add_argument('-x','--cleq1',type=str,nargs='?',default="k",help='text color when speedup<=1')
-parser.add_argument('-y','--cgt1',type=str,nargs='?',default="r",help='text color when speedup>1')
-parser.add_argument('-z','--cperf',type=str,nargs='?',default="r",help='text color for perf plot')
+parser.add_argument('-x','--colorleq1',type=str,nargs='?',default="k",help='text color when speedup<=1')
+parser.add_argument('-y','--colorgt1',type=str,nargs='?',default="r",help='text color when speedup>1')
+parser.add_argument('-z','--colorperf',type=str,nargs='?',default="r",help='text color for perf plot')
 args = parser.parse_args()
 
 experiment_dir = "gs_%s.%s"%(args.qrproblem,args.tag)
@@ -35,8 +35,8 @@ for i in range(2):
     #pyplot.setp(ax[i].get_xticklabels(),rotation=45,ha="right",rotation_mode="anchor")
 for i in range(rows):
     for j in range(cols):
-        text = ax[0].text(j,i,"%.0e"%perf_cl_plt[i,j],ha="center",va="center",color=args.cperf)
-        text = ax[1].text(j,i,"%.1f"%speedup_plt[i,j],ha="center",va="center",color=args.cleq1 if speedup_plt[i,j]<=1 else args.cgt1)
+        text = ax[0].text(j,i,"%.0e"%perf_cl_plt[i,j],ha="center",va="center",color=args.colorperf)
+        text = ax[1].text(j,i,"%.1f"%speedup_plt[i,j],ha="center",va="center",color=args.colorleq1 if speedup_plt[i,j]<=1 else args.colorgt1)
 cax_perf = fig.add_axes([ax[0].get_position().x0,ax[0].get_position().y1+.025,ax[0].get_position().x1-ax[0].get_position().x0,0.025])
 fig.colorbar(cm.ScalarMappable(norm=norm_perf,cmap=args.cmap),cax_perf,location="top",label="wall clock time")
 cax_speedup = fig.add_axes([ax[1].get_position().x0,ax[1].get_position().y1+.025,ax[1].get_position().x1-ax[1].get_position().x0,0.025])
