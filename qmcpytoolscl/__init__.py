@@ -57,9 +57,17 @@ def _parse_kwargs_backend_queue_program(kwargs):
             else:
                 kwargs["queue"] = cl.CommandQueue(kwargs["context"])
 
-def _preprocess_fwht(*args_device,kwargs):
-    if kwargs["local_size"] is None or kwargs["local_size"][2]!=kwargs["global_size"][2]:
-        raise Exception("fwht requires local_size is not None and local_size[2] = %d equals global_size[2] = %d"%(kwargs["local_size"][2],kwargs["global_size"][2]))
+def _preprocess_rfft_1d_radix2(*args_device,kwargs):
+    if kwargs["backend"]=="cl" and (kwargs["local_size"] is None or kwargs["local_size"][2]!=kwargs["global_size"][2]):
+        raise Exception("rfft_1d_radix2 requires local_size is not None and local_size[2] = %d equals global_size[2] = %d"%(kwargs["local_size"][2],kwargs["global_size"][2]))
+
+def _preprocess_fwht_1d_radix2(*args_device,kwargs):
+    if kwargs["backend"]=="cl" and (kwargs["local_size"] is None or kwargs["local_size"][2]!=kwargs["global_size"][2]):
+        raise Exception("fwht_1d_radix2 requires local_size is not None and local_size[2] = %d equals global_size[2] = %d"%(kwargs["local_size"][2],kwargs["global_size"][2]))
+
+def _preprocess_lat_gen_natural_gray(r,n,d,bs_r,bs_n,bs_d,n_start,gc,g,x,kwargs):
+    if (not gc) and (not ((n_start==0 or np.log2(n_start)%1==0) and ((n+n_start)==0 or np.log2(n+n_start)%1==0))):
+        raise Exception("lat_gen_natural_gray in natural order requires n_start and n+n_start are either 0 or powers of 2")
 
 overwrite_args = {
     "rfft_1d_radix2": 2, 
@@ -74,6 +82,9 @@ def opencl_c_func(func):
             t0_perf = time.perf_counter()
             t0_process = time.process_time()
             args = args[:3]+args[:3]+args[3:] # repeat the first 3 args to the batch sizes
+            try:
+                eval('_preprocess_%s(*args,kwargs=kwargs)'%func_name)
+            except NameError: pass
             eval("%s_c(*args)"%func_name)
             tdelta_process = time.process_time()-t0_process 
             tdelta_perf = time.perf_counter()-t0_perf 

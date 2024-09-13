@@ -1731,9 +1731,9 @@ Since we are performing a real fft, the last n/2-1 componenets are conjugates of
 A future implementation may exploit this symmetry.
 
 Args:
-    d1 (np.uint64): first dimenion
+    d1 (np.uint64): first dimension
     d2 (np.uint64): second dimension
-    n_half (np.uint64): half of the last dimenion of size n = 2n_half along which FFT is performed
+    n_half (np.uint64): half of the last dimension of size n = 2n_half along which FFT is performed
     twiddler (np.ndarray of np.double): size n vector used to store real twiddle factors
     twiddlei (np.ndarray of np.double): size n vector used to store imaginary twiddle factors 
     xr (np.ndarray of np.double): real array of size d1*d2*n on which to perform FFT in place
@@ -1778,9 +1778,9 @@ FWHT is done in place along the last dimension where the size is required to be 
 Follows the divide-and-conquer algorithm described in https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform
 
 Args:
-    d1 (np.uint64): first dimenion
+    d1 (np.uint64): first dimension
     d2 (np.uint64): second dimension
-    n_half (np.uint64): half of the last dimenion along which FWHT is performed
+    n_half (np.uint64): half of the last dimension along which FWHT is performed
     x (np.ndarray of np.double): array of size d1*d2*2n_half on which to perform FWHT in place
 >>> d1 = np.uint64(1) 
 >>> d2 = np.uint64(1)
@@ -1809,4 +1809,3 @@ True
 ## Issues 
 
 - `lat_gen_linear` requires `n_start` and `n_start+n` are either 0 or powers of 2
-- `fwht` requires `n_half` and `global_size[2]` are powers of 2
