@@ -16,7 +16,7 @@ speedtestgs_lattice:
 	python gs_parse.py -q lattice -t full -c cool -x k -y k -z k
 
 speedtestgs_dnb2:
-	python gs_run.py -q digital_net_base_2 -t full -m 10 -k 10 -s 3 -r 1 -p 1 -d 2 -f True
+	python gs_run.py --qrproblem digital_net_base_2 --tag full --np2 13 --dp2 14 --gsnp2 2 --gsdp2 2 --skip 0 --runs 1 --platform 1 --device 2 --force True
 	python gs_parse.py -q digital_net_base_2 -t full -c cool -x k -y k -z k
 
 speedtestnd_lattice:

@@ -1805,7 +1805,3 @@ array([ 4.,  2.,  0., -2.,  0.,  2.,  0.,  2.])
 >>> np.allclose(x,y_sympy,atol=1e-8)
 True
 ```
-
-## Issues 
-
-- `lat_gen_linear` requires `n_start` and `n_start+n` are either 0 or powers of 2
