@@ -1753,6 +1753,8 @@ Args:
 >>> d2 = np.uint64(1)
 >>> xr = np.array([1,0,1,0,0,1,1,0],dtype=np.double)
 >>> xi = np.array([0,1,0,1,1,0,0,1],dtype=np.double)
+>>> xr_og = xr.copy()
+>>> xi_og = xi.copy()
 >>> twiddler = np.empty_like(xr,dtype=np.double)
 >>> twiddlei = np.empty_like(xr,dtype=np.double)
 >>> n_half = np.uint64(len(xr)//2)
@@ -1764,12 +1766,10 @@ array([ 4.        , -0.58578644,  0.        , -1.41421356,  0.        ,
 array([ 4.        , -1.41421356,  0.        ,  3.41421356,  0.        ,
         1.41421356,  0.        ,  0.58578644])
 >>> time_perf,time_process = qmcpytoolscl.ifft_bro_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
->>> xr
-array([1.00000000e+00, 0.00000000e+00, 1.00000000e+00, 5.55111512e-17,
-       5.55111512e-17, 1.00000000e+00, 1.00000000e+00, 1.11022302e-16])
->>> xi
-array([0.00000000e+00, 1.00000000e+00, 0.00000000e+00, 1.00000000e+00,
-       1.00000000e+00, 5.55111512e-17, 0.00000000e+00, 1.00000000e+00])
+>>> np.allclose(xr,xr_og,atol=1e-8)
+True
+>>> np.allclose(xi,xi_og,atol=1e-8)
+True
 ```
 
 ```python
