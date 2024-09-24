@@ -1759,12 +1759,12 @@ Args:
 >>> twiddlei = np.empty_like(xr,dtype=np.double)
 >>> n_half = np.uint64(len(xr)//2)
 >>> time_perf,time_process = qmcpytoolscl.fft_bro_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
->>> xi
-array([ 4.        , -0.58578644,  0.        , -1.41421356,  0.        ,
-       -3.41421356,  0.        ,  1.41421356])
 >>> xr
-array([ 4.        , -1.41421356,  0.        ,  3.41421356,  0.        ,
-        1.41421356,  0.        ,  0.58578644])
+array([ 1.41421356, -0.5       ,  0.        ,  1.20710678,  0.        ,
+        0.5       ,  0.        ,  0.20710678])
+>>> xi
+array([ 1.41421356, -0.20710678,  0.        , -0.5       ,  0.        ,
+       -1.20710678,  0.        ,  0.5       ])
 >>> time_perf,time_process = qmcpytoolscl.ifft_bro_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
 >>> np.allclose(xr,xr_og,atol=1e-8)
 True
@@ -1787,7 +1787,7 @@ True
 >>> x_np = xr+1j*xi
 >>> x_bro_np = x_np[:,:,ir]
 >>> y = xr+1j*xi
->>> yt_np = np.fft.fft(x_bro_np)
+>>> yt_np = np.fft.fft(x_bro_np,norm="ortho")
 >>> time_perf,time_process = qmcpytoolscl.fft_bro_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
 >>> yt = xr+1j*xi
 >>> np.allclose(yt,yt_np,atol=1e-8)
@@ -1816,20 +1816,26 @@ Args:
 >>> n_half = np.uint64(len(x)//2)
 >>> time_perf,time_process = qmcpytoolscl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_ft)
 >>> x
-array([ 4.,  2.,  0., -2.,  0.,  2.,  0.,  2.])
+array([ 1.41421356,  0.70710678,  0.        , -0.70710678,  0.        ,
+        0.70710678,  0.        ,  0.70710678])
 ```
 
 ```python 
 >>> d1 = np.uint(5) 
->>> d2 = np.uint(7) 
->>> n_half = np.uint(2**7) 
+>>> d2 = np.uint(7)
+>>> n = 2**8
+>>> n_half = np.uint(n//2) 
 >>> x = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
+>>> x_og = x.copy()
 >>> import sympy
 >>> y_sympy = np.empty_like(x,dtype=np.double) 
 >>> for i in range(d1):
 ...     for j in range(d2): 
-...         y_sympy[i,j] = np.array(sympy.fwht(x[i,j]),dtype=np.double)
+...         y_sympy[i,j] = np.array(sympy.fwht(x[i,j])/np.sqrt(n),dtype=np.double)
 >>> time_perf,time_process = qmcpytoolscl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_ft)
 >>> np.allclose(x,y_sympy,atol=1e-8)
+True
+>>> time_perf,time_process = qmcpytoolscl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_ft)
+>>> np.allclose(x,x_og,atol=1e-8)
 True
 ```

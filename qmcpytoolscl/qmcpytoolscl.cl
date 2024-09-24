@@ -976,6 +976,7 @@ __kernel void fwht_1d_radix2(
     double x1,x2;
     ulong n = 2*n_half;
     ulong m = (ulong)(log2((double)n));
+    double sqrt2 = sqrt((double)2);
     for(k=0; k<m; k++){
         s = m-k-1;
         f = 1<<s; 
@@ -996,8 +997,8 @@ __kernel void fwht_1d_radix2(
                     idx = j1*d2*n+j2*n;
                     x1 = x[idx+i1];
                     x2 = x[idx+i2];
-                    x[idx+i1] = x1+x2;
-                    x[idx+i2] = x1-x2;
+                    x[idx+i1] = (x1+x2)/sqrt2;
+                    x[idx+i2] = (x1-x2)/sqrt2;
                     if(j2==(d2-1)){
                         break;
                     }
@@ -1038,6 +1039,7 @@ __kernel void fft_bro_1d_radix2(
     ulong n = 2*n_half;
     ulong m = (ulong)(log2((double)n));
     ulong bigone = 1;
+    double sqrt2 = sqrt((double)2);
     // initialize twiddle factors
     for(ii=0; ii<batch_size_n_half; ii++){
         i1 = 2*(i0+ii);
@@ -1081,10 +1083,10 @@ __kernel void fft_bro_1d_radix2(
                     xi2 = xi[idx+i2];
                     yr = xr2*cosv-xi2*sinv;
                     yi = xr2*sinv+xi2*cosv;
-                    xr[idx+i1] = xr1+yr;
-                    xi[idx+i1] = xi1+yi;
-                    xr[idx+i2] = xr1-yr;
-                    xi[idx+i2] = xi1-yi;
+                    xr[idx+i1] = (xr1+yr)/sqrt2;
+                    xi[idx+i1] = (xi1+yi)/sqrt2;
+                    xr[idx+i2] = (xr1-yr)/sqrt2;
+                    xi[idx+i2] = (xi1-yi)/sqrt2;
                     if(j2==(d2-1)){
                         break;
                     }
@@ -1125,6 +1127,7 @@ __kernel void ifft_bro_1d_radix2(
     ulong n = 2*n_half;
     ulong m = (ulong)(log2((double)n));
     ulong bigone = 1;
+    double sqrt2 = sqrt((double)2);
     // initialize twiddle factors
     for(ii=0; ii<batch_size_n_half; ii++){
         i1 = 2*(i0+ii);
@@ -1168,10 +1171,10 @@ __kernel void ifft_bro_1d_radix2(
                     xi2 = xi[idx+i2];
                     yr = xr1-xr2;
                     yi = xi1-xi2; 
-                    xr[idx+i1] = (xr1+xr2)/2;
-                    xi[idx+i1] = (xi1+xi2)/2;
-                    xr[idx+i2] = (yr*cosv-yi*sinv)/2;
-                    xi[idx+i2] = (yr*sinv+yi*cosv)/2;
+                    xr[idx+i1] = (xr1+xr2)/sqrt2;
+                    xi[idx+i1] = (xi1+xi2)/sqrt2;
+                    xr[idx+i2] = (yr*cosv-yi*sinv)/sqrt2;
+                    xi[idx+i2] = (yr*sinv+yi*cosv)/sqrt2;
                     if(j2==(d2-1)){
                         break;
                     }
