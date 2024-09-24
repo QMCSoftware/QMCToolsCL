@@ -1720,15 +1720,26 @@ Fast transforms require the use of a single work group for the final dimension i
 ...     kwargs_ft = kwargs 
 ```
 
-### fast Fourier transform
+### (inverse) fast Fourier transform 
 
 ```python 
->>> print(qmcpytoolscl.rfft_1d_radix2.__doc__)
-Fast Fourier Transform for real valued inputs.
+>>> print(qmcpytoolscl.fft_bro_1d_radix2.__doc__)
+Fast Fourier Transform for inputs in bit reversed order.
 FFT is done in place along the last dimension where the size is required to be a power of 2.
 Follows a decimation-in-time procedure described in https://www.cmlab.csie.ntu.edu.tw/cml/dsp/training/coding/transform/fft.html.
-Since we are performing a real fft, the last n/2-1 componenets are conjugates of componenets n/2-1,...,1 when indexing from 0.
-A future implementation may exploit this symmetry.
+
+Args:
+    d1 (np.uint64): first dimension
+    d2 (np.uint64): second dimension
+    n_half (np.uint64): half of the last dimension of size n = 2n_half along which FFT is performed
+    twiddler (np.ndarray of np.double): size n vector used to store real twiddle factors
+    twiddlei (np.ndarray of np.double): size n vector used to store imaginary twiddle factors 
+    xr (np.ndarray of np.double): real array of size d1*d2*n on which to perform FFT in place
+    xi (np.ndarray of np.double): imaginary array of size d1*d2*n on which to perform FFT in place
+>>> print(qmcpytoolscl.ifft_bro_1d_radix2.__doc__)
+Inverse Fast Fourier Transform with outputs in bit reversed order.
+FFT is done in place along the last dimension where the size is required to be a power of 2.
+Follows a procedure described in https://www.expertsmind.com/learning/inverse-dft-using-the-fft-algorithm-assignment-help-7342873886.aspx.
 
 Args:
     d1 (np.uint64): first dimension
@@ -1741,31 +1752,48 @@ Args:
 >>> d1 = np.uint64(1) 
 >>> d2 = np.uint64(1)
 >>> xr = np.array([1,0,1,0,0,1,1,0],dtype=np.double)
->>> xi = np.empty_like(xr,dtype=np.double)
+>>> xi = np.array([0,1,0,1,1,0,0,1],dtype=np.double)
 >>> twiddler = np.empty_like(xr,dtype=np.double)
 >>> twiddlei = np.empty_like(xr,dtype=np.double)
 >>> n_half = np.uint64(len(xr)//2)
->>> time_perf,time_process = qmcpytoolscl.rfft_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
->>> y = xr+1j*xi
->>> y
-array([ 4.        +0.j        ,  0.29289322+0.70710678j,
-       -1.        -1.j        ,  1.70710678+0.70710678j,
-        2.        +0.j        ,  1.70710678-0.70710678j,
-       -1.        +1.j        ,  0.29289322-0.70710678j])
+>>> time_perf,time_process = qmcpytoolscl.fft_bro_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
+>>> xi
+array([ 4.        , -0.58578644,  0.        , -1.41421356,  0.        ,
+       -3.41421356,  0.        ,  1.41421356])
+>>> xr
+array([ 4.        , -1.41421356,  0.        ,  3.41421356,  0.        ,
+        1.41421356,  0.        ,  0.58578644])
+>>> time_perf,time_process = qmcpytoolscl.ifft_bro_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
+>>> xr
+array([1.00000000e+00, 0.00000000e+00, 1.00000000e+00, 5.55111512e-17,
+       5.55111512e-17, 1.00000000e+00, 1.00000000e+00, 1.11022302e-16])
+>>> xi
+array([0.00000000e+00, 1.00000000e+00, 0.00000000e+00, 1.00000000e+00,
+       1.00000000e+00, 5.55111512e-17, 0.00000000e+00, 1.00000000e+00])
 ```
 
 ```python
 >>> d1 = np.uint(5) 
 >>> d2 = np.uint(7) 
->>> n_half = np.uint(2**7) 
+>>> m = 8
+>>> n = 2**m
+>>> n_half = np.uint(n//2)
+>>> bitrev = np.vectorize(lambda i,m: int('{:0{m}b}'.format(i,m=m)[::-1],2))
+>>> ir = bitrev(np.arange(n),m) 
 >>> xr = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
->>> xi = np.empty_like(xr,dtype=np.double)
+>>> xi = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
 >>> twiddler = np.empty_like(xr,dtype=np.double)
 >>> twiddlei = np.empty_like(xr,dtype=np.double)
->>> y_np = np.fft.fft(xr)
->>> time_perf,time_process = qmcpytoolscl.rfft_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
+>>> x_np = xr+1j*xi
+>>> x_bro_np = x_np[:,:,ir]
 >>> y = xr+1j*xi
->>> np.allclose(y,y_np,atol=1e-8)
+>>> yt_np = np.fft.fft(x_bro_np)
+>>> time_perf,time_process = qmcpytoolscl.fft_bro_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
+>>> yt = xr+1j*xi
+>>> np.allclose(yt,yt_np,atol=1e-8)
+True
+>>> time_perf,time_process = qmcpytoolscl.ifft_bro_1d_radix2(d1,d2,n_half,twiddler,twiddlei,xr,xi,**kwargs_ft)
+>>> np.allclose(xr+1j*xi,y,atol=1e-8)
 True
 ```
 
