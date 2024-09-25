@@ -1797,6 +1797,67 @@ True
 True
 ```
 
+```python
+>>> fft_np = lambda x: np.fft.fft(x,norm="ortho")
+>>> ifft_np = lambda x: np.fft.ifft(x,norm="ortho")
+>>> def fft(x):
+...     assert x.ndim==1
+...     n = len(x)
+...     n_half = np.uint64(n//2)
+...     xr = x.real.copy()
+...     xi = x.imag.copy()
+...     qmcpytoolscl.fft_bro_1d_radix2(1,1,n_half,np.empty(n,dtype=np.double),np.empty(n,dtype=np.double),xr,xi)
+...     return xr+1j*xi
+>>> def ifft(x):
+...     assert x.ndim==1
+...     n = len(x)
+...     n_half = np.uint64(n//2)
+...     xr = x.real.copy()
+...     xi = x.imag.copy()
+...     qmcpytoolscl.ifft_bro_1d_radix2(1,1,n_half,np.empty(n,dtype=np.double),np.empty(n,dtype=np.double),xr,xi)
+...     return xr+1j*xi
+>>> # parameters 
+>>> m = 10
+>>> n = 2**m
+>>> # bit reverse used for reference solver 
+>>> bitrev = np.vectorize(lambda i,m: int('{:0{m}b}'.format(i,m=m)[::-1],2))
+>>> ir = bitrev(np.arange(2*n),m+1)
+>>> # points 
+>>> y1 = np.random.rand(n)+1j*np.random.rand(n)
+>>> y2 = np.random.rand(n)+1j*np.random.rand(n)
+>>> y = np.hstack([y1,y2])
+>>> # kernel evaluations
+>>> k1 = np.random.rand(n) 
+>>> k2 = np.random.rand(n) 
+>>> k = np.hstack([k1,k2]) 
+>>> # fast transforms 
+>>> yt = fft(y) 
+>>> kt = fft(k)
+>>> y1t = fft(y1) 
+>>> y2t = fft(y2) 
+>>> k1t = fft(k1) 
+>>> k2t = fft(k2)
+>>> wt = np.exp(-np.pi*1j*np.arange(n)/n)
+>>> wtsq = wt**2
+>>> gammat = k1t**2-wtsq*k2t**2
+>>> # matrix vector product
+>>> u = ifft(yt*kt)*np.sqrt(2*n)
+>>> u_np = ifft_np(fft_np(y[ir])*fft_np(k[ir]))[ir]*np.sqrt(2*n)
+>>> np.allclose(u,u_np,atol=1e-10)
+True
+>>> u_hat = np.hstack([ifft(y1t*k1t+wtsq*y2t*k2t),ifft(y2t*k1t+y1t*k2t)])*np.sqrt(n)
+>>> np.allclose(u_hat,u,atol=1e-10)
+True
+>>> # inverse 
+>>> v = ifft(yt/kt)/np.sqrt(2*n)
+>>> v_np = ifft_np(fft_np(y[ir])/fft_np(k[ir]))[ir]/np.sqrt(2*n)
+>>> np.allclose(v,v_np,atol=1e-10)
+True
+>>> v_hat = np.hstack([ifft((y1t*k1t-wtsq*y2t*k2t)/gammat),ifft((y2t*k1t-y1t*k2t)/gammat)])/np.sqrt(n)
+>>> np.allclose(v,v_hat,atol=1e-10)
+True
+```
+
 ### fast Walsh-Hadamard transform
 
 ```python 
@@ -1837,5 +1898,56 @@ array([ 1.41421356,  0.70710678,  0.        , -0.70710678,  0.        ,
 True
 >>> time_perf,time_process = qmcpytoolscl.fwht_1d_radix2(d1,d2,n_half,x,**kwargs_ft)
 >>> np.allclose(x,x_og,atol=1e-8)
+True
+```
+
+```python
+>>> def fwht_sp(x):
+...     assert x.ndim==1
+...     n = len(x) 
+...     y = np.array(sympy.fwht(x),dtype=np.float64)
+...     y_ortho = y/np.sqrt(n) 
+...     return y_ortho
+>>> def fwht(x):
+...     assert x.ndim==1
+...     n = len(x)
+...     n_half = np.uint64(n//2)
+...     x_cp = x.copy()
+...     qmcpytoolscl.fwht_1d_radix2(1,1,n_half,x_cp)
+...     return x_cp
+>>> # parameters
+>>> m = 10
+>>> n = int(2**m)
+>>> # points
+>>> y1 = np.random.rand(n) 
+>>> y2 = np.random.rand(n) 
+>>> y = np.hstack([y1,y2])
+>>> # kernel evaluations
+>>> k1 = np.random.rand(n) 
+>>> k2 = np.random.rand(n) 
+>>> k = np.hstack([k1,k2]) 
+>>> # fast transforms
+>>> yt = fwht(y) 
+>>> kt = fwht(k)
+>>> y1t = fwht(y1) 
+>>> y2t = fwht(y2) 
+>>> k1t = fwht(k1) 
+>>> k2t = fwht(k2)
+>>> gammat = k1t**2-k2t**2
+>>> # matrix vector product
+>>> u_sp = fwht_sp(fwht_sp(y)*fwht_sp(k))*np.sqrt(2*n)
+>>> u = fwht(yt*kt)*np.sqrt(2*n)
+>>> np.allclose(u_sp,u,atol=1e-8)
+True
+>>> u_hat = np.hstack([fwht(y1t*k1t+y2t*k2t),fwht(y2t*k1t+y1t*k2t)])*np.sqrt(n)
+>>> np.allclose(u,u_hat,atol=1e-10)
+True
+>>> # inverse 
+>>> v_sp = fwht_sp(fwht_sp(y)/fwht_sp(k))/np.sqrt(2*n)
+>>> v = fwht(yt/kt)/np.sqrt(2*n)
+>>> np.allclose(v_sp,v,atol=1e-8)
+True
+>>> v_hat = np.hstack([fwht((y1t*k1t-y2t*k2t)/gammat),fwht((y2t*k1t-y1t*k2t)/gammat)])/np.sqrt(n)
+>>> np.allclose(v,v_hat,atol=1e-10)
 True
 ```
