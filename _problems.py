@@ -1,4 +1,4 @@
-import qmcpytoolscl 
+import qmctoolscl 
 import pyopencl as cl
 import numpy as np
 import os
@@ -13,7 +13,7 @@ def run_dnb2_problem(n, d, kwargs):
     if kwargs["backend"]=="cl":
         C = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=C)
         xb = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xb)
-    time_perf,time_process = qmcpytoolscl.dnb2_gen_natural_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint8(True),np.uint64(mmax),C,xb,**kwargs)
+    time_perf,time_process = qmctoolscl.dnb2_gen_natural_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint8(True),np.uint64(mmax),C,xb,**kwargs)
     if kwargs["backend"]=="cl":
         C.release()
         xb.release()
@@ -27,7 +27,7 @@ def run_lat_problem(n, d, kwargs):
     if kwargs["backend"]=="cl":
         g = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=g)
         x = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=x)
-    time_perf,time_process = qmcpytoolscl.lat_gen_natural_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint8(True),g,x,**kwargs)
+    time_perf,time_process = qmctoolscl.lat_gen_natural_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint8(True),g,x,**kwargs)
     if kwargs["backend"]=="cl":
         g.release()
         x.release()
@@ -44,7 +44,7 @@ def run_halton_problem(n, d, kwargs):
     if kwargs["backend"]=="cl":
         C = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=C)
         xdig = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xdig)
-    time_perf,time_process = qmcpytoolscl.gdn_gen_natural(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(1),np.uint64(mmax),np.uint64(mmax),np.uint64(0),primes,C,xdig,**kwargs)
+    time_perf,time_process = qmctoolscl.gdn_gen_natural(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(1),np.uint64(mmax),np.uint64(mmax),np.uint64(0),primes,C,xdig,**kwargs)
     if kwargs["backend"]=="cl":
         C.release()
         xdig.release()
@@ -73,7 +73,7 @@ def setup_speed_tests(platform_id, device_id):
     device = platform.get_devices()[device_id]
     print("\nPlatform: %s\nDevice: %s\n"%(platform.name,device.name))
     context = cl.Context([device])
-    program = qmcpytoolscl.get_qmcpytoolscl_program_from_context(context)
+    program = qmctoolscl.get_qmctoolscl_program_from_context(context)
     queue = cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
     kwargs_cl = {
         "backend": "cl", 

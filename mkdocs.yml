@@ -1,4 +1,4 @@
-site_name: QMCPyToolsCL
+site_name: QMCToolsCL
 markdown_extensions:
     - toc
     - attr_list

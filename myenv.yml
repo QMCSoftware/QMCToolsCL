@@ -1,4 +1,4 @@
-name: qmcpycltools
+name: qmctoolscl
 channels:
   - conda-forge
   - defaults
@@ -59,12 +59,17 @@ dependencies:
   - zipp=3.20.1
   - zstd=1.5.6
   - pip:
+      - babel==2.16.0
+      - certifi==2024.8.30
+      - charset-normalizer==3.3.2
       - click==8.1.7
+      - colorama==0.4.6
       - contourpy==1.3.0
       - cycler==0.12.1
       - exceptiongroup==1.2.2
       - fonttools==4.53.1
       - ghp-import==2.1.0
+      - idna==3.8
       - iniconfig==2.0.0
       - jinja2==3.1.4
       - kiwisolver==1.4.7
@@ -73,12 +78,16 @@ dependencies:
       - mergedeep==1.3.4
       - mkdocs==1.6.1
       - mkdocs-get-deps==0.2.0
+      - mkdocs-material==9.5.34
+      - mkdocs-material-extensions==1.3.1
       - mpmath==1.3.0
       - packaging==24.1
+      - paginate==0.5.7
       - pandas==2.2.2
       - pathspec==0.12.1
       - pillow==10.4.0
       - pluggy==1.5.0
+      - pygments==2.18.0
       - pymdown-extensions==10.9
       - pyparsing==3.1.4
       - pytest==8.3.3
@@ -86,8 +95,12 @@ dependencies:
       - pytz==2024.2
       - pyyaml==6.0.2
       - pyyaml-env-tag==0.1
+      - regex==2024.9.11
+      - requests==2.32.3
+      - scipy==1.14.1
       - six==1.16.0
       - sympy==1.13.2
       - tomli==2.0.1
       - tzdata==2024.1
+      - urllib3==2.2.3
       - watchdog==5.0.2
