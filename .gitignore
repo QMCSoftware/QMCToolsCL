@@ -13,3 +13,5 @@ qmctoolscl.egg-info/*
 build/*
 
 *.pytest.txt
+
+my_device_info.txt

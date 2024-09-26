@@ -59,12 +59,18 @@ map_run_problem = {
 def nd_gs_scheme(n, d):
     return n,d
 
-def custom_gs_scheme(n, d):
-    return max(n//2,1),max(d//2,1)
+def custom_gs_scheme_lattice(n, d):
+    n = min(2**12/d,n)
+    return n,d
+
+def custom_gs_scheme_dnb2(n, d):
+    n = min(2**14/d,n)
+    return n,d
 
 map_gs_scheme = {
     "nd": nd_gs_scheme,
-    "custom": custom_gs_scheme,
+    "customlattice": custom_gs_scheme_lattice,
+    "customdnb2": custom_gs_scheme_dnb2,
 }
 
 def setup_speed_tests(platform_id, device_id):

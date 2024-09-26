@@ -1033,7 +1033,7 @@ __kernel void fft_bro_1d_radix2(
     ulong j10 = get_global_id(0)*batch_size_d1;
     ulong j20 = get_global_id(1)*batch_size_d2;
     ulong i0 = get_global_id(2)*batch_size_n_half;
-    ulong b1,b2,ii,i,i1,i2,i1cp,i2cp,t,jj1,jj2,j1,j2,k,s,f,idx;
+    ulong ii,i,i1,i2,t,jj1,jj2,j1,j2,k,s,f,idx;
     double xr1,xr2,xi1,xi2,yr,yi,v1,v2,cosv,sinv;
     double PI = acos(-1.);
     ulong n = 2*n_half;
@@ -1121,7 +1121,7 @@ __kernel void ifft_bro_1d_radix2(
     ulong j10 = get_global_id(0)*batch_size_d1;
     ulong j20 = get_global_id(1)*batch_size_d2;
     ulong i0 = get_global_id(2)*batch_size_n_half;
-    ulong b1,b2,ii,i,i1,i2,i1cp,i2cp,t,jj1,jj2,j1,j2,k,s,f,idx;
+    ulong ii,i,i1,i2,t,jj1,jj2,j1,j2,k,s,f,idx;
     double xr1,xr2,xi1,xi2,yr,yi,v1,v2,cosv,sinv;
     double PI = acos(-1.);
     ulong n = 2*n_half;
