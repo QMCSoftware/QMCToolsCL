@@ -69,9 +69,9 @@ def _preprocess_fwht_1d_radix2(*args_device,kwargs):
     if kwargs["backend"]=="cl" and (kwargs["local_size"] is None or kwargs["local_size"][2]!=kwargs["global_size"][2]):
         raise Exception("fwht_1d_radix2 requires local_size is not None and local_size[2] = %d equals global_size[2] = %d"%(kwargs["local_size"][2],kwargs["global_size"][2]))
 
-def _preprocess_lat_gen_natural_gray(r,n,d,bs_r,bs_n,bs_d,n_start,gc,g,x,kwargs):
-    if (not gc) and (not ((n_start==0 or np.log2(n_start)%1==0) and ((n+n_start)==0 or np.log2(n+n_start)%1==0))):
-        raise Exception("lat_gen_natural_gray in natural order requires n_start and n+n_start are either 0 or powers of 2")
+def _preprocess_lat_gen_natural(r,n,d,bs_r,bs_n,bs_d,n_start,g,x,kwargs):
+    if not ((n_start==0 or np.log2(n_start)%1==0) and ((n+n_start)==0 or np.log2(n+n_start)%1==0)):
+        raise Exception("lat_gen_natural requires n_start and n+n_start are either 0 or powers of 2")
 
 overwrite_args = {
     "fft_bro_1d_radix2": 2, 

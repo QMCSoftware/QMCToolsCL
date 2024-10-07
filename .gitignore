@@ -15,3 +15,5 @@ build/*
 *.pytest.txt
 
 my_device_info.txt
+
+dist/*
