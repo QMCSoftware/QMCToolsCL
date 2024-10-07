@@ -26,7 +26,9 @@ setuptools.setup(
         'numpy >= 1.17.0',
     ],
     python_requires = ">=3.5",
-    description="Python Interface to (Quasi)-Monte Carlo Tools in C and OpenCL",
+    description = "Quasi-Monte Carlo Tools in PyOpenCL and C",
+    long_description="Python interface to QMC tools with C and OpenCL backends. See https://qmcsoftware.github.io/QMCToolsCL/",
+    long_description_content_type="text/markdown",
     url="https://qmcsoftware.github.io/QMCToolsCL/",
     include_package_data=True,
     packages = [
