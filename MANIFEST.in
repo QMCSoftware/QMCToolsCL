@@ -1,1 +1,3 @@
+prune qmctoolscl/qmctoolscl.c
 include qmctoolscl/qmctoolscl.h
+include qmctoolscl/qmctoolscl.cl
