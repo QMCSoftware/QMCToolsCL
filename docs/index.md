@@ -95,25 +95,23 @@ array([[[0.   , 0.   , 0.   , 0.   , 0.   ],
         [0.875, 0.625, 0.625, 0.875, 0.875]]])
 ```
 
-### generate Gray code or natural order
+### natural order
 
 ```python 
->>> print(qmctoolscl.lat_gen_natural_gray.__doc__)
-Lattice points in Gray code or natural order
+>>> print(qmctoolscl.lat_gen_natural.__doc__)
+Lattice points in natural order
 
 Args:
     r (np.uint64): replications
     n (np.uint64): points
     d (np.uint64): dimension
     n_start (np.uint64): starting index in sequence
-    gc (np.uint8): flag to use Gray code or natural order
     g (np.ndarray of np.uint64): pointer to generating vector of size r*d 
     x (np.ndarray of np.double): pointer to point storage of size r*n*d
 >>> n_start = np.uint64(2)
 >>> n = np.uint64(6) 
 >>> x = np.empty((r,n,d),dtype=np.float64)
->>> gc = np.uint8(False)
->>> time_perf,time_process = qmctoolscl.lat_gen_natural_gray(r,n,d,n_start,gc,g,x,**kwargs)
+>>> time_perf,time_process = qmctoolscl.lat_gen_natural(r,n,d,n_start,g,x,**kwargs)
 >>> x
 array([[[0.25 , 0.25 , 0.25 , 0.25 , 0.25 ],
         [0.75 , 0.75 , 0.75 , 0.75 , 0.75 ],
@@ -128,8 +126,22 @@ array([[[0.25 , 0.25 , 0.25 , 0.25 , 0.25 ],
         [0.625, 0.875, 0.875, 0.625, 0.625],
         [0.375, 0.125, 0.125, 0.375, 0.375],
         [0.875, 0.625, 0.625, 0.875, 0.875]]])
->>> gc = np.uint8(True)
->>> time_perf,time_process = qmctoolscl.lat_gen_natural_gray(r,n,d,n_start,gc,g,x,**kwargs)
+```
+
+### Gray code order
+
+```python 
+>>> print(qmctoolscl.lat_gen_gray.__doc__)
+Lattice points in Gray code order
+
+Args:
+    r (np.uint64): replications
+    n (np.uint64): points
+    d (np.uint64): dimension
+    n_start (np.uint64): starting index in sequence
+    g (np.ndarray of np.uint64): pointer to generating vector of size r*d 
+    x (np.ndarray of np.double): pointer to point storage of size r*n*d
+>>> time_perf,time_process = qmctoolscl.lat_gen_gray(r,n,d,n_start,g,x,**kwargs)
 >>> x
 array([[[0.75 , 0.75 , 0.75 , 0.75 , 0.75 ],
         [0.25 , 0.25 , 0.25 , 0.25 , 0.25 ],
@@ -389,18 +401,17 @@ Args:
 True
 ```
 
-### generate Gray code or natural order 
+### natural order 
 
 ```python
->>> print(qmctoolscl.dnb2_gen_natural_gray.__doc__)
-Binary representation of digital net in base 2 in either Gray code or natural order
+>>> print(qmctoolscl.dnb2_gen_natural.__doc__)
+Binary representation of digital net in base 2 in natural order
 
 Args:
     r (np.uint64): replications
     n (np.uint64): points
     d (np.uint64): dimension
     n_start (np.uint64): starting index in sequence
-    gc (np.uint8): flag to use Gray code or natural order
     mmax (np.uint64): columns in each generating matrix
     C (np.ndarray of np.uint64): generating matrices of size r*d*mmax
     xb (np.ndarray of np.uint64): binary digital net points of size r*n*d
@@ -409,8 +420,7 @@ Args:
 >>> n_start = np.uint64(2)
 >>> n = np.uint64(14)
 >>> xb = np.empty((r,n,d),dtype=np.uint64)
->>> gc = np.uint8(False)
->>> time_perf,time_process = qmctoolscl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
+>>> time_perf,time_process = qmctoolscl.dnb2_gen_natural(r,n,d,n_start,mmax,C,xb,**kwargs)
 >>> xb
 array([[[1605, 3698],
         [2487,  770],
@@ -441,8 +451,23 @@ array([[[1605, 3698],
         [3558, 1828],
         [1668, 1230],
         [2715, 2240]]], dtype=uint64)
->>> gc = np.uint8(True)
->>> time_perf,time_process = qmctoolscl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
+```
+
+### Gray code order
+
+```python
+>>> print(qmctoolscl.dnb2_gen_gray.__doc__)
+Binary representation of digital net in base 2 in Gray code order
+
+Args:
+    r (np.uint64): replications
+    n (np.uint64): points
+    d (np.uint64): dimension
+    n_start (np.uint64): starting index in sequence
+    mmax (np.uint64): columns in each generating matrix
+    C (np.ndarray of np.uint64): generating matrices of size r*d*mmax
+    xb (np.ndarray of np.uint64): binary digital net points of size r*n*d
+>>> time_perf,time_process = qmctoolscl.dnb2_gen_gray(r,n,d,n_start,mmax,C,xb,**kwargs)
 >>> xb
 array([[[2487,  770],
         [1605, 3698],
@@ -657,7 +682,6 @@ array([[[0.8232915 , 0.53771796],
 >>> n_start = np.uint64(0)
 >>> n = np.uint64(8)
 >>> d = np.uint64(4)
->>> gc = np.uint8(False)
 >>> C = np.array([
 ...   [ 8,  4,  2,  1],
 ...   [ 8, 12, 10, 15],
@@ -667,7 +691,7 @@ array([[[0.8232915 , 0.53771796],
 >>> mmax = np.uint64(C.shape[1])
 >>> tmax = np.uint64(np.ceil(np.log2(np.max(C))))
 >>> xb = np.empty((r,n,d),dtype=np.uint64)
->>> time_perf,time_process = qmctoolscl.dnb2_gen_natural_gray(r,n,d,n_start,gc,mmax,C,xb,**kwargs)
+>>> time_perf,time_process = qmctoolscl.dnb2_gen_natural(r,n,d,n_start,mmax,C,xb,**kwargs)
 >>> print(qmctoolscl.dnb2_nested_uniform_scramble.__doc__)
 Nested uniform scramble of digital net b2
 
