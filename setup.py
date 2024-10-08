@@ -19,7 +19,7 @@ with open(cl_file[:-1],"w") as f:
 
 setuptools.setup(
     name = "qmctoolscl",
-    version = "1.0.1",
+    version = "1.0.3",
     author="Aleksei G Sorokin",
     author_email="asorokin@hawk.iit.edu",
     install_requires = [

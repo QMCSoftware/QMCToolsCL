@@ -173,7 +173,7 @@ Args:
     shifts (np.ndarray of np.double): shifts of size r*d
     xr (np.ndarray of np.double): pointer to point storage of size r*n*d
 >>> r_x = r 
->>> r = 2*r_x
+>>> r = np.uint64(2*r_x)
 >>> shifts = rng.random((r,d))
 >>> xr = np.empty((r,n,d),dtype=np.float64)
 >>> time_perf,time_process = qmctoolscl.lat_shift_mod_1(r,n,d,r_x,x,shifts,xr,**kwargs)
@@ -234,7 +234,7 @@ Args:
 >>> d = np.uint64(C_lsb.shape[0])
 >>> mmax = np.uint64(C_lsb.shape[1])
 >>> tmax = 4
->>> tmaxes = np.tile(np.uint64(tmax),r)
+>>> tmaxes = np.tile(np.uint64(tmax),int(r))
 >>> C = np.empty((d,mmax),dtype=np.uint64)
 >>> time_perf,time_process = qmctoolscl.dnb2_gmat_lsb_to_msb(r,d,mmax,tmaxes,C_lsb,C,**kwargs)
 >>> C
@@ -260,7 +260,7 @@ Args:
     C (np.ndarray of np.uint64): original generating matrices of size r_C*d*mmax
     C_lms (np.ndarray of np.uint64): resulting generating matrices of size r*d*mmax
 >>> r_C = r 
->>> r = 2*r_C
+>>> r = np.uint64(2*r_C)
 >>> tmax_new = np.uint64(6)
 >>> print(qmctoolscl.dnb2_get_linear_scramble_matrix.__doc__)
 Return a scrambling matrix for linear matrix scrambling
@@ -517,9 +517,9 @@ Args:
     xrb (np.ndarray of np.uint64): digital shifted digital net points of size r*n*d
 >>> tmax = tmax_alpha 
 >>> tmax_new = np.uint64(64)
->>> lshifts = np.tile(tmax_new-tmax,r) 
+>>> lshifts = np.tile(tmax_new-tmax,int(r)) 
 >>> r_x = r 
->>> r = 2*r_x
+>>> r = np.uint64(2*r_x)
 >>> print(qmctoolscl.random_tbit_uint64s.__doc__)
 Generate the desired shape of random integers with t bits
 
@@ -611,7 +611,7 @@ Args:
     xb (np.ndarray of np.uint64): binary digital net points of size r*n*d
     x (np.ndarray of np.double): float digital net points of size r*n*d
 >>> x = np.empty((r,n,d),dtype=np.float64)
->>> tmaxes_new = np.tile(tmax_new,r)
+>>> tmaxes_new = np.tile(tmax_new,int(r))
 >>> time_perf,time_process = qmctoolscl.dnb2_integer_to_float(r,n,d,tmaxes_new,xrb,x,**kwargs)
 >>> x
 array([[[0.8232915 , 0.53771796],
@@ -930,7 +930,7 @@ array([[[[1, 1, 0, 0, 1, 1, 0, 1, 1, 1],
          [0, 0, 0, 0, 3, 3, 3, 6, 6, 0]]]], dtype=uint64)
 ```
 
-### generate natural order
+### natural order
 
 ```python
 >>> print(qmctoolscl.gdn_gen_natural.__doc__)
@@ -1425,7 +1425,7 @@ array([[[0.97290039, 0.53917744],
 >>> d = np.uint64(bases.shape[1])
 >>> mmax = np.uint64(3)
 >>> tmax = mmax
->>> C = np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(r,d,1,1))
+>>> C = np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(int(r),int(d),1,1))
 >>> xdig = np.empty((r,n,d,tmax),dtype=np.uint64)
 >>> time_perf,time_process = qmctoolscl.gdn_gen_natural(r,n,d,r_b,mmax,tmax,n_start,bases,C,xdig)
 >>> r_x = r 
@@ -1666,7 +1666,7 @@ Args:
 True
 ```
 
-### generate natural order with the same base 
+### natural order with the same base 
 
 ```python
 >>> print(qmctoolscl.gdn_gen_natural_same_base.__doc__)
@@ -1804,8 +1804,8 @@ True
 >>> n_half = np.uint(n//2)
 >>> bitrev = np.vectorize(lambda i,m: int('{:0{m}b}'.format(i,m=m)[::-1],2))
 >>> ir = bitrev(np.arange(n),m) 
->>> xr = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
->>> xi = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
+>>> xr = rng.uniform(0,1,(d1,d2,int(2*n_half))).astype(np.double)
+>>> xi = rng.uniform(0,1,(d1,d2,int(2*n_half))).astype(np.double)
 >>> twiddler = np.empty_like(xr,dtype=np.double)
 >>> twiddlei = np.empty_like(xr,dtype=np.double)
 >>> x_np = xr+1j*xi
@@ -1910,7 +1910,7 @@ array([ 1.41421356,  0.70710678,  0.        , -0.70710678,  0.        ,
 >>> d2 = np.uint(7)
 >>> n = 2**8
 >>> n_half = np.uint(n//2) 
->>> x = rng.uniform(0,1,(d1,d2,2*n_half)).astype(np.double)
+>>> x = rng.uniform(0,1,(d1,d2,int(2*n_half))).astype(np.double)
 >>> x_og = x.copy()
 >>> import sympy
 >>> y_sympy = np.empty_like(x,dtype=np.double) 

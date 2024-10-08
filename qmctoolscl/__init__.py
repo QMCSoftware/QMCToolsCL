@@ -179,7 +179,7 @@ Args:
     shape (tuple of ints): shape of resulting integer array"""
     assert 0<=t<=64, "t must be between 0 and 64"
     if t<64: 
-        x = rng.integers(0,1<<t,shape,dtype=np.uint64)
+        x = rng.integers(0,1<<int(t),shape,dtype=np.uint64)
     else: # t==64
         x = rng.integers(-(1<<63),1<<63,shape,dtype=np.int64)
         negs = x<0
@@ -238,12 +238,13 @@ Args:
     bases (np.ndarray of np.uint64): bases of size r_b*d"""
     S = np.empty((r,d,tmax_new,tmax),dtype=np.uint64)
     bases_2d = np.atleast_2d(bases)
-    lower_flag = np.tri(int(tmax_new),int(tmax),k=-1,dtype=np.bool)
+    lower_flag = np.tri(int(tmax_new),int(tmax),k=-1,dtype=bool)
     n_lower_flags = lower_flag.sum()
-    diag_flag = np.eye(tmax_new,tmax,dtype=np.bool)
+    diag_flag = np.eye(tmax_new,tmax,dtype=bool)
     for l in range(r):
+        l_b = int(l%r_b)
         for j in range(d):
-            b = bases_2d[l%r_b,j]
+            b = bases_2d[l_b,j]
             Slj = np.zeros((tmax_new,tmax),dtype=np.uint64)
             Slj[lower_flag] = rng.integers(0,b,n_lower_flags)
             Slj[diag_flag] = rng.integers(1,b,tmax)
@@ -257,7 +258,7 @@ Arg:
     r (np.uint64): replications 
     d (np.uint64): dimension 
     mmax (np.uint64): maximum number rows and columns in each generating matrix"""
-    return np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(r,d,1,1))
+    return np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(int(r),int(d),1,1))
 
 def gdn_get_digital_shifts(rng, r, d, tmax_new, r_b, bases):
     """Return digital shifts for gdn
@@ -272,8 +273,9 @@ Args:
     shifts = np.empty((r,d,tmax_new),dtype=np.uint64)
     bases_2d = np.atleast_2d(bases)
     for l in range(r):
+         l_b = int(l%r_b)
          for j in range(d):
-             b = bases_2d[l%r_b,j]
+             b = bases_2d[l_b,j]
              shifts[l,j] = rng.integers(0,b,tmax_new,dtype=np.uint64)
     return shifts
 
@@ -291,8 +293,9 @@ Args:
     bmax = bases_2d.max()
     perms = np.zeros((r,d,tmax_new,bmax),dtype=np.uint64)
     for l in range(r):
+        l_b = int(l%r_b)
         for j in range(d):
-            b = bases_2d[l%r_b,j]
+            b = bases_2d[l_b,j]
             for t in range(tmax_new):
                 perms[l,j,t,:b] = rng.permutation(b)
     return perms
@@ -330,7 +333,9 @@ Args:
     xrb (np.ndarray of np.uint64): array to store scrambled points of size r*n*d"""
     t0_perf = time.perf_counter()
     t0_process = time.process_time()
-    for l in range(r): 
+    t_delta = np.uint64(tmax_new-tmax)
+    for l in range(r):
+        l_x = np.uint64(l%r_x)
         for j in range(d):
             rng = rngs[l,j]
             root_node = root_nodes[l,j]
@@ -341,20 +346,20 @@ Args:
                 root_node.xb = np.uint64(0) 
                 root_node.shift_bits = random_tbit_uint64s(rng,tmax_new,1)[0]
             for i in range(n):
-                _xb_new = xb[l%r_x,i,j]<<(tmax_new-tmax)
+                _xb_new = xb[l_x,i,j]<<t_delta
                 _xb = _xb_new
                 node = root_nodes[l,j]
                 t = tmax_new
                 shift = np.uint64(0)                 
                 while t>0:
-                    b = (_xb>>(t-1))&1 # leading bit of _xb
-                    ones_mask_tm1 = (2**(t-1)-1)
+                    b = int(_xb>>np.uint64(t-1))&1 # leading bit of _xb
+                    ones_mask_tm1 = np.uint64(2**(t-1)-1)
                     _xb_next = _xb&ones_mask_tm1 # drop the leading bit of _xb 
                     if node.xb is None: # this is not a leaf node, so node.shift_bits in [0,1]
-                        if node.shift_bits: shift += 2**(t-1) # add node.shift_bits to the shift
+                        if node.shift_bits: shift += np.uint64(2**(t-1)) # add node.shift_bits to the shift
                         if b==0: # looking to move left
                             if node.left_b2 is None: # left node does not exist
-                                shift_bits = int(rng.integers(0,2**(t-1))) # get (t-1) random bits
+                                shift_bits = np.uint64(rng.integers(0,2**(t-1))) # get (t-1) random bits
                                 node.left_b2 = NUSNode_dnb2(shift_bits,_xb_next,None,None) # create the left node 
                                 shift += shift_bits # add the (t-1) random bits to the shift
                                 break
@@ -362,7 +367,7 @@ Args:
                                 node = node.left_b2
                         else: # b==1, looking to move right
                             if node.right_b2 is None: # right node does not exist
-                                shift_bits = int(rng.integers(0,2**(t-1))) # get (t-1) random bits
+                                shift_bits = np.uint64(rng.integers(0,2**(t-1))) # get (t-1) random bits
                                 node.right_b2 = NUSNode_dnb2(shift_bits,_xb_next,None,None) # create the right node
                                 shift += shift_bits # add the (t-1) random bits to the shift
                                 break 
@@ -372,16 +377,16 @@ Args:
                         shift += node.shift_bits
                         break
                     else: #  node.xb!=_xb, this is a leaf node where the _xb values don't match
-                        node_b = (node.xb>>(t-1))&1 # leading bit of node.xb
+                        node_b = int(node.xb>>np.uint64(t-1))&1 # leading bit of node.xb
                         node_xb_next = node.xb&ones_mask_tm1 # drop the leading bit of node.xb
                         node_shift_bits_next = node.shift_bits&ones_mask_tm1 # drop the leading bit of node.shift_bits
-                        node_leading_shift_bit = (node.shift_bits>>(t-1))&1
-                        if node_leading_shift_bit: shift += 2**(t-1)
+                        node_leading_shift_bit = int(node.shift_bits>>np.uint64(t-1))&1
+                        if node_leading_shift_bit: shift += np.uint64(2**(t-1))
                         if node_b==0 and b==1: # the node will move its contents left and the _xb will go right
                             node.left_b2 = NUSNode_dnb2(node_shift_bits_next,node_xb_next,None,None)  # create the left node from the current node
                             node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
                             # create the right node 
-                            shift_bits = int(rng.integers(0,2**(t-1))) # (t-1) random bits for the right node
+                            shift_bits = np.uint64(rng.integers(0,2**(t-1))) # (t-1) random bits for the right node
                             node.right_b2 = NUSNode_dnb2(shift_bits,_xb_next,None,None)
                             shift += shift_bits
                             break
@@ -389,7 +394,7 @@ Args:
                             node.right_b2 = NUSNode_dnb2(node_shift_bits_next,node_xb_next,None,None)  # create the right node from the current node
                             node.xb,node.shift_bits = None,node_leading_shift_bit # reset the existing node
                             # create the left node 
-                            shift_bits = int(rng.integers(0,2**(t-1))) # (t-1) random bits for the left node
+                            shift_bits = np.uint64(rng.integers(0,2**(t-1))) # (t-1) random bits for the left node
                             node.left_b2 = NUSNode_dnb2(shift_bits,_xb_next,None,None)
                             shift += shift_bits
                             break
@@ -445,10 +450,12 @@ Args:
     t0_perf = time.perf_counter()
     t0_process = time.process_time()
     for l in range(r): 
+        l_b = int(l%r_b)
+        l_x = int(l%r_x)
         for j in range(d):
             rng = rngs[l,j]
             root_node = root_nodes[l,j]
-            b = bases[l%r_b,j]
+            b = bases[l_b,j]
             assert isinstance(root_node,NUSNode_gdn)
             if root_node.perm is None:
                 # initilize root nodes
@@ -461,13 +468,13 @@ Args:
                 t = 0
                 perm = np.zeros(tmax_new,dtype=np.uint64)         
                 while t<tmax:
-                    _xdig = np.zeros(tmax_new-t,dtype=np.uint64)
-                    _xdig[:(tmax-t)] = xdig[l%r_x,i,j,t:]
+                    _xdig = np.zeros(np.uint64(tmax_new-t),dtype=np.uint64)
+                    _xdig[:np.uint64(tmax-t)] = xdig[l_x,i,j,t:]
                     dig = _xdig[0]
                     if node.xdig is None: # this is not a leaf node, so node.perm is a single permutation
                         perm[t] = node.perm[dig] # set the permuted value
                         if node.children[dig] is None: # child in dig position does not exist
-                            node_perm = random_uint64_permutations(rng,tmax_new-t-1,b)
+                            node_perm = random_uint64_permutations(rng,np.uint64(tmax_new-t-1),b)
                             node.children[dig] = NUSNode_gdn(node_perm,_xdig[1:],[None]*b)
                             perm[(t+1):] = node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xdig[1:]] # digits in _xdig[1:] index node_perm rows
                             break
@@ -486,7 +493,7 @@ Args:
                         if node_dig==dig: 
                             node = node.children[dig] 
                         else: # create child node in the dig position
-                            dig_node_perm = random_uint64_permutations(rng,tmax_new-t-1,b)
+                            dig_node_perm = random_uint64_permutations(rng,np.uint64(tmax_new-t-1),b)
                             node.children[dig] = NUSNode_gdn(dig_node_perm,_xdig[1:],[None]*b) # create a new leaf node
                             perm[(t+1):] = dig_node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xdig[1:]] # digits in _xdig[1:] index node_perm rows
                             break
