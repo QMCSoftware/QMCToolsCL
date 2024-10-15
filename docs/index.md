@@ -6,13 +6,8 @@ The `qmctoolscl` package provides a **Python** interface to tools in **OpenCL** 
 
 ## Installation 
 
-For now, install from source via 
-
 ```
-git clone https://github.com/QMCSoftware/qmctoolscl.git
-cd qmctoolscl
-pip install numpy
-pip install -e . 
+pip install qmctoolscl
 ```
 
 To use OpenCL features, please install <a href="https://pypi.org/project/pyopencl/" target="_blank">PyOpenCL</a>. Commands used to install PyOpenCL on Linux, MacOS, and Windows for our automated tests can be found <a href="https://github.com/QMCSoftware/qmctoolscl/blob/main/.github/workflows/doctests.yml" target="_blank">here</a>. Note that Apple has deprecated support for OpenCL (see <a href="https://developer.apple.com/opencl/" target="_blank">this post</a>), but installation is still possible in many cases. If you cannot install PyOpenCL, the C backend to this package will still work independently. 
