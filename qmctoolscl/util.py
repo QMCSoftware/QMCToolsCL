@@ -4,10 +4,10 @@ import os
 import ctypes 
 import glob 
 import os
+
 c_lib = ctypes.CDLL(glob.glob(os.path.dirname(os.path.abspath(__file__))+"/c_lib*")[0], mode=ctypes.RTLD_GLOBAL)
 
 from .c_funcs import *
-
 
 def print_opencl_device_info():
     """ Print OpenCL devices info. Copied from https://github.com/HandsOnOpenCL/Exercises-Solutions/blob/master/Exercises/Exercise01/Python/DeviceInfo.py """
@@ -77,7 +77,7 @@ def _preprocess_lat_gen_natural(r,n,d,bs_r,bs_n,bs_d,n_start,g,x,kwargs):
     if not ((n_start==0 or np.log2(n_start)%1==0) and ((n+n_start)==0 or np.log2(n+n_start)%1==0)):
         raise Exception("lat_gen_natural requires n_start and n+n_start are either 0 or powers of 2")
 
-overwrite_args = {
+_overwrite_args = {
     "fft_bro_1d_radix2": 2, 
     "ifft_bro_1d_radix2": 2, 
 }
@@ -125,7 +125,7 @@ def _opencl_c_func(func):
             else:
                 tdelta_process = -1
             if isinstance(args[-1],np.ndarray):
-                num_overwrite_args = overwrite_args[func_name] if func_name in overwrite_args else 1
+                num_overwrite_args = _overwrite_args[func_name] if func_name in _overwrite_args else 1
                 for i in range(-1,-1-num_overwrite_args,-1):
                     cl.enqueue_copy(kwargs["queue"],args[i],args_device[i])
             tdelta_perf = time.perf_counter()-t0_perf

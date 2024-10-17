@@ -79,7 +79,7 @@ def setup_speed_tests(platform_id, device_id):
     device = platform.get_devices()[device_id]
     print("\nPlatform: %s\nDevice: %s\n"%(platform.name,device.name))
     context = cl.Context([device])
-    program = qmctoolscl.get_qmctoolscl_program_from_context(context)
+    program = qmctoolscl.util.get_qmctoolscl_program_from_context(context)
     queue = cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
     kwargs_cl = {
         "backend": "cl", 
