@@ -34,4 +34,4 @@ exportcondaenv:
 	conda env export --no-builds | tail -r | tail -n +2 | tail -r > myenv.yml
 
 mydeviceinfo:
-	python -c "import qmctoolscl; qmctoolscl.print_opencl_device_info()" > my_device_info.txt
+	python -c "import qmctoolscl; qmctoolscl.util.print_opencl_device_info()" > my_device_info.txt
