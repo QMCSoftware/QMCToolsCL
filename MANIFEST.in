@@ -1,3 +1,5 @@
 prune qmctoolscl/qmctoolscl.c
 include qmctoolscl/qmctoolscl.h
 include qmctoolscl/qmctoolscl.cl
+prune qmctoolscl/c_funcs.py
+prune qmctoolscl/wrapped_funcs.py

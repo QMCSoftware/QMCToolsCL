@@ -1,5 +1,7 @@
 import setuptools
 from setuptools import Extension
+import os 
+import re 
 
 cl_file = "./qmctoolscl/qmctoolscl.cl"
 with open(cl_file,"r") as f:
@@ -41,3 +43,47 @@ setuptools.setup(
         )
     ],
 )
+
+c_to_ctypes_map = {
+    "ulong": "uint64",
+    "double": "double",
+    "char": "uint8",
+}
+
+THISDIR = os.path.dirname(os.path.realpath(__file__))
+
+with open("%s/qmctoolscl/qmctoolscl.cl"%THISDIR,"r") as f:
+    code = f.read() 
+str_c = "import ctypes\nimport numpy as np\nfrom .util import c_lib\n\n"
+str_wf = "from .util import _opencl_c_func\nfrom .c_funcs import *\n\n"
+blocks = re.findall(r'(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
+for block in blocks:
+    lines = block.replace("(","").splitlines()
+    name = lines[0]
+    desc = [] 
+    si = 1
+    while lines[si].strip()[:2]=="//":
+        desc += [lines[si].split("// ")[1].strip()]
+        si += 1
+    desc = "\n".join(desc)
+    args = []
+    doc_args = []
+    for i in range(si,len(lines)):
+        var_input,var_desc = lines[i].split(" // ")
+        var_type,var = var_input.replace(",","").split(" ")[-2:]
+        if var_type not in c_to_ctypes_map:
+                raise Exception("var_type %s not found in map"%var_type)
+        c_var_type = c_to_ctypes_map[var_type]
+        if var[0]!="*":
+            doc_args += ["%s (np.%s): %s"%(var,c_var_type,var_desc)]
+            args += ["ctypes.c_%s"%c_var_type]
+        else:
+            doc_args += ["%s (np.ndarray of np.%s): %s"%(var[1:],c_var_type,var_desc)]
+            args += ["np.ctypeslib.ndpointer(ctypes.c_%s,flags='C_CONTIGUOUS')"%c_var_type]
+    doc_args = doc_args[:3]+doc_args[6:] # skip batch size args
+    str_c += "%s_c = c_lib.%s\n"%(name,name)
+    str_c += "%s_c.argtypes = [\n\t%s\n]\n\n"%(name,',\n\t'.join(args))
+    str_wf += '@_opencl_c_func\ndef %s():\n    """%s\n\nArgs:\n    %s"""\n    pass\n\n'%(name,desc.strip(),"\n    ".join(doc_args))
+
+with open("%s/qmctoolscl/c_funcs.py"%THISDIR,"w") as f: f.write(str_c)
+with open("%s/qmctoolscl/wrapped_funcs.py"%THISDIR,"w") as f: f.write(str_wf)
