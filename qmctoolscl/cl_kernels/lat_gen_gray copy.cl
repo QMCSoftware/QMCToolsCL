@@ -18,6 +18,15 @@ __kernel void lat_gen_gray(
     ulong ll_max = (r-l0)<bs_r ? (r-l0):bs_r;
     double ifrac;
     ulong p,v,itrue,b,ll,l,ii,i,jj,j,idx;
+    ulong g_priv[%d*%d]; // bs_r*bs_d
+    double x_priv[%d*%d*%d]; // bs_r*bs_n*bs_d
+    for(jj=0; jj<jj_max; jj++){
+        j = j0+jj;
+        for(ll=0; ll<ll_max; ll++){
+            l = l0+ll;
+            g_priv[ll*bs_d+jj] = g[l*d+j];
+        }
+    }
     ulong n0 = n_start+i0;
     p = ceil(log2((double)n0+1));
     v = 0; 
@@ -38,7 +47,7 @@ __kernel void lat_gen_gray(
             idx = i*d+j;
             for(ll=0; ll<ll_max; ll++){
                 l = l0+ll;
-                x[l*n*d+idx] = (double)(fmod((double)(g[l*d+j]*ifrac),(double)(1.)));
+                x_priv[ll*bs_n*bs_d+ii*bs_d+jj] = (double)(fmod((double)(g_priv[ll*bs_d+jj]*ifrac),(double)(1.)));
             }
         }
         itrue = i+n_start+1;
@@ -51,5 +60,15 @@ __kernel void lat_gen_gray(
             b += 1;
         }
         v ^= 1<<(p-b-1);
+    }
+    for(ii=0; ii<ii_max; ii++){
+        i = i0+ii;
+        for(jj=0; jj<jj_max; jj++){
+            j = j0+jj;
+            for(ll=0; ll<ll_max; ll++){
+                l = l0+ll;
+                x[l*n*d+i*d+j] = x_priv[ll*bs_n*bs_d+ii*bs_d+jj];
+            }
+        }
     }
 }

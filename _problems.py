@@ -4,22 +4,16 @@ import numpy as np
 import os
 import shutil
 
-def run_dnb2_problem(n, d, kwargs): 
+def run_dnb2(n, d, kwargs): 
     C_full = np.loadtxt("https://raw.githubusercontent.com/QMCSoftware/LDData/main/dnet/mps.sobol_Cs.txt",dtype=np.uint64,skiprows=7)
     assert d<=len(C_full) 
     C = C_full[:d]
     mmax = C.shape[1] 
     xb = np.empty((n,d),dtype=np.uint64)
-    if kwargs["backend"]=="cl":
-        C = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=C)
-        xb = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xb)
     time_perf,time_process = qmctoolscl.dnb2_gen_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),np.uint64(mmax),C,xb,**kwargs)
-    if kwargs["backend"]=="cl":
-        C.release()
-        xb.release()
     return time_perf,time_process
 
-def run_lat_gen_gray(n, d, kwargs):
+def run_lattice(n, d, kwargs):
     g_full = np.loadtxt("https://raw.githubusercontent.com/QMCSoftware/LDData/main/lattice/mps.exod2_base2_m20.txt",dtype=np.uint64,skiprows=6) 
     assert d<=len(g_full) 
     g = g_full[:d] 
@@ -35,44 +29,22 @@ def run_halton_problem(n, d, kwargs):
     assert np.log2(n)<mmax
     C = np.tile(np.eye(mmax,dtype=np.uint64)[None,None,:,:],(1,d,1,1))
     xdig = np.empty((n,d,mmax),dtype=np.uint64) 
-    if kwargs["backend"]=="cl":
-        C = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=C)
-        xdig = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xdig)
     time_perf,time_process = qmctoolscl.gdn_gen_natural(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(1),np.uint64(mmax),np.uint64(mmax),np.uint64(0),primes,C,xdig,**kwargs)
-    if kwargs["backend"]=="cl":
-        C.release()
-        xdig.release()
     return time_perf,time_process
 
-def run_fft_problem(n, d, kwargs):
+def run_fft(n, d, kwargs):
     assert n == 1
     xr = np.random.rand(d)
     xi = np.random.rand(d)
     twiddler = np.empty(d,dtype=np.double)
     twiddlei = np.empty(d,dtype=np.double)
-    if kwargs["backend"]=="cl":
-        kwargs["local_size"] = kwargs["global_size"]
-        xr = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xr)
-        xi = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xi)
-        twiddler = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=twiddler)
-        twiddlei = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=twiddlei)
     time_perf,time_process = qmctoolscl.fft_bro_1d_radix2(np.uint64(1),np.uint64(n),np.uint64(d//2),twiddler,twiddlei,xr,xi,**kwargs)
-    if kwargs["backend"]=="cl":
-        xr.release()
-        xi.release()
-        twiddler.release()
-        twiddlei.release()
     return time_perf,time_process
 
-def run_fwht_problem(n, d, kwargs):
+def run_fwht(n, d, kwargs):
     assert n == 1
     x = np.random.rand(d)
-    if kwargs["backend"]=="cl":
-        kwargs["local_size"] = kwargs["global_size"]
-        x = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=x)
     time_perf,time_process = qmctoolscl.fwht_1d_radix2(np.uint64(1),np.uint64(n),np.uint64(d//2),x,**kwargs)
-    if kwargs["backend"]=="cl":
-        x.release()
     return time_perf,time_process
 
 def nd_gs_scheme(n, d):

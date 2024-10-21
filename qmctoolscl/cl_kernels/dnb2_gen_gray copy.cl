@@ -17,17 +17,7 @@ __kernel void dnb2_gen_gray(
     ulong ii_max = (n-i0)<bs_n ? (n-i0):bs_n;
     ulong jj_max = (d-j0)<bs_d ? (d-j0):bs_d;
     ulong ll_max = (r-l0)<bs_r ? (r-l0):bs_r;
-    ulong b,t,kk,ll,l,ii,i,jj,j,prev_i,new_i;
-    ulong C_priv[%d*%d*%d]; // bs_r*bs_d*mmax
-    for(jj=0; jj<jj_max; jj++){
-        j = j0+jj;
-        for(ll=0; ll<ll_max; ll++){
-            l = l0+ll;
-            for(kk=0; kk<mmax; kk++){
-                C_priv[ll*bs_d*mmax+jj*mmax+kk] = C[l*d*mmax+j*mmax+kk];
-            }
-        }
-    }
+    ulong b,t,ll,l,ii,i,jj,j,prev_i,new_i;
     ulong itrue = n_start+i0;
     // initial index 
     t = itrue^(itrue>>1);
@@ -49,7 +39,7 @@ __kernel void dnb2_gen_gray(
                     j = j0+jj;
                     for(ll=0; ll<ll_max; ll++){
                         l = l0+ll;
-                        //xb[l*n*d+prev_i+j] ^= C_priv[ll*bs_d*mmax+jj*mmax+b];
+                        xb[l*n*d+prev_i+j] ^= C[l*d*mmax+j*mmax+b];
                     }
                 }
             }
@@ -70,7 +60,7 @@ __kernel void dnb2_gen_gray(
             j = j0+jj;
             for(ll=0; ll<ll_max; ll++){
                 l = l0+ll;
-                xb[l*n*d+new_i+j] = xb[l*n*d+prev_i+j]^C_priv[ll*bs_d*mmax+jj*mmax+b];
+                xb[l*n*d+new_i+j] = xb[l*n*d+prev_i+j]^C[l*d*mmax+j*mmax+b];
             }
         }
         prev_i = new_i;

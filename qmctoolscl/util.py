@@ -33,16 +33,20 @@ def print_opencl_device_info():
         print()
 
 bs_plugin_indices = {
-    "lat_gen_gray": [0,2,0,1,2]
+    #"lat_gen_gray": [3,5,3,4,5],
+    "dnb2_gen_gray": [3,5,7],
 }
 
-def get_qmctoolscl_program_from_context(context, func_name, bs):
+def get_qmctoolscl_program_from_context(context, func_name, args_device):
     import pyopencl as cl
     FILEDIR = os.path.dirname(os.path.realpath(__file__))
     with open(FILEDIR+"/cl_kernels/%s.cl"%func_name,"r") as kernel_file:
         kernelsource = kernel_file.read()
     if func_name in bs_plugin_indices:
-        kernelsource = kernelsource%tuple([int(bs[i]) for i in bs_plugin_indices[func_name]])
+        insert_ints = tuple([int(args_device[i]) for i in bs_plugin_indices[func_name]])
+        kernelsource = kernelsource%insert_ints
+    print(kernelsource)
+    print(args_device)
     program = cl.Program(context,kernelsource).build()
     return program
 
@@ -117,11 +121,11 @@ def _opencl_c_func(func):
             kwargs["global_size"],bs = parse_gs_bs(kwargs["global_size"],args)
             if "local_size" not in kwargs:
                 kwargs["local_size"] = None
-            if "program" not in kwargs:
-                kwargs["program"] =  get_qmctoolscl_program_from_context(kwargs["context"],func_name,bs)
-            cl_func = getattr(kwargs["program"],func_name)
             args_device = [cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=arg) if isinstance(arg,np.ndarray) else arg for arg in args]
             args_device = args_device[:3]+bs+args_device[3:] # repeat the first 3 args to the batch sizes
+            if "program" not in kwargs:
+                kwargs["program"] =  get_qmctoolscl_program_from_context(kwargs["context"],func_name,args_device)
+            cl_func = getattr(kwargs["program"],func_name)
             try:
                 eval('_preprocess_%s(*args_device,kwargs=kwargs)'%func_name)
             except NameError: pass
