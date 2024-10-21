@@ -50,10 +50,43 @@ def run_halton_problem(n, d, kwargs):
         xdig.release()
     return time_perf,time_process
 
+def run_fft_problem(n, d, kwargs):
+    assert n == 1
+    xr = np.random.rand(d)
+    xi = np.random.rand(d)
+    twiddler = np.empty(d,dtype=np.double)
+    twiddlei = np.empty(d,dtype=np.double)
+    if kwargs["backend"]=="cl":
+        kwargs["local_size"] = kwargs["global_size"]
+        xr = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xr)
+        xi = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=xi)
+        twiddler = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=twiddler)
+        twiddlei = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=twiddlei)
+    time_perf,time_process = qmctoolscl.fft_bro_1d_radix2(np.uint64(1),np.uint64(n),np.uint64(d//2),twiddler,twiddlei,xr,xi,**kwargs)
+    if kwargs["backend"]=="cl":
+        xr.release()
+        xi.release()
+        twiddler.release()
+        twiddlei.release()
+    return time_perf,time_process
+
+def run_fwht_problem(n, d, kwargs):
+    assert n == 1
+    x = np.random.rand(d)
+    if kwargs["backend"]=="cl":
+        kwargs["local_size"] = kwargs["global_size"]
+        x = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=x)
+    time_perf,time_process = qmctoolscl.fwht_1d_radix2(np.uint64(1),np.uint64(n),np.uint64(d//2),x,**kwargs)
+    if kwargs["backend"]=="cl":
+        x.release()
+    return time_perf,time_process
+
 map_run_problem = {
     "lattice": run_lat_problem,
     "digital_net_base_2": run_dnb2_problem,
     "halton": run_halton_problem,
+    "fft": run_fft_problem,
+    "fwht": run_fwht_problem
 }
 
 def nd_gs_scheme(n, d):

@@ -50,7 +50,7 @@ __kernel void lat_gen_gray(
     ulong jj_max = (d-j0)<batch_size_d ? (d-j0):batch_size_d;
     ulong ll_max = (r-l0)<batch_size_r ? (r-l0):batch_size_r;
     double ifrac;
-    ulong p,v,itrue,igc,b,ll,l,ii,i,jj,j,idx;
+    ulong p,v,itrue,b,ll,l,ii,i,jj,j,idx;
     ulong n0 = n_start+i0;
     p = ceil(log2((double)n0+1));
     v = 0; 

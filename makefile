@@ -11,6 +11,14 @@ shortspeedtests:
 	python nd_parse.py
 	rm -r -f nd_lattice.debug
 
+speedtestgs_fft:
+	python gs_run.py --qrproblem fft --tag full --np2 0 --dp2 21 --gsminnp2 0 --gsnp2 0 --gsmindp2 5 --gsdp2 8 --skip 0 --runs 1 --platform 1 --device 2 --force True
+	python gs_parse.py --qrproblem fft --tag full --cmap cool --colorleq1 k --colorgt1 k --colorperf k
+
+speedtestgs_fwht:
+	python gs_run.py --qrproblem fwht --tag full --np2 0 --dp2 21 --gsminnp2 0 --gsnp2 0 --gsmindp2 5 --gsdp2 8 --skip 0 --runs 1 --platform 1 --device 2 --force True
+	python gs_parse.py --qrproblem fwht --tag full --cmap cool --colorleq1 k --colorgt1 k --colorperf k
+
 speedtestgs_lattice:
 	python gs_run.py --qrproblem lattice --tag full --np2 16 --dp2 9 --gsminnp2 1 --gsnp2 16 --gsmindp2 1 --gsdp2 9 --skip 0 --runs 1 --platform 1 --device 2 --force True
 	python gs_parse.py --qrproblem lattice --tag full --cmap cool --colorleq1 k --colorgt1 k --colorperf k
