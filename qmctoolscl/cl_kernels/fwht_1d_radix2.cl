@@ -5,17 +5,17 @@ __kernel void fwht_1d_radix2(
     const ulong d1, // first dimension
     const ulong d2, // second dimension
     const ulong n_half, // half of the last dimension along which FWHT is performed
-    const ulong batch_size_d1, // batch size first dimension 
-    const ulong batch_size_d2, // batch size second dimension
-    const ulong batch_size_n_half, // batch size for half of the last dimension
+    const ulong bs_d1, // batch size first dimension 
+    const ulong bs_d2, // batch size second dimension
+    const ulong bs_n_half, // batch size for half of the last dimension
     __global double *x // array of size d1*d2*2n_half on which to perform FWHT in place
 ){
-    ulong j10 = get_global_id(0)*batch_size_d1;
-    ulong j20 = get_global_id(1)*batch_size_d2;
-    ulong i0 = get_global_id(2)*batch_size_n_half;
-    ulong ii_max = (n_half-i0)<batch_size_n_half ? (n_half-i0):batch_size_n_half;
-    ulong jj1_max = (d1-j10)<batch_size_d1 ? (d1-j10):batch_size_d1;
-    ulong jj2_max = (d2-j20)<batch_size_d2 ? (d2-j20):batch_size_d2;
+    ulong j10 = get_global_id(0)*bs_d1;
+    ulong j20 = get_global_id(1)*bs_d2;
+    ulong i0 = get_global_id(2)*bs_n_half;
+    ulong ii_max = (n_half-i0)<bs_n_half ? (n_half-i0):bs_n_half;
+    ulong jj1_max = (d1-j10)<bs_d1 ? (d1-j10):bs_d1;
+    ulong jj2_max = (d2-j20)<bs_d2 ? (d2-j20):bs_d2;
     ulong ii,i,i1,i2,jj1,jj2,j1,j2,k,s,f,idx;
     double x1,x2;
     ulong n = 2*n_half;

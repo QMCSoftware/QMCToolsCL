@@ -5,20 +5,20 @@ EXPORT void dnb2_gen_gray(
     const unsigned long long r, // replications
     const unsigned long long n, // points
     const unsigned long long d, // dimension
-    const unsigned long long batch_size_r, // batch size for replications
-    const unsigned long long batch_size_n, // batch size for points
-    const unsigned long long batch_size_d, // batch size for dimension
+    const unsigned long long bs_r, // batch size for replications
+    const unsigned long long bs_n, // batch size for points
+    const unsigned long long bs_d, // batch size for dimension
     const unsigned long long n_start, // starting index in sequence
     const unsigned long long mmax, // columns in each generating matrix
     const unsigned long long *C, // generating matrices of size r*d*mmax
     unsigned long long *xb // binary digital net points of size r*n*d
 ){   
-    unsigned long long l0 = 0*batch_size_r;
-    unsigned long long i0 = 0*batch_size_n;
-    unsigned long long j0 = 0*batch_size_d;
-    unsigned long long ii_max = (n-i0)<batch_size_n ? (n-i0):batch_size_n;
-    unsigned long long jj_max = (d-j0)<batch_size_d ? (d-j0):batch_size_d;
-    unsigned long long ll_max = (r-l0)<batch_size_r ? (r-l0):batch_size_r;
+    unsigned long long l0 = 0*bs_r;
+    unsigned long long i0 = 0*bs_n;
+    unsigned long long j0 = 0*bs_d;
+    unsigned long long ii_max = (n-i0)<bs_n ? (n-i0):bs_n;
+    unsigned long long jj_max = (d-j0)<bs_d ? (d-j0):bs_d;
+    unsigned long long ll_max = (r-l0)<bs_r ? (r-l0):bs_r;
     unsigned long long b,t,ll,l,ii,i,jj,j,prev_i,new_i;
     unsigned long long itrue = n_start+i0;
     // initial index 

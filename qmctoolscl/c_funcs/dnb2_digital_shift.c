@@ -5,21 +5,21 @@ EXPORT void dnb2_digital_shift(
     const unsigned long long r, // replications
     const unsigned long long n, // points
     const unsigned long long d, // dimension
-    const unsigned long long batch_size_r, // batch size for replications
-    const unsigned long long batch_size_n, // batch size for points
-    const unsigned long long batch_size_d, // batch size for dimension
+    const unsigned long long bs_r, // batch size for replications
+    const unsigned long long bs_n, // batch size for points
+    const unsigned long long bs_d, // batch size for dimension
     const unsigned long long r_x, // replications of xb
     const unsigned long long *lshifts, // left shift applied to each element of xb
     const unsigned long long *xb, // binary base 2 digital net points of size r_x*n*d
     const unsigned long long *shiftsb, // digital shifts of size r*d
     unsigned long long *xrb // digital shifted digital net points of size r*n*d
 ){
-    unsigned long long l0 = 0*batch_size_r;
-    unsigned long long i0 = 0*batch_size_n;
-    unsigned long long j0 = 0*batch_size_d;
-    unsigned long long ii_max = (n-i0)<batch_size_n ? (n-i0):batch_size_n;
-    unsigned long long jj_max = (d-j0)<batch_size_d ? (d-j0):batch_size_d;
-    unsigned long long ll_max = (r-l0)<batch_size_r ? (r-l0):batch_size_r;
+    unsigned long long l0 = 0*bs_r;
+    unsigned long long i0 = 0*bs_n;
+    unsigned long long j0 = 0*bs_d;
+    unsigned long long ii_max = (n-i0)<bs_n ? (n-i0):bs_n;
+    unsigned long long jj_max = (d-j0)<bs_d ? (d-j0):bs_d;
+    unsigned long long ll_max = (r-l0)<bs_r ? (r-l0):bs_r;
     unsigned long long ll,l,ii,i,jj,j,idx;
     unsigned long long nelem_x = r_x*n*d;
     for(ll=0; ll<ll_max; ll++){

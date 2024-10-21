@@ -5,9 +5,9 @@ EXPORT void gdn_linear_matrix_scramble(
     const unsigned long long r, // replications 
     const unsigned long long d, // dimension 
     const unsigned long long mmax, // columns in each generating matrix
-    const unsigned long long batch_size_r, // batch size for replications
-    const unsigned long long batch_size_d, // batch size for dimension
-    const unsigned long long batch_size_mmax, // batch size columns
+    const unsigned long long bs_r, // batch size for replications
+    const unsigned long long bs_d, // batch size for dimension
+    const unsigned long long bs_mmax, // batch size columns
     const unsigned long long r_C, // number of replications of C 
     const unsigned long long r_b, // number of replications of bases
     const unsigned long long tmax, // number of rows in each generating matrix 
@@ -17,12 +17,12 @@ EXPORT void gdn_linear_matrix_scramble(
     const unsigned long long *C, // generating matrices of size r_C*d*mmax*tmax 
     unsigned long long *C_lms // new generating matrices of size r*d*mmax*tmax_new
 ){
-    unsigned long long l0 = 0*batch_size_r;
-    unsigned long long j0 = 0*batch_size_d;
-    unsigned long long k0 = 0*batch_size_mmax;
-    unsigned long long kk_max = (mmax-k0)<batch_size_mmax ? (mmax-k0):batch_size_mmax;
-    unsigned long long jj_max = (d-j0)<batch_size_d ? (d-j0):batch_size_d;
-    unsigned long long ll_max = (r-l0)<batch_size_r ? (r-l0):batch_size_r;
+    unsigned long long l0 = 0*bs_r;
+    unsigned long long j0 = 0*bs_d;
+    unsigned long long k0 = 0*bs_mmax;
+    unsigned long long kk_max = (mmax-k0)<bs_mmax ? (mmax-k0):bs_mmax;
+    unsigned long long jj_max = (d-j0)<bs_d ? (d-j0):bs_d;
+    unsigned long long ll_max = (r-l0)<bs_r ? (r-l0):bs_r;
     unsigned long long ll,l,jj,j,kk,k,t,c,b,v,idx_C,idx_C_lms,idx_S; 
     for(ll=0; ll<ll_max; ll++){
         l = l0+ll;

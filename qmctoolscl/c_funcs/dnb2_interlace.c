@@ -5,9 +5,9 @@ EXPORT void dnb2_interlace(
     const unsigned long long r, // replications
     const unsigned long long d_alpha, // dimension of resulting generating matrices 
     const unsigned long long mmax, // columns of generating matrices
-    const unsigned long long batch_size_r, // batch size for replications
-    const unsigned long long batch_size_d_alpha, // batch size for dimension of resulting generating matrices
-    const unsigned long long batch_size_mmax, // batch size for replications
+    const unsigned long long bs_r, // batch size for replications
+    const unsigned long long bs_d_alpha, // batch size for dimension of resulting generating matrices
+    const unsigned long long bs_mmax, // batch size for replications
     const unsigned long long d, // dimension of original generating matrices
     const unsigned long long tmax, // bits in integers of original generating matrices
     const unsigned long long tmax_alpha, // bits in integers of resulting generating matrices
@@ -15,12 +15,12 @@ EXPORT void dnb2_interlace(
     const unsigned long long *C, // original generating matrices of size r*d*mmax
     unsigned long long *C_alpha // resulting interlaced generating matrices of size r*d_alpha*mmax
 ){
-    unsigned long long l0 = 0*batch_size_r;
-    unsigned long long j0_alpha = 0*batch_size_d_alpha;
-    unsigned long long k0 = 0*batch_size_mmax;
-    unsigned long long kk_max = (mmax-k0)<batch_size_mmax ? (mmax-k0):batch_size_mmax;
-    unsigned long long jj_alpha_max = (d_alpha-j0_alpha)<batch_size_d_alpha ? (d_alpha-j0_alpha):batch_size_d_alpha;
-    unsigned long long ll_max = (r-l0)<batch_size_r ? (r-l0):batch_size_r;
+    unsigned long long l0 = 0*bs_r;
+    unsigned long long j0_alpha = 0*bs_d_alpha;
+    unsigned long long k0 = 0*bs_mmax;
+    unsigned long long kk_max = (mmax-k0)<bs_mmax ? (mmax-k0):bs_mmax;
+    unsigned long long jj_alpha_max = (d_alpha-j0_alpha)<bs_d_alpha ? (d_alpha-j0_alpha):bs_d_alpha;
+    unsigned long long ll_max = (r-l0)<bs_r ? (r-l0):bs_r;
     unsigned long long ll,l,jj_alpha,j_alpha,kk,k,t_alpha,t,jj,j,v,b;
     unsigned long long bigone = 1;
     for(ll=0; ll<ll_max; ll++){

@@ -7,20 +7,20 @@ EXPORT void ifft_bro_1d_radix2(
     const unsigned long long d1, // first dimension
     const unsigned long long d2, // second dimension
     const unsigned long long n_half, // half of the last dimension of size n = 2n_half along which FFT is performed
-    const unsigned long long batch_size_d1, // batch size first dimension 
-    const unsigned long long batch_size_d2, // batch size second dimension
-    const unsigned long long batch_size_n_half, // batch size for half of the last dimension
+    const unsigned long long bs_d1, // batch size first dimension 
+    const unsigned long long bs_d2, // batch size second dimension
+    const unsigned long long bs_n_half, // batch size for half of the last dimension
     double *twiddler, // size n vector used to store real twiddle factors
     double *twiddlei, // size n vector used to store imaginary twiddle factors 
     double *xr, // real array of size d1*d2*n on which to perform FFT in place
     double *xi // imaginary array of size d1*d2*n on which to perform FFT in place
 ){
-    unsigned long long j10 = 0*batch_size_d1;
-    unsigned long long j20 = 0*batch_size_d2;
-    unsigned long long i0 = 0*batch_size_n_half;
-    unsigned long long ii_max = (n_half-i0)<batch_size_n_half ? (n_half-i0):batch_size_n_half;
-    unsigned long long jj1_max = (d1-j10)<batch_size_d1 ? (d1-j10):batch_size_d1;
-    unsigned long long jj2_max = (d2-j20)<batch_size_d2 ? (d2-j20):batch_size_d2;
+    unsigned long long j10 = 0*bs_d1;
+    unsigned long long j20 = 0*bs_d2;
+    unsigned long long i0 = 0*bs_n_half;
+    unsigned long long ii_max = (n_half-i0)<bs_n_half ? (n_half-i0):bs_n_half;
+    unsigned long long jj1_max = (d1-j10)<bs_d1 ? (d1-j10):bs_d1;
+    unsigned long long jj2_max = (d2-j20)<bs_d2 ? (d2-j20):bs_d2;
     unsigned long long ii,i,i1,i2,t,jj1,jj2,j1,j2,k,s,f,idx;
     double xr1,xr2,xi1,xi2,yr,yi,v1,v2,cosv,sinv;
     double PI = acos(-1.);

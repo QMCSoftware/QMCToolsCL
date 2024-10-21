@@ -20,8 +20,8 @@ speedtestgs_fwht:
 	python gs_parse.py --qrproblem fwht --tag full --cmap cool --colorleq1 k --colorgt1 k --colorperf k
 
 speedtestgs_lattice:
-	python gs_run.py --qrproblem lattice --tag full --np2 16 --dp2 9 --gsminnp2 1 --gsnp2 16 --gsmindp2 1 --gsdp2 9 --skip 0 --runs 1 --platform 1 --device 2 --force True
-	python gs_parse.py --qrproblem lattice --tag full --cmap cool --colorleq1 k --colorgt1 k --colorperf k
+	python gs_run.py --qrproblem lat_gen_gray --tag full --np2 16 --dp2 9 --gsminnp2 14 --gsnp2 16 --gsmindp2 8 --gsdp2 9 --skip 0 --runs 1 --platform 1 --device 2 --force True
+	python gs_parse.py --qrproblem lat_gen_gray --tag full --cmap cool --colorleq1 k --colorgt1 k --colorperf k
 
 speedtestgs_dnb2:
 	python gs_run.py --qrproblem digital_net_base_2 --tag full --np2 14 --dp2 14 --gsminnp2 1 --gsnp2 12 --gsmindp2 5 --gsdp2 14 --skip 0 --runs 1 --platform 1 --device 2 --force True

@@ -3,9 +3,9 @@ __kernel void gdn_linear_matrix_scramble(
     const ulong r, // replications 
     const ulong d, // dimension 
     const ulong mmax, // columns in each generating matrix
-    const ulong batch_size_r, // batch size for replications
-    const ulong batch_size_d, // batch size for dimension
-    const ulong batch_size_mmax, // batch size columns
+    const ulong bs_r, // batch size for replications
+    const ulong bs_d, // batch size for dimension
+    const ulong bs_mmax, // batch size columns
     const ulong r_C, // number of replications of C 
     const ulong r_b, // number of replications of bases
     const ulong tmax, // number of rows in each generating matrix 
@@ -15,12 +15,12 @@ __kernel void gdn_linear_matrix_scramble(
     __global const ulong *C, // generating matrices of size r_C*d*mmax*tmax 
     __global ulong *C_lms // new generating matrices of size r*d*mmax*tmax_new
 ){
-    ulong l0 = get_global_id(0)*batch_size_r;
-    ulong j0 = get_global_id(1)*batch_size_d;
-    ulong k0 = get_global_id(2)*batch_size_mmax;
-    ulong kk_max = (mmax-k0)<batch_size_mmax ? (mmax-k0):batch_size_mmax;
-    ulong jj_max = (d-j0)<batch_size_d ? (d-j0):batch_size_d;
-    ulong ll_max = (r-l0)<batch_size_r ? (r-l0):batch_size_r;
+    ulong l0 = get_global_id(0)*bs_r;
+    ulong j0 = get_global_id(1)*bs_d;
+    ulong k0 = get_global_id(2)*bs_mmax;
+    ulong kk_max = (mmax-k0)<bs_mmax ? (mmax-k0):bs_mmax;
+    ulong jj_max = (d-j0)<bs_d ? (d-j0):bs_d;
+    ulong ll_max = (r-l0)<bs_r ? (r-l0):bs_r;
     ulong ll,l,jj,j,kk,k,t,c,b,v,idx_C,idx_C_lms,idx_S; 
     for(ll=0; ll<ll_max; ll++){
         l = l0+ll;

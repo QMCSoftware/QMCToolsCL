@@ -3,21 +3,21 @@ __kernel void gdn_integer_to_float(
     const ulong r, // replications
     const ulong n, // points
     const ulong d, // dimension
-    const ulong batch_size_r, // batch size for replications
-    const ulong batch_size_n, // batch size for points
-    const ulong batch_size_d, // batch size for dimension
+    const ulong bs_r, // batch size for replications
+    const ulong bs_n, // batch size for points
+    const ulong bs_d, // batch size for dimension
     const ulong r_b, // replications of bases 
     const ulong tmax, // rows of each generating matrix
     __global const ulong *bases, // bases for each dimension of size r_b*d
     __global const ulong *xdig, // binary digital net points of size r*n*d*tmax
     __global double *x // float digital net points of size r*n*d
 ){
-    ulong l0 = get_global_id(0)*batch_size_r;
-    ulong i0 = get_global_id(1)*batch_size_n;
-    ulong j0 = get_global_id(2)*batch_size_d;
-    ulong ii_max = (n-i0)<batch_size_n ? (n-i0):batch_size_n;
-    ulong jj_max = (d-j0)<batch_size_d ? (d-j0):batch_size_d;
-    ulong ll_max = (r-l0)<batch_size_r ? (r-l0):batch_size_r;
+    ulong l0 = get_global_id(0)*bs_r;
+    ulong i0 = get_global_id(1)*bs_n;
+    ulong j0 = get_global_id(2)*bs_d;
+    ulong ii_max = (n-i0)<bs_n ? (n-i0):bs_n;
+    ulong jj_max = (d-j0)<bs_d ? (d-j0):bs_d;
+    ulong ll_max = (r-l0)<bs_r ? (r-l0):bs_r;
     ulong ll,l,ii,i,jj,j,t,idx_xdig;
     double recip,v,xdig_double,b;
     for(ll=0; ll<ll_max; ll++){

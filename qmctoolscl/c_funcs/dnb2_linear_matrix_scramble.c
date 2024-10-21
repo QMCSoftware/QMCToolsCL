@@ -5,21 +5,21 @@ EXPORT void dnb2_linear_matrix_scramble(
     const unsigned long long r, // replications
     const unsigned long long d, // dimension
     const unsigned long long mmax, // columns in each generating matrix 
-    const unsigned long long batch_size_r, // batch size for replications
-    const unsigned long long batch_size_d, // batch size for dimensions
-    const unsigned long long batch_size_mmax, // batch size for columns
+    const unsigned long long bs_r, // batch size for replications
+    const unsigned long long bs_d, // batch size for dimensions
+    const unsigned long long bs_mmax, // batch size for columns
     const unsigned long long r_C, // original generating matrices
     const unsigned long long tmax_new, // bits in the integers of the resulting generating matrices
     const unsigned long long *S, // scrambling matrices of size r*d*tmax_new
     const unsigned long long *C, // original generating matrices of size r_C*d*mmax
     unsigned long long *C_lms // resulting generating matrices of size r*d*mmax
 ){
-    unsigned long long l0 = 0*batch_size_r;
-    unsigned long long j0 = 0*batch_size_d;
-    unsigned long long k0 = 0*batch_size_mmax;
-    unsigned long long kk_max = (mmax-k0)<batch_size_mmax ? (mmax-k0):batch_size_mmax;
-    unsigned long long jj_max = (d-j0)<batch_size_d ? (d-j0):batch_size_d;
-    unsigned long long ll_max = (r-l0)<batch_size_r ? (r-l0):batch_size_r;
+    unsigned long long l0 = 0*bs_r;
+    unsigned long long j0 = 0*bs_d;
+    unsigned long long k0 = 0*bs_mmax;
+    unsigned long long kk_max = (mmax-k0)<bs_mmax ? (mmax-k0):bs_mmax;
+    unsigned long long jj_max = (d-j0)<bs_d ? (d-j0):bs_d;
+    unsigned long long ll_max = (r-l0)<bs_r ? (r-l0):bs_r;
     unsigned long long b,t,ll,l,jj,j,kk,k,u,v,udotv,vnew,idx;
     unsigned long long bigone = 1;
     unsigned long long nelemC = r_C*d*mmax;

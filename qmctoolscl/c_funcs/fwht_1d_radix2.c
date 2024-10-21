@@ -7,17 +7,17 @@ EXPORT void fwht_1d_radix2(
     const unsigned long long d1, // first dimension
     const unsigned long long d2, // second dimension
     const unsigned long long n_half, // half of the last dimension along which FWHT is performed
-    const unsigned long long batch_size_d1, // batch size first dimension 
-    const unsigned long long batch_size_d2, // batch size second dimension
-    const unsigned long long batch_size_n_half, // batch size for half of the last dimension
+    const unsigned long long bs_d1, // batch size first dimension 
+    const unsigned long long bs_d2, // batch size second dimension
+    const unsigned long long bs_n_half, // batch size for half of the last dimension
     double *x // array of size d1*d2*2n_half on which to perform FWHT in place
 ){
-    unsigned long long j10 = 0*batch_size_d1;
-    unsigned long long j20 = 0*batch_size_d2;
-    unsigned long long i0 = 0*batch_size_n_half;
-    unsigned long long ii_max = (n_half-i0)<batch_size_n_half ? (n_half-i0):batch_size_n_half;
-    unsigned long long jj1_max = (d1-j10)<batch_size_d1 ? (d1-j10):batch_size_d1;
-    unsigned long long jj2_max = (d2-j20)<batch_size_d2 ? (d2-j20):batch_size_d2;
+    unsigned long long j10 = 0*bs_d1;
+    unsigned long long j20 = 0*bs_d2;
+    unsigned long long i0 = 0*bs_n_half;
+    unsigned long long ii_max = (n_half-i0)<bs_n_half ? (n_half-i0):bs_n_half;
+    unsigned long long jj1_max = (d1-j10)<bs_d1 ? (d1-j10):bs_d1;
+    unsigned long long jj2_max = (d2-j20)<bs_d2 ? (d2-j20):bs_d2;
     unsigned long long ii,i,i1,i2,jj1,jj2,j1,j2,k,s,f,idx;
     double x1,x2;
     unsigned long long n = 2*n_half;

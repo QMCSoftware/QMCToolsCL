@@ -19,18 +19,12 @@ def run_dnb2_problem(n, d, kwargs):
         xb.release()
     return time_perf,time_process
 
-def run_lat_problem(n, d, kwargs):
+def run_lat_gen_gray(n, d, kwargs):
     g_full = np.loadtxt("https://raw.githubusercontent.com/QMCSoftware/LDData/main/lattice/mps.exod2_base2_m20.txt",dtype=np.uint64,skiprows=6) 
     assert d<=len(g_full) 
     g = g_full[:d] 
     x = np.empty((n,d),dtype=np.float64)
-    if kwargs["backend"]=="cl":
-        g = cl.Buffer(kwargs["context"],cl.mem_flags.READ_ONLY|cl.mem_flags.COPY_HOST_PTR,hostbuf=g)
-        x = cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=x)
     time_perf,time_process = qmctoolscl.lat_gen_gray(np.uint64(1),np.uint64(n),np.uint64(d),np.uint64(0),g,x,**kwargs)
-    if kwargs["backend"]=="cl":
-        g.release()
-        x.release()
     return time_perf,time_process
 
 def run_halton_problem(n, d, kwargs):
@@ -81,14 +75,6 @@ def run_fwht_problem(n, d, kwargs):
         x.release()
     return time_perf,time_process
 
-map_run_problem = {
-    "lattice": run_lat_problem,
-    "digital_net_base_2": run_dnb2_problem,
-    "halton": run_halton_problem,
-    "fft": run_fft_problem,
-    "fwht": run_fwht_problem
-}
-
 def nd_gs_scheme(n, d):
     return n,d
 
@@ -105,22 +91,6 @@ map_gs_scheme = {
     "customlattice": custom_gs_scheme_lattice,
     "customdnb2": custom_gs_scheme_dnb2,
 }
-
-def setup_speed_tests(platform_id, device_id):
-    kwargs_c = {"backend": "c"}
-    platform = cl.get_platforms()[platform_id]
-    device = platform.get_devices()[device_id]
-    print("\nPlatform: %s\nDevice: %s\n"%(platform.name,device.name))
-    context = cl.Context([device])
-    program = qmctoolscl.util.get_qmctoolscl_program_from_context(context)
-    queue = cl.CommandQueue(context,properties=cl.command_queue_properties.PROFILING_ENABLE)
-    kwargs_cl = {
-        "backend": "cl", 
-        "wait": True,
-        "context": context, 
-        "program": program, 
-        "queue": queue}
-    return kwargs_c,kwargs_cl
 
 def remake_dir(experiment_dir,force=False):
     if os.path.isdir(experiment_dir):
