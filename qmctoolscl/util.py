@@ -32,10 +32,10 @@ def print_opencl_device_info():
             print("\t\tMax Work-group Dims:(", dim[0], " ".join(map(str, dim[1:])), ")")
         print()
 
-def get_qmctoolscl_program_from_context(context):
+def get_qmctoolscl_program_from_context(context, func_name):
     import pyopencl as cl
     FILEDIR = os.path.dirname(os.path.realpath(__file__))
-    with open(FILEDIR+"/qmctoolscl.cl","r") as kernel_file:
+    with open(FILEDIR+"/cl_kernels/%s.cl"%func_name,"r") as kernel_file:
         kernelsource = kernel_file.read()
     program = cl.Program(context,kernelsource).build()
     return program
@@ -102,7 +102,7 @@ def _opencl_c_func(func):
             import pyopencl as cl
             t0_perf = time.perf_counter()
             if "program" not in kwargs:
-                kwargs["program"] =  get_qmctoolscl_program_from_context(kwargs["context"])
+                kwargs["program"] =  get_qmctoolscl_program_from_context(kwargs["context"],func_name)
             assert "global_size" in kwargs 
             kwargs["global_size"] = [min(kwargs["global_size"][i],args[i]) for i in range(3)]
             batch_size = [np.uint64(np.ceil(args[i]/kwargs["global_size"][i])) for i in range(3)]

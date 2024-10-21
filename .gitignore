@@ -12,7 +12,7 @@ raw.githubusercontent.com/*
 *.pyc
 *.so 
 *.DS_Store
-qmctoolscl/*.c
+#qmctoolscl/*.c
 qmctoolscl.egg-info/*
 build/*
 

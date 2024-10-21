@@ -3,21 +3,23 @@ from setuptools import Extension
 import os 
 import re 
 
-cl_file = "./qmctoolscl/qmctoolscl.cl"
-with open(cl_file,"r") as f:
-    cl_content = f.read()
-c_content = '#include "qmctoolscl.h"\n\n'+cl_content 
-c_content = c_content.replace("__kernel void","EXPORT void")
-c_content = c_content.replace("__global ","")
-c_content = c_content.replace("ulong","unsigned long long")
-c_content = c_content.replace("get_global_id(0)","0")
-c_content = c_content.replace("get_global_id(1)","0")
-c_content = c_content.replace("get_global_id(2)","0")
-c_content = c_content.replace("barrier(CLK_LOCAL_MEM_FENCE);","")
-c_content = c_content.replace("barrier(CLK_GLOBAL_MEM_FENCE);","")
-c_content = c_content.replace("barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);","")
-with open(cl_file[:-1],"w") as f:
-    f.write(c_content)
+cl_files = [file[:-3] for file in os.listdir("./qmctoolscl/cl_kernels/") if file[-3:]==".cl"]
+
+# for cl_file in cl_files:
+#     with open("./qmctoolscl/cl_kernels/%s.cl"%cl_file,"r") as f:
+#         cl_content = f.read()
+#     c_content = '#include "qmctoolscl.h"\n\n'+cl_content 
+#     c_content = c_content.replace("__kernel void","EXPORT void")
+#     c_content = c_content.replace("__global ","")
+#     c_content = c_content.replace("ulong","unsigned long long")
+#     c_content = c_content.replace("get_global_id(0)","0")
+#     c_content = c_content.replace("get_global_id(1)","0")
+#     c_content = c_content.replace("get_global_id(2)","0")
+#     c_content = c_content.replace("barrier(CLK_LOCAL_MEM_FENCE);","")
+#     c_content = c_content.replace("barrier(CLK_GLOBAL_MEM_FENCE);","")
+#     c_content = c_content.replace("barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);","")
+#     with open("./qmctoolscl/c_funcs/%s.c"%cl_file,"w") as f:
+#         f.write(c_content)
 
 setuptools.setup(
     name = "qmctoolscl",
@@ -39,7 +41,7 @@ setuptools.setup(
     ext_modules = [
         Extension(
             name = 'qmctoolscl.c_lib',
-            sources = ["./qmctoolscl/qmctoolscl.c"]
+            sources = ["./qmctoolscl/c_funcs/python_compat.c"]+["./qmctoolscl/c_funcs/%s.c"%cl_file for cl_file in cl_files]
         )
     ],
 )
@@ -52,40 +54,41 @@ c_to_ctypes_map = {
 
 THISDIR = os.path.dirname(os.path.realpath(__file__))
 
-with open("%s/qmctoolscl/qmctoolscl.cl"%THISDIR,"r") as f:
-    code = f.read() 
 str_c = "import ctypes\nimport numpy as np\nfrom .util import c_lib\n\n"
 str_wf = "from .util import _opencl_c_func\nfrom .c_funcs import *\n\n"
 str_init = "from .rand_funcs import *\nfrom .wrapped_funcs import ("
-blocks = re.findall(r'(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
-for block in blocks:
-    lines = block.replace("(","").splitlines()
-    name = lines[0]
-    desc = [] 
-    si = 1
-    while lines[si].strip()[:2]=="//":
-        desc += [lines[si].split("// ")[1].strip()]
-        si += 1
-    desc = "\n".join(desc)
-    args = []
-    doc_args = []
-    for i in range(si,len(lines)):
-        var_input,var_desc = lines[i].split(" // ")
-        var_type,var = var_input.replace(",","").split(" ")[-2:]
-        if var_type not in c_to_ctypes_map:
-                raise Exception("var_type %s not found in map"%var_type)
-        c_var_type = c_to_ctypes_map[var_type]
-        if var[0]!="*":
-            doc_args += ["%s (np.%s): %s"%(var,c_var_type,var_desc)]
-            args += ["ctypes.c_%s"%c_var_type]
-        else:
-            doc_args += ["%s (np.ndarray of np.%s): %s"%(var[1:],c_var_type,var_desc)]
-            args += ["np.ctypeslib.ndpointer(ctypes.c_%s,flags='C_CONTIGUOUS')"%c_var_type]
-    doc_args = doc_args[:3]+doc_args[6:] # skip batch size args
-    str_c += "%s_c = c_lib.%s\n"%(name,name)
-    str_c += "%s_c.argtypes = [\n\t%s\n]\n\n"%(name,',\n\t'.join(args))
-    str_wf += '@_opencl_c_func\ndef %s():\n    """%s\n\nArgs:\n    %s"""\n    pass\n\n'%(name,desc.strip(),"\n    ".join(doc_args))
-    str_init += "\n\t%s,"%name
+for cl_file in cl_files:
+    with open("%s/qmctoolscl/cl_kernels/%s.cl"%(THISDIR,cl_file),"r") as f:
+        code = f.read() 
+    blocks = re.findall(r'(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
+    for block in blocks:
+        lines = block.replace("(","").splitlines()
+        name = lines[0]
+        desc = [] 
+        si = 1
+        while lines[si].strip()[:2]=="//":
+            desc += [lines[si].split("// ")[1].strip()]
+            si += 1
+        desc = "\n".join(desc)
+        args = []
+        doc_args = []
+        for i in range(si,len(lines)):
+            var_input,var_desc = lines[i].split(" // ")
+            var_type,var = var_input.replace(",","").split(" ")[-2:]
+            if var_type not in c_to_ctypes_map:
+                    raise Exception("var_type %s not found in map"%var_type)
+            c_var_type = c_to_ctypes_map[var_type]
+            if var[0]!="*":
+                doc_args += ["%s (np.%s): %s"%(var,c_var_type,var_desc)]
+                args += ["ctypes.c_%s"%c_var_type]
+            else:
+                doc_args += ["%s (np.ndarray of np.%s): %s"%(var[1:],c_var_type,var_desc)]
+                args += ["np.ctypeslib.ndpointer(ctypes.c_%s,flags='C_CONTIGUOUS')"%c_var_type]
+        doc_args = doc_args[:3]+doc_args[6:] # skip batch size args
+        str_c += "%s_c = c_lib.%s\n"%(name,name)
+        str_c += "%s_c.argtypes = [\n\t%s\n]\n\n"%(name,',\n\t'.join(args))
+        str_wf += '@_opencl_c_func\ndef %s():\n    """%s\n\nArgs:\n    %s"""\n    pass\n\n'%(name,desc.strip(),"\n    ".join(doc_args))
+        str_init += "\n\t%s,"%name
 
 with open("%s/qmctoolscl/c_funcs.py"%THISDIR,"w") as f: f.write(str_c)
 with open("%s/qmctoolscl/wrapped_funcs.py"%THISDIR,"w") as f: f.write(str_wf)
