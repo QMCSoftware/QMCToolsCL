@@ -150,7 +150,6 @@ Args:
             for t in range(tmax_new):
                 perms[l,j,t,:b] = rng.permutation(b)
     return perms
-gdn_get_permutations = gdn_get_digital_permutations # alias 
 
 class NUSNode_dnb2(object):
     def __init__(self, shift_bits=None, xb=None, left_b2=None, right_b2=None):
