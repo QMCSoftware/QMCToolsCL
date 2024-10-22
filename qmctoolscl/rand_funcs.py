@@ -30,6 +30,26 @@ Args:
     for i in range(n): 
         x[i] = rng.permutation(b) 
     return x
+
+def lat_get_shifts(rng, r, d):
+    """Get random shifts
+Args:
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications
+    d (np.uint64): dimension"""
+    shifts = rng.random((r,d))
+    return shifts 
+
+def dnb2_get_digital_shifts(rng,r,d,tmax_new):
+    """Get random shifts
+Args:
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications
+    d (np.uint64): dimension
+    tmax_new (np.uint64): bits in each integer"""
+    shifts = random_tbit_uint64s(rng,tmax_new,(r,d))
+    return shifts
+
 def dnb2_get_linear_scramble_matrix(rng, r, d, tmax, tmax_new, print_mats):
     """Return a scrambling matrix for linear matrix scrambling
 
@@ -110,7 +130,7 @@ Args:
              shifts[l,j] = rng.integers(0,b,tmax_new,dtype=np.uint64)
     return shifts
 
-def gdn_get_permutations(rng, r, d, tmax_new, r_b, bases):
+def gdn_get_digital_permutations(rng, r, d, tmax_new, r_b, bases):
     """Return permutations for gdn
 
 Args: 
@@ -130,6 +150,7 @@ Args:
             for t in range(tmax_new):
                 perms[l,j,t,:b] = rng.permutation(b)
     return perms
+gdn_get_permutations = gdn_get_digital_permutations # alias 
 
 class NUSNode_dnb2(object):
     def __init__(self, shift_bits=None, xb=None, left_b2=None, right_b2=None):
