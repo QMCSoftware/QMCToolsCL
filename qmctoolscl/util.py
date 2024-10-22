@@ -32,11 +32,19 @@ def print_opencl_device_info():
             print("\t\tMax Work-group Dims:(", dim[0], " ".join(map(str, dim[1:])), ")")
         print()
 
-def get_qmctoolscl_program_from_context(context):
+bs_plugin_indices = {
+    #"lat_gen_gray": [3,5,3,4,5],
+    #"dnb2_gen_gray": [3,5,7],
+}
+
+def get_qmctoolscl_program_from_context(context, func_name, args_device):
     import pyopencl as cl
     FILEDIR = os.path.dirname(os.path.realpath(__file__))
-    with open(FILEDIR+"/qmctoolscl.cl","r") as kernel_file:
+    with open(FILEDIR+"/cl_kernels/%s.cl"%func_name,"r") as kernel_file:
         kernelsource = kernel_file.read()
+    if func_name in bs_plugin_indices:
+        insert_ints = tuple([int(args_device[i]) for i in bs_plugin_indices[func_name]])
+        kernelsource = kernelsource%insert_ints
     program = cl.Program(context,kernelsource).build()
     return program
 
@@ -82,6 +90,12 @@ _overwrite_args = {
     "ifft_bro_1d_radix2": 2, 
 }
 
+def parse_gs_bs(gs, args3):
+    gs = [min(gs[i],args3[i]) for i in range(3)]
+    bs = [np.uint64(np.ceil(args3[i]/gs[i])) for i in range(3)]
+    gs = [np.uint64(np.ceil(args3[i]/bs[i])) for i in range(3)]
+    return gs,bs
+
 def _opencl_c_func(func):
     func_name = func.__name__
     def wrapped_func(*args, **kwargs):
@@ -101,27 +115,23 @@ def _opencl_c_func(func):
         else: # kwargs["backend"]=="cl"
             import pyopencl as cl
             t0_perf = time.perf_counter()
-            if "program" not in kwargs:
-                kwargs["program"] =  get_qmctoolscl_program_from_context(kwargs["context"])
             assert "global_size" in kwargs 
-            kwargs["global_size"] = [min(kwargs["global_size"][i],args[i]) for i in range(3)]
-            batch_size = [np.uint64(np.ceil(args[i]/kwargs["global_size"][i])) for i in range(3)]
-            kwargs["global_size"] = [np.uint64(np.ceil(args[i]/batch_size[i])) for i in range(3)]
+            kwargs["global_size"],bs = parse_gs_bs(kwargs["global_size"],args)
             if "local_size" not in kwargs:
                 kwargs["local_size"] = None
-            cl_func = getattr(kwargs["program"],func_name)
             args_device = [cl.Buffer(kwargs["context"],cl.mem_flags.READ_WRITE|cl.mem_flags.COPY_HOST_PTR,hostbuf=arg) if isinstance(arg,np.ndarray) else arg for arg in args]
-            args_device = args_device[:3]+batch_size+args_device[3:] # repeat the first 3 args to the batch sizes
+            args_device = args_device[:3]+bs+args_device[3:] # repeat the first 3 args to the batch sizes
+            if "program" not in kwargs:
+                kwargs["program"] =  get_qmctoolscl_program_from_context(kwargs["context"],func_name,args_device)
+            cl_func = getattr(kwargs["program"],func_name)
             try:
                 eval('_preprocess_%s(*args_device,kwargs=kwargs)'%func_name)
             except NameError: pass
+            t0_process = time.perf_counter()
             event = cl_func(kwargs["queue"],kwargs["global_size"],kwargs["local_size"],*args_device)
             if "wait" not in kwargs or kwargs["wait"]:
                 event.wait()
-                try:
-                    tdelta_process = (event.profile.end - event.profile.start)*1e-9
-                except cl._cl.RuntimeError:
-                    tdelta_process = -1
+                tdelta_process = time.perf_counter()-t0_process
             else:
                 tdelta_process = -1
             if isinstance(args[-1],np.ndarray):

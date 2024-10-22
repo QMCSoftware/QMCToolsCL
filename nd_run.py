@@ -1,13 +1,13 @@
-from _problems import * 
+import _problems 
 
 import numpy as np
 import pandas as pd
 import argparse 
 
 parser = argparse.ArgumentParser(prog='Global Size Experiment')
-parser.add_argument('-q','--qrproblem',type=str,nargs='?',default="lattice",help='quasi-random problem type in %s'%list(map_run_problem.keys()))
+parser.add_argument('-q','--qrproblem',type=str,nargs='?',default="lattice",help='quasi-random problem type')
 parser.add_argument('-t','--tag',type=str,nargs='?',default="debug",help='experiment tag')
-parser.add_argument('-g','--gsscheme',type=str,nargs='?',default="nd",help='scheme to set global size in %s'%list(map_gs_scheme.keys()))
+parser.add_argument('-g','--gsscheme',type=str,nargs='?',default="nd",help='scheme to set global size in %s'%list(_problems.map_gs_scheme.keys()))
 parser.add_argument('-m','--np2',type=int,nargs='?',default=1,help='problems from n = 2^0,...,2^m')
 parser.add_argument('-k','--dp2',type=int,nargs='?',default=2,help='problems from d = 2^0,...,2^k')
 parser.add_argument('-s','--skip',type=int,nargs='?',default=0,help='initial runs skipped for each problem, default 0')
@@ -18,19 +18,26 @@ parser.add_argument('-f','--force',type=bool,nargs='?',default=False,help='if Tr
 args = parser.parse_args()
 
 experiment_dir = "nd_%s.%s"%(args.qrproblem,args.tag)
-run_problem = map_run_problem[args.qrproblem]
-gs_scheme = map_gs_scheme[args.gsscheme]
+run_problem = getattr(_problems,"run_%s"%args.qrproblem)
+gs_scheme = _problems.map_gs_scheme[args.gsscheme]
 n_pows2 = np.arange(args.np2+1)
 ns = 2**n_pows2
 d_pows2 = np.arange(0,args.dp2+1)
 ds = 2**d_pows2
 d_mesh,n_mesh = np.meshgrid(ds,ns) 
 
-kwargs_c,kwargs_cl = setup_speed_tests(args.platform,args.device)
-remake_dir(experiment_dir,force=args.force)
+_problems.remake_dir(experiment_dir,force=args.force)
 
 df_c_perf,df_c_process = np.zeros((args.np2+1,args.dp2+1),dtype=np.float64),np.zeros((args.np2+1,args.dp2+1),dtype=np.float64)
 df_cl_perf,df_cl_process = np.zeros((args.np2+1,args.dp2+1),dtype=np.float64),np.zeros((args.np2+1,args.dp2+1),dtype=np.float64)
+
+kwargs_c = {
+    "backend": "c"
+}
+
+kwargs_cl = {
+    "backend": "cl", 
+    "wait": True}
 
 print("logging n_pows2 up to %d and d_pows2 up to %d"%(args.np2,args.dp2))
 for i in range(args.np2+1):
