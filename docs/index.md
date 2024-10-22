@@ -169,7 +169,13 @@ Args:
     xr (np.ndarray of np.double): pointer to point storage of size r*n*d
 >>> r_x = r 
 >>> r = np.uint64(2*r_x)
->>> shifts = rng.random((r,d))
+>>> print(qmctoolscl.lat_get_shifts.__doc__)
+Get random shifts
+Args:
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications
+    d (np.uint64): dimension
+>>> shifts = qmctoolscl.lat_get_shifts(rng,r,d)
 >>> xr = np.empty((r,n,d),dtype=np.float64)
 >>> time_perf,time_process = qmctoolscl.lat_shift_mod_1(r,n,d,r_x,x,shifts,xr,**kwargs)
 >>> xr
@@ -515,14 +521,14 @@ Args:
 >>> lshifts = np.tile(tmax_new-tmax,int(r)) 
 >>> r_x = r 
 >>> r = np.uint64(2*r_x)
->>> print(qmctoolscl.random_tbit_uint64s.__doc__)
-Generate the desired shape of random integers with t bits
-
+>>> print(qmctoolscl.dnb2_get_digital_shifts.__doc__)
+Get random shifts
 Args:
     rng (np.random._generator.Generator): random number generator
-    t: (int): number of bits with 0 <= t <= 64
-    shape (tuple of ints): shape of resulting integer array
->>> shiftsb = qmctoolscl.random_tbit_uint64s(rng,tmax_new,(r,d))
+    r (np.uint64): replications
+    d (np.uint64): dimension
+    tmax_new (np.uint64): bits in each integer
+>>> shiftsb = qmctoolscl.dnb2_get_digital_shifts(rng,r,d,tmax_new)
 >>> shiftsb
 array([[ 5310653692329262186, 13368902947290702765],
        [14338104955770306630,   858526716083693676],
@@ -1165,7 +1171,7 @@ Args:
     perms (np.ndarray of np.uint64): permutations of size r*d*tmax_new*bmax
     xdig (np.ndarray of np.uint64): binary digital net points of size r_x*n*d*tmax
     xdig_new (np.ndarray of np.uint64): float digital net points of size r*n*d*tmax_new
->>> print(qmctoolscl.gdn_get_permutations.__doc__)
+>>> print(qmctoolscl.gdn_get_digital_permutations.__doc__)
 Return permutations for gdn
 
 Args: 
@@ -1175,7 +1181,7 @@ Args:
     tmax_new (np.uint64): number of bits in each shift 
     r_b (np.uint64): replications of bases 
     bases (np.ndarray of np.uint64): bases of size r_b*d
->>> perms = qmctoolscl.gdn_get_permutations(rng,r,d,tmax_new,r_b,bases)
+>>> perms = qmctoolscl.gdn_get_digital_permutations(rng,r,d,tmax_new,r_b,bases)
 >>> perms
 array([[[[1, 0, 0, 0, 0, 0, 0],
          [0, 1, 0, 0, 0, 0, 0],

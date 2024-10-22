@@ -34,7 +34,7 @@ def print_opencl_device_info():
 
 bs_plugin_indices = {
     #"lat_gen_gray": [3,5,3,4,5],
-    "dnb2_gen_gray": [3,5,7],
+    #"dnb2_gen_gray": [3,5,7],
 }
 
 def get_qmctoolscl_program_from_context(context, func_name, args_device):
