@@ -93,3 +93,11 @@ for cl_file in cl_files:
 with open("%s/qmctoolscl/c_funcs.py"%THISDIR,"w") as f: f.write(str_c)
 with open("%s/qmctoolscl/wrapped_funcs.py"%THISDIR,"w") as f: f.write(str_wf)
 with open("%s/qmctoolscl/__init__.py"%THISDIR,"w") as f: f.write(str_init+"\n)")
+
+# str_tex = str_tex.replace("np.double","floats")
+# str_tex = str_tex.replace("np.ndarray","array")
+# str_tex = str_tex.replace("of np.uint64","of ints")
+# str_tex = str_tex.replace("np.uint64","ints")
+# with open("api.tex","w") as f: f.write(str_tex+"\\end{itemize}")
+
+
