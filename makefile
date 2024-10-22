@@ -24,7 +24,7 @@ speedtestgs_fft:
 	python gs_parse.py --qrproblem fft --tag full --cmap cool --colorleq1 k --colorgt1 k --colorperf k
 
 speedtestgs_fwht:
-	python gs_run.py --qrproblem fwht --tag full --np2 0 --dp2 21 --gsminnp2 0 --gsnp2 0 --gsmindp2 5 --gsdp2 8 --skip 0 --runs 1 --platform 1 --device 2 --force True
+	python gs_run.py --qrproblem fwht --tag full --np2 0 --dp2 23 --gsminnp2 0 --gsnp2 0 --gsmindp2 0 --gsdp2 12 --skip 1 --runs 3 --platform 1 --device 2 --force True
 	python gs_parse.py --qrproblem fwht --tag full --cmap cool --colorleq1 k --colorgt1 k --colorperf k
 
 speedtestnd_lattice:

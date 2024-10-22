@@ -45,8 +45,6 @@ def get_qmctoolscl_program_from_context(context, func_name, args_device):
     if func_name in bs_plugin_indices:
         insert_ints = tuple([int(args_device[i]) for i in bs_plugin_indices[func_name]])
         kernelsource = kernelsource%insert_ints
-    print(kernelsource)
-    print(args_device)
     program = cl.Program(context,kernelsource).build()
     return program
 

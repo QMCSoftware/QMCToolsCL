@@ -42,6 +42,8 @@ def run_fft(n, d, kwargs):
     return time_perf,time_process
 
 def run_fwht(n, d, kwargs):
+    if kwargs["backend"]=="cl":
+        kwargs["local_size"] = kwargs["global_size"]
     assert n == 1
     x = np.random.rand(d)
     time_perf,time_process = qmctoolscl.fwht_1d_radix2(np.uint64(1),np.uint64(n),np.uint64(d//2),x,**kwargs)
