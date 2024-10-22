@@ -57,6 +57,7 @@ with open("%s/qmctoolscl/qmctoolscl.cl"%THISDIR,"r") as f:
 str_c = "import ctypes\nimport numpy as np\nfrom .util import c_lib\n\n"
 str_wf = "from .util import _opencl_c_func\nfrom .c_funcs import *\n\n"
 str_init = "from .rand_funcs import *\nfrom .wrapped_funcs import ("
+str_tex = "\\begin{itemize}\n"
 blocks = re.findall(r'(?<=void\s).*?(?=\s?\))',code,re.DOTALL)
 for block in blocks:
     lines = block.replace("(","").splitlines()
@@ -85,8 +86,17 @@ for block in blocks:
     str_c += "%s_c = c_lib.%s\n"%(name,name)
     str_c += "%s_c.argtypes = [\n\t%s\n]\n\n"%(name,',\n\t'.join(args))
     str_wf += '@_opencl_c_func\ndef %s():\n    """%s\n\nArgs:\n    %s"""\n    pass\n\n'%(name,desc.strip(),"\n    ".join(doc_args))
+    str_tex += "\\item\n\\texttt{%s}: \n%s\n\\begin{lstlisting}\n\t%s\n\\end{lstlisting}\n"%(name.replace("_","\\_"),desc.strip(),"\n    ".join(doc_args))
     str_init += "\n\t%s,"%name
 
 with open("%s/qmctoolscl/c_funcs.py"%THISDIR,"w") as f: f.write(str_c)
 with open("%s/qmctoolscl/wrapped_funcs.py"%THISDIR,"w") as f: f.write(str_wf)
 with open("%s/qmctoolscl/__init__.py"%THISDIR,"w") as f: f.write(str_init+"\n)")
+
+# str_tex = str_tex.replace("np.double","floats")
+# str_tex = str_tex.replace("np.ndarray","array")
+# str_tex = str_tex.replace("of np.uint64","of ints")
+# str_tex = str_tex.replace("np.uint64","ints")
+# with open("api.tex","w") as f: f.write(str_tex+"\\end{itemize}")
+
+
