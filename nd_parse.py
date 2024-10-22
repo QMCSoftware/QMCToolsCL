@@ -6,7 +6,7 @@ from matplotlib import pyplot,cm,colors
 import argparse 
 
 parser = argparse.ArgumentParser(prog='Global Size Experiment')
-parser.add_argument('-q','--qrproblem',type=str,nargs='?',default="lattice",help='quasi-random problem type in %s'%list(map_run_problem.keys()))
+parser.add_argument('-q','--qrproblem',type=str,nargs='?',default="lattice",help='quasi-random problem type')
 parser.add_argument('-t','--tag',type=str,nargs='?',default="debug",help='experiment tag')
 parser.add_argument('-m','--minnp2',type=int,nargs='?',default=0,help='only plot n>=2^m')
 parser.add_argument('-k','--mindp2',type=int,nargs='?',default=0,help='only plot d>=2^k')
@@ -17,11 +17,12 @@ parser.add_argument('-z','--colorperf',type=str,nargs='?',default="r",help='text
 args = parser.parse_args()
 
 experiment_dir = "nd_%s.%s"%(args.qrproblem,args.tag)
-df_c_perf = pd.read_csv("%s/nd_%s.c_perf.csv"%(experiment_dir,args.qrproblem),index_col=0)
+df_c_process = pd.read_csv("%s/nd_%s.c_process.csv"%(experiment_dir,args.qrproblem),index_col=0)
+df_cl_process = pd.read_csv("%s/nd_%s.cl_process.csv"%(experiment_dir,args.qrproblem),index_col=0)
 df_cl_perf = pd.read_csv("%s/nd_%s.cl_perf.csv"%(experiment_dir,args.qrproblem),index_col=0)
 
 perf_cl_plt = df_cl_perf.values[args.minnp2:,args.mindp2:]
-speedup_plt = df_c_perf.values[args.minnp2:,args.mindp2:]/perf_cl_plt
+speedup_plt = df_c_process.values[args.minnp2:,args.mindp2:]/perf_cl_plt
 
 rows,cols = perf_cl_plt.shape 
 fig,ax = pyplot.subplots(nrows=1,ncols=2,figsize=(2*cols,rows+1),sharey=True)
@@ -30,10 +31,10 @@ norm_speedup = colors.Normalize(vmin=0,vmax=speedup_plt.max())
 ax[0].imshow(perf_cl_plt,cmap=args.cmap,norm=norm_perf)
 ax[1].imshow(speedup_plt,cmap=args.cmap,norm=norm_speedup)
 ax[0].set_ylabel(r"$n$")
-ax[0].set_yticks(np.arange(rows),labels=[r"$2^{%d}$"%p for p in np.log2(df_c_perf.index)[args.minnp2:]])
+ax[0].set_yticks(np.arange(rows),labels=[r"$2^{%d}$"%p for p in np.log2(df_cl_perf.index)[args.minnp2:]])
 for i in range(2):
     ax[i].set_xlabel(r"$d$")
-    ax[i].set_xticks(np.arange(cols),labels=[r"$2^{%d}$"%np.log2(int(v)) for v in df_c_perf.columns[args.mindp2:]])
+    ax[i].set_xticks(np.arange(cols),labels=[r"$2^{%d}$"%np.log2(int(v)) for v in df_cl_perf.columns[args.mindp2:]])
     #pyplot.setp(ax[i].get_xticklabels(),rotation=45,ha="right",rotation_mode="anchor")
 for i in range(rows):
     for j in range(cols):
