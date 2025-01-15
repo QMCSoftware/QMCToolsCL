@@ -63,8 +63,8 @@ Args:
     S = np.empty((r,d,tmax_new),dtype=np.uint64) 
     for t in range(tmax_new):
         S[:,:,t] = random_tbit_uint64s(rng,min(t,tmax),(r,d))
-    S[:,:,:tmax] <<= np.arange(tmax,0,-1,dtype=np.uint64)
-    S[:,:,:tmax] += np.uint64(1)<<np.arange(tmax-1,-1,-1,dtype=np.uint64)
+    S[:,:,:tmax] <<= np.arange(int(tmax),0,-1,dtype=np.uint64)
+    S[:,:,:tmax] += np.uint64(1)<<np.arange(int(tmax)-1,-1,-1,dtype=np.uint64)
     if print_mats:
         print("S with shape (r=%d, d=%d, tmax_new=%d)"%(r,d,tmax_new))
         for l in range(r):
@@ -327,12 +327,12 @@ Args:
                         if node.children[dig] is None: # child in dig position does not exist
                             node_perm = random_uint64_permutations(rng,np.uint64(tmax_new-t-1),b)
                             node.children[dig] = NUSNode_gdn(node_perm,_xdig[1:],[None]*b)
-                            perm[(t+1):] = node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xdig[1:]] # digits in _xdig[1:] index node_perm rows
+                            perm[(t+1):] = node_perm[np.arange(int(tmax_new)-t-1,dtype=np.uint64),_xdig[1:]] # digits in _xdig[1:] index node_perm rows
                             break
                         else: # child in dig position exists, so move there 
                             node = node.children[dig]
                     elif (node.xdig==_xdig).all(): # this is a leaf node we have already seen before!
-                        perm[t:] = node.perm[np.arange(tmax_new-t,dtype=np.uint64),_xdig] # digits in _xdig index node_perm rows
+                        perm[t:] = node.perm[np.arange(int(tmax_new)-t,dtype=np.uint64),_xdig] # digits in _xdig index node_perm rows
                         break
                     else: # node.xdig!=_xdig, this is a leaf node where the _xdig values don't match
                         node_dig = node.xdig[0]
@@ -346,7 +346,7 @@ Args:
                         else: # create child node in the dig position
                             dig_node_perm = random_uint64_permutations(rng,np.uint64(tmax_new-t-1),b)
                             node.children[dig] = NUSNode_gdn(dig_node_perm,_xdig[1:],[None]*b) # create a new leaf node
-                            perm[(t+1):] = dig_node_perm[np.arange(tmax_new-t-1,dtype=np.uint64),_xdig[1:]] # digits in _xdig[1:] index node_perm rows
+                            perm[(t+1):] = dig_node_perm[np.arange(int(tmax_new)-t-1,dtype=np.uint64),_xdig[1:]] # digits in _xdig[1:] index node_perm rows
                             break
                     t += 1
                 xrdig[l,i,j] = perm
