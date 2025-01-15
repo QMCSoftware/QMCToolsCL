@@ -76,6 +76,5 @@ EXPORT void fft_bro_1d_radix2(
                 }
             }
         }
-        
     }
 }
