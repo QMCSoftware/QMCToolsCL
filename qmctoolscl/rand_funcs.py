@@ -200,7 +200,7 @@ Args:
                 _xb_new = xb[l_x,i,j]<<t_delta
                 _xb = _xb_new
                 node = root_nodes[l,j]
-                t = tmax_new
+                t = int(tmax_new)
                 shift = np.uint64(0)                 
                 while t>0:
                     b = int(_xb>>np.uint64(t-1))&1 # leading bit of _xb

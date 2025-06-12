@@ -23,7 +23,7 @@ cl_files = [file[:-3] for file in os.listdir("./qmctoolscl/cl_kernels/") if file
 
 setuptools.setup(
     name = "qmctoolscl",
-    version = "1.1.2",
+    version = "1.1.3",
     author="Aleksei G Sorokin",
     author_email="asorokin@hawk.iit.edu",
     install_requires = [
