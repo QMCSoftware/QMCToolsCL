@@ -60,11 +60,12 @@ Args:
     tmax (np.uint64): bits in each integer
     tmax_new (np.uint64): bits in each integer of the generating matrix after scrambling
     print_mats (np.uint8): flag to print the resulting matrices"""
-    S = np.empty((r,d,tmax_new),dtype=np.uint64) 
-    for t in range(tmax_new):
-        S[:,:,t] = random_tbit_uint64s(rng,min(t,tmax),(r,d))
-    S[:,:,:tmax] <<= np.arange(int(tmax),0,-1,dtype=np.uint64)
-    S[:,:,:tmax] += np.uint64(1)<<np.arange(int(tmax)-1,-1,-1,dtype=np.uint64)
+    tmin = min(tmax_new,tmax) 
+    S = random_tbit_uint64s(rng,tmin,(r,d,tmax_new))
+    shift = np.arange(tmin,0,-1,dtype=np.uint64)
+    S[:,:,:tmin] >>= shift
+    S[:,:,:tmin] <<= shift
+    S[:,:,:tmin] += np.uint64(1)<<np.arange(int(tmax)-1,-1,-1,dtype=np.uint64)
     if print_mats:
         print("S with shape (r=%d, d=%d, tmax_new=%d)"%(r,d,tmax_new))
         for l in range(r):
@@ -73,7 +74,7 @@ Args:
                 print("    j = %d"%j)
                 for t in range(tmax_new):
                     b = bin(S[l,j,t])[2:]
-                    print("        "+"0"*(tmax-len(b))+b)
+                    print("        "+"0"*int(tmax-len(b))+b)
     return S
 
 def gdn_get_linear_scramble_matrix(rng, r, d, tmax, tmax_new, r_b, bases):
