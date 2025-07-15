@@ -60,7 +60,7 @@ Args:
     tmax (np.uint64): bits in each integer
     tmax_new (np.uint64): bits in each integer of the generating matrix after scrambling
     print_mats (np.uint8): flag to print the resulting matrices"""
-    tmin = min(tmax_new,tmax) 
+    tmin = int(min(tmax_new,tmax))
     S = random_tbit_uint64s(rng,tmin,(r,d,tmax_new))
     shift = np.arange(tmin,0,-1,dtype=np.uint64)
     S[:,:,:tmin] >>= shift
