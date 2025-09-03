@@ -1,5 +1,8 @@
-name: Wheels
+name: wheels
 on:
+  push:
+    branches:
+      - distrib 
   release:
     types:
       - created
