@@ -319,7 +319,7 @@ Args:
                 node = root_nodes[l,j]
                 t = 0
                 perm = np.zeros(tmax_new,dtype=np.uint64)         
-                while t<tmax:
+                while t<=tmax:
                     _xdig = np.zeros(np.uint64(tmax_new-t),dtype=np.uint64)
                     _xdig[:np.uint64(tmax-t)] = xdig[l_x,i,j,t:]
                     dig = _xdig[0]

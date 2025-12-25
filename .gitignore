@@ -1,4 +1,5 @@
 api.tex
+.vscode/settings.json 
 
 qmctoolscl/c_funcs.py
 qmctoolscl/wrapped_funcs.py
