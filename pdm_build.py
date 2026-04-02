@@ -2,7 +2,9 @@ from setuptools import Extension
 import os 
 import re 
 
-cl_files = [file[:-3] for file in os.listdir("./qmctoolscl/cl_kernels/") if file[-3:]==".cl"]
+THISDIR = os.path.dirname(os.path.realpath(__file__))
+
+cl_files = [file[:-3] for file in os.listdir("%s/qmctoolscl/cl_kernels/"%THISDIR) if file[-3:]==".cl"]
 
 # for cl_file in cl_files:
 #     with open("./qmctoolscl/cl_kernels/%s.cl"%cl_file,"r") as f:
@@ -38,12 +40,10 @@ c_to_ctypes_map = {
     "char": "uint8",
 }
 
-THISDIR = os.path.dirname(os.path.realpath(__file__))
-
 str_c = "import ctypes\nimport numpy as np\nfrom .util import c_lib\n\n"
 str_wf = "from .util import _opencl_c_func\nfrom .c_funcs import *\n\n"
 str_init = """
-__version__ = "1.2.0.0.0.1a"
+__version__ = "1.2.0.0.0.1c"
 
 from .rand_funcs import *\nfrom .wrapped_funcs import (
 """
