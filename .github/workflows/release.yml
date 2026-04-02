@@ -18,7 +18,8 @@ jobs:
       with:
         python-version: '3.x'
     - name: Install dependencies
-      run: python -m pip install --upgrade setuptools wheel pdm
+      shell: pwsh
+      run: powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install.ps1 | iex"
     - name: Build wheels
       run: pdm build
     - uses: actions/upload-artifact@v4
