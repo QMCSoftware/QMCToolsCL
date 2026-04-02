@@ -18,9 +18,6 @@ jobs:
           python-version: '3.12'
           cache: false
 
-      - name: Install dependencies
-        run: pdm install
-
       - name: Build package
         run: pdm build
 
