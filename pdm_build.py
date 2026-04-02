@@ -43,7 +43,7 @@ c_to_ctypes_map = {
 str_c = "import ctypes\nimport numpy as np\nfrom .util import c_lib\n\n"
 str_wf = "from .util import _opencl_c_func\nfrom .c_funcs import *\n\n"
 str_init = """
-__version__ = "1.2.0.0.0.2a"
+__version__ = "1.2"
 
 from .rand_funcs import *\nfrom .wrapped_funcs import (
 """

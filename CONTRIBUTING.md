@@ -6,5 +6,5 @@ To create a release of `qmctoolscl`on PyPI:
 2. Move the contents of the downloaded `dist/` folder into `QMCToolsCL/dist/`.
 3. Open a terminal rooted at `QMCToolsCL/`
 4. Run `twine check dist/*`.
-5. Run `pdm publish --no-build --repository testpypi` and check the install.
+5. Run `pdm publish --no-build --repository testpypi` and check the install. To clone from `testpypi`, use a command like `pip install -i https://test.pypi.org/simple/ qmctoolscl==1.2.0.0.0.2a0 --extra-index-url https://pypi.org/simple/`.
 6. Run `pdm publish --no-build`. 

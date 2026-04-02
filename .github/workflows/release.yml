@@ -2,7 +2,7 @@ name: PDM Build Windows
 
 on:
   push:
-    branches: [ "main", "master", "release"]
+    branches: [ "main", "master"]
 
 jobs:
   build:
