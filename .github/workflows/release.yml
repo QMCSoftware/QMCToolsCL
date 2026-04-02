@@ -9,7 +9,7 @@ on:
     types:
       - created
 jobs:
-  PDM_build_Windows:
+  pdm_build_Windows:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -17,9 +17,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
-    - name: Install dependencies
+    - name: Install pdm 
       shell: pwsh
       run: powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install.ps1 | iex"
+    - name: Install pdm in Python
+      run: python -m pip install pdm 
     - name: Build wheels
       run: pdm build
     - uses: actions/upload-artifact@v4
