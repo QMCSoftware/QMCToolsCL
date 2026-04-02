@@ -1,30 +1,31 @@
-name: release Windows sdist bdist_wheel
+name: PDM Build Windows
+
 on:
   push:
-    branches:
-      - master 
-      - main
-      - release
-  release:
-    types:
-      - created
+    branches: [ "main", "master", "release"]
+
 jobs:
-  pdm_build_Windows:
+  build:
     runs-on: windows-latest
+
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.x
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    - name: Install pdm 
-      shell: pwsh
-      run: powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install.ps1 | iex"
-    - name: Install pdm in Python
-      run: python -m pip install pdm 
-    - name: Build wheels
-      run: pdm build
-    - uses: actions/upload-artifact@v4
-      with:
-        name: dist
-        path: dist
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.11' # Specify your preferred Python version
+          cache: true            # Enables dependency caching for faster runs
+
+      - name: Install dependencies
+        run: pdm install --check --frozen-lockfile
+
+      - name: Build package
+        run: pdm build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdm-dist-windows
+          path: dist/
