@@ -41,7 +41,11 @@ setuptools.setup(
     ext_modules = [
         Extension(
             name = 'qmctoolscl.c_lib',
-            sources = ["./qmctoolscl/c_funcs/python_compat.c"]+["./qmctoolscl/c_funcs/%s.c"%cl_file for cl_file in cl_files]
+            sources = ["./qmctoolscl/c_funcs/%s.c"%cl_file for cl_file in cl_files]+\
+                [
+                    "./qmctoolscl/c_funcs/python_compat.c",
+                    "./qmctoolscl/c_funcs/util.c",
+                ]
         )
     ],
 )
