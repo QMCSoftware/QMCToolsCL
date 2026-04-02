@@ -19,6 +19,7 @@ jobs:
           cache: false
 
       - name: Install dependencies
+        run: pdm lock
         run: pdm install --check --frozen-lockfile
 
       - name: Build package
@@ -27,5 +28,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pdm-dist-windows
+          name: dist
           path: dist/
