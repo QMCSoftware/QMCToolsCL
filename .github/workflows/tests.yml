@@ -4,8 +4,6 @@ on:
     branches:
       - master 
       - main
-      - dev
-
 jobs:
   tests:
     name: Tests on ${{ matrix.os }}

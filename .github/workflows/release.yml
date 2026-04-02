@@ -2,7 +2,8 @@ name: release Windows sdist bdist_wheel
 on:
   push:
     branches:
-      - main 
+      - master 
+      - main
   release:
     types:
       - created
