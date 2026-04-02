@@ -19,8 +19,7 @@ jobs:
           cache: false
 
       - name: Install dependencies
-        run: pdm lock
-        run: pdm install --check --frozen-lockfile
+        run: pdm install
 
       - name: Build package
         run: pdm build
