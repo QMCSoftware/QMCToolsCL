@@ -25,11 +25,11 @@ cl_files = [file[:-3] for file in os.listdir("%s/qmctoolscl/cl_kernels/"%THISDIR
 ext_modules = [
     Extension(
         name = 'qmctoolscl.c_lib',
-        sources = ["./qmctoolscl/c_funcs/%s.c"%cl_file for cl_file in cl_files]+\
+        sources = ["qmctoolscl/c_funcs/%s.c"%cl_file for cl_file in cl_files]+\
             [
-                "./qmctoolscl/c_funcs/python_compat.c",
-                "./qmctoolscl/c_funcs/util.c",
-                "./qmctoolscl/c_funcs/halton_qrng.c",
+                "qmctoolscl/c_funcs/python_compat.c",
+                "qmctoolscl/c_funcs/util.c",
+                "qmctoolscl/c_funcs/halton_qrng.c",
             ]
     )
 ]
@@ -43,7 +43,7 @@ c_to_ctypes_map = {
 str_c = "import ctypes\nimport numpy as np\nfrom .util import c_lib\n\n"
 str_wf = "from .util import _opencl_c_func\nfrom .c_funcs import *\n\n"
 str_init = """
-__version__ = "1.2"
+__version__ = "1.2.1"
 
 from .rand_funcs import *\nfrom .wrapped_funcs import (
 """
