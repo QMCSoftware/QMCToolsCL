@@ -9,7 +9,7 @@ on:
     types:
       - created
 jobs:
-  PDM build on Windows:
+  PDM_build_Windows:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
