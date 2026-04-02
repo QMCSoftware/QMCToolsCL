@@ -45,6 +45,7 @@ setuptools.setup(
                 [
                     "./qmctoolscl/c_funcs/python_compat.c",
                     "./qmctoolscl/c_funcs/util.c",
+                    "./qmctoolscl/c_funcs/halton_qrng.c",
                 ]
         )
     ],
@@ -93,6 +94,27 @@ for cl_file in cl_files:
         str_c += "%s_c.argtypes = [\n\t%s\n]\n\n"%(name,',\n\t'.join(args))
         str_wf += '@_opencl_c_func\ndef %s():\n    """%s\n\nArgs:\n    %s"""\n    pass\n\n'%(name,desc.strip(),"\n    ".join(doc_args))
         str_init += "\n\t%s,"%name
+
+str_c += """
+halton_qrng_c = c_lib.halton_qrng
+halton_qrng_c.argtypes = [
+    ctypes.c_int,  # n
+    ctypes.c_int,  # d
+    ctypes.c_int,  # n0
+    ctypes.c_int,  # generalized
+    np.ctypeslib.ndpointer(ctypes.c_double,flags='C_CONTIGUOUS'), # res
+    np.ctypeslib.ndpointer(ctypes.c_double,flags='C_CONTIGUOUS'), # randu_d_32
+    np.ctypeslib.ndpointer(ctypes.c_int,flags='C_CONTIGUOUS')     # dvec
+]  
+    
+get_unsigned_long_size_c = c_lib.get_unsigned_long_size
+get_unsigned_long_size_c.argtypes = []
+get_unsigned_long_size_c.restype = ctypes.c_uint8
+
+get_unsigned_long_long_size_c = c_lib.get_unsigned_long_long_size
+get_unsigned_long_long_size_c.argtypes = []
+get_unsigned_long_long_size_c.restype = ctypes.c_uint8
+"""
 
 with open("%s/qmctoolscl/c_funcs.py"%THISDIR,"w") as f: f.write(str_c)
 with open("%s/qmctoolscl/wrapped_funcs.py"%THISDIR,"w") as f: f.write(str_wf)

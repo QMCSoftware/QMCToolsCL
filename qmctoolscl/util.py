@@ -142,15 +142,3 @@ def _opencl_c_func(func):
             return tdelta_perf,tdelta_process
     wrapped_func.__doc__ = func.__doc__
     return wrapped_func
-
-def get_c_get_unsigned_long_size():
-    get_unsigned_long_size_c = c_lib.get_unsigned_long_size
-    get_unsigned_long_size_c.argtypes = []
-    get_unsigned_long_size_c.restype = ctypes.c_uint8
-    return get_unsigned_long_size_c()
-
-def get_c_get_unsigned_long_long_size():
-    get_unsigned_long_long_size_c = c_lib.get_unsigned_long_long_size
-    get_unsigned_long_long_size_c.argtypes = []
-    get_unsigned_long_long_size_c.restype = ctypes.c_uint8
-    return get_unsigned_long_long_size_c()
