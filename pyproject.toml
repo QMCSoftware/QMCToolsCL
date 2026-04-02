@@ -1,0 +1,59 @@
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+# brew install pdm
+# https://pdm-project.org/latest/usage/publish/
+# pdm publish --repository testpypi
+# pdm publish 
+
+[build-system]
+requires = ["pdm-backend","setuptools","wheel"]
+build-backend = "pdm.backend"
+
+[project.urls]
+Documentation = "https://qmcsoftware.github.io/QMCToolsCL/"
+Repository = "https://github.com/QMCSoftware/QMCToolsCL"
+Issues = "https://github.com/QMCSoftware/QMCToolsCL/issues"
+
+[project]
+name = "qmctoolscl"
+description = "Quasi-Monte Carlo Tools in C and PyOpenCL"
+authors = [
+    {name="Aleksei G Sorokin"},
+    ]
+readme = "README.md"
+keywords=[
+    "quasi",
+    "monte",
+    "carlo",
+    "lattice",
+    "digital sequence",
+    "higher order digital nets",
+    "Halton",
+    "linear matrix scrambling",
+    "nested uniform scrambling",
+    "Owen scrambling",
+    "digital interlacing",
+    ]
+license = "Apache-2.0"
+dynamic = ["version"]
+requires-python = ">= 3.5"
+dependencies = [
+    "numpy >= 1.17.0",
+    ]
+
+[tool.pdm.build]
+run-setuptools = true
+includes = [
+    "qmctoolscl",
+    "qmctoolscl/c_funcs/qmctoolscl.h",
+    "qmctoolscl/c_funcs/*.c",
+    "qmctoolscl/cl_kernels/*.cl",
+    ]
+excludes = [
+    "qmctoolscl/c_funcs.py",
+    "qmctoolscl/wrapped_funcs.py",
+    "qmctoolscl/__init__.py",
+    ]
+
+[tool.pdm.version]
+source = "file"
+path = "qmctoolscl/__init__.py"

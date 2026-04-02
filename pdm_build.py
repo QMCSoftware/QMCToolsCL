@@ -1,9 +1,10 @@
-import setuptools
 from setuptools import Extension
 import os 
 import re 
 
-cl_files = [file[:-3] for file in os.listdir("./qmctoolscl/cl_kernels/") if file[-3:]==".cl"]
+THISDIR = os.path.dirname(os.path.realpath(__file__))
+
+cl_files = [file[:-3] for file in os.listdir("%s/qmctoolscl/cl_kernels/"%THISDIR) if file[-3:]==".cl"]
 
 # for cl_file in cl_files:
 #     with open("./qmctoolscl/cl_kernels/%s.cl"%cl_file,"r") as f:
@@ -21,35 +22,17 @@ cl_files = [file[:-3] for file in os.listdir("./qmctoolscl/cl_kernels/") if file
 #     with open("./qmctoolscl/c_funcs/%s.c"%cl_file,"w") as f:
 #         f.write(c_content)
 
-setuptools.setup(
-    name = "qmctoolscl",
-    version = "1.2",
-    author="Aleksei G Sorokin",
-    author_email="asorokin@hawk.iit.edu",
-    install_requires = [
-        'numpy >= 1.17.0',
-    ],
-    python_requires = ">=3.5",
-    description = "Quasi-Monte Carlo Tools in PyOpenCL and C",
-    long_description="Python interface to QMC tools with C and OpenCL backends. See https://qmcsoftware.github.io/QMCToolsCL/",
-    long_description_content_type="text/markdown",
-    url="https://qmcsoftware.github.io/QMCToolsCL/",
-    include_package_data=True,
-    packages = [
-        'qmctoolscl',
-    ],
-    ext_modules = [
-        Extension(
-            name = 'qmctoolscl.c_lib',
-            sources = ["./qmctoolscl/c_funcs/%s.c"%cl_file for cl_file in cl_files]+\
-                [
-                    "./qmctoolscl/c_funcs/python_compat.c",
-                    "./qmctoolscl/c_funcs/util.c",
-                    "./qmctoolscl/c_funcs/halton_qrng.c",
-                ]
-        )
-    ],
-)
+ext_modules = [
+    Extension(
+        name = 'qmctoolscl.c_lib',
+        sources = ["./qmctoolscl/c_funcs/%s.c"%cl_file for cl_file in cl_files]+\
+            [
+                "./qmctoolscl/c_funcs/python_compat.c",
+                "./qmctoolscl/c_funcs/util.c",
+                "./qmctoolscl/c_funcs/halton_qrng.c",
+            ]
+    )
+]
 
 c_to_ctypes_map = {
     "ulong": "uint64",
@@ -57,11 +40,14 @@ c_to_ctypes_map = {
     "char": "uint8",
 }
 
-THISDIR = os.path.dirname(os.path.realpath(__file__))
-
 str_c = "import ctypes\nimport numpy as np\nfrom .util import c_lib\n\n"
 str_wf = "from .util import _opencl_c_func\nfrom .c_funcs import *\n\n"
-str_init = "from .rand_funcs import *\nfrom .wrapped_funcs import ("
+str_init = """
+__version__ = "1.2"
+
+from .rand_funcs import *\nfrom .wrapped_funcs import (
+"""
+
 for cl_file in cl_files:
     with open("%s/qmctoolscl/cl_kernels/%s.cl"%(THISDIR,cl_file),"r") as f:
         code = f.read() 
@@ -126,4 +112,5 @@ with open("%s/qmctoolscl/__init__.py"%THISDIR,"w") as f: f.write(str_init+"\n)")
 # str_tex = str_tex.replace("np.uint64","ints")
 # with open("api.tex","w") as f: f.write(str_tex+"\\end{itemize}")
 
-
+def pdm_build_update_setup_kwargs(context, setup_kwargs):
+    setup_kwargs.update(ext_modules=ext_modules)
