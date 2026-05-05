@@ -16,7 +16,11 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           miniforge-version: "latest"
-          auto-activate-base: true
+          with:
+            auto-activate-base: true
+            auto-update-conda: true
+            python-version: "3.12"
+            activate-environment: test
       - name: Install Base Dependencies 
         shell: bash -l {0}
         run: |
@@ -56,6 +60,8 @@ jobs:
       - name: Doctests with PyOpenCL
         shell: bash -l {0}
         run: |
+          pip install pytest
+          pip install sympy
           python -m pytest index.cl.pytest.txt
       - name: Short Speed Tests
         shell: bash -l {0}
