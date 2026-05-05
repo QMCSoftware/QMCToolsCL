@@ -12,21 +12,22 @@ jobs:
         matrix:
             os: ["macos-latest", "ubuntu-latest", "windows-latest"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: actions/checkout@v4
+
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: "latest"
           auto-activate-base: true
+          activate-environment: test
+          python-version: "3.12"
       - name: Install Base Dependencies 
         shell: bash -l {0}
         run: |
-          pip install numpy
-          pip install pytest
-          pip install sympy
+          conda install numpy pytest sympy -y
       - name: Install qmctoolscl 
         shell: bash -l {0}
         run: |
-          pip install -e .
+          python -m pip install -e .
       - name: Prepare Doctests from Docs 
         shell: bash -l {0}
         run: |
@@ -38,7 +39,7 @@ jobs:
       - name: Install PyOpenCL
         shell: bash -l {0}
         run: |
-          pip install siphash24
+          python -m pip install siphash24
           conda install pyopencl -y
           if [ "$RUNNER_OS" == "macOS" ]; then
             conda install pocl -y
@@ -56,12 +57,9 @@ jobs:
       - name: Doctests with PyOpenCL
         shell: bash -l {0}
         run: |
-          pip install pytest
-          pip install sympy
           python -m pytest index.cl.pytest.txt
       - name: Short Speed Tests
         shell: bash -l {0}
         run: |
-          pip install pandas 
-          pip install matplotlib 
+          conda install pandas matplotlib -y
           make shortspeedtests
