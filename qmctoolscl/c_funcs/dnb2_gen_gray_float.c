@@ -24,13 +24,25 @@ EXPORT void dnb2_gen_gray_float(
     unsigned long long ii_max = (n-i0)<bs_n ? (n-i0):bs_n;
     unsigned long long jj_max = (d-j0)<bs_d ? (d-j0):bs_d;
     unsigned long long ll_max = (r-l0)<bs_r ? (r-l0):bs_r;
-    unsigned long long b,t,ll,l,l_x,ii,i,jj,j,idx,cidx,shift_idx;
+    unsigned long long b,t,ll,l,l_x,ii,i,jj,j,idx,cidx,shift_idx,state_idx;
     unsigned long long itrue,xb,val;
-    double scale;
+    unsigned long long *xb_state;
+    double *scales;
+
+    xb_state = (unsigned long long*) malloc(r_x*d*sizeof(unsigned long long));
+    if(xb_state==NULL){
+        return;
+    }
+    scales = (double*) malloc(r*sizeof(double));
+    if(scales==NULL){
+        free(xb_state);
+        return;
+    }
     for(ll=0; ll<ll_max; ll++){
         l = l0+ll;
-        l_x = l%r_x;
-        scale = ldexp(1.0,-(int)tmaxes[l]);
+        scales[l] = ldexp(1.0,-(int)tmaxes[l]);
+    }
+    for(l_x=0; l_x<r_x; l_x++){
         for(jj=0; jj<jj_max; jj++){
             j = j0+jj;
             itrue = n_start+i0;
@@ -45,22 +57,39 @@ EXPORT void dnb2_gen_gray_float(
                 b += 1;
                 t >>= 1;
             }
-            shift_idx = l*d+j;
-            for(ii=0; ii<ii_max; ii++){
-                i = i0+ii;
-                if(ii>0){
-                    itrue = i+n_start;
-                    b = 0;
-                    while(!((itrue>>b)&1)){
-                        b += 1;
-                    }
+            xb_state[l_x*d+j] = xb;
+        }
+    }
+    for(ii=0; ii<ii_max; ii++){
+        i = i0+ii;
+        if(ii>0){
+            itrue = i+n_start;
+            b = 0;
+            while(!((itrue>>b)&1)){
+                b += 1;
+            }
+            for(l_x=0; l_x<r_x; l_x++){
+                for(jj=0; jj<jj_max; jj++){
+                    j = j0+jj;
                     cidx = l_x*d*mmax+j*mmax+b;
-                    xb ^= C[cidx];
+                    xb_state[l_x*d+j] ^= C[cidx];
                 }
+            }
+        }
+        for(ll=0; ll<ll_max; ll++){
+            l = l0+ll;
+            l_x = l%r_x;
+            for(jj=0; jj<jj_max; jj++){
+                j = j0+jj;
                 idx = l*n*d+i*d+j;
-                val = apply_shift ? ((xb<<lshifts[l%r_x])^shiftsb[shift_idx]) : xb;
-                x[idx] = ((double)(val))*scale;
+                state_idx = l_x*d+j;
+                shift_idx = l*d+j;
+                xb = xb_state[state_idx];
+                val = apply_shift ? ((xb<<lshifts[l_x])^shiftsb[shift_idx]) : xb;
+                x[idx] = ((double)(val))*scales[l];
             }
         }
     }
+    free(scales);
+    free(xb_state);
 }
