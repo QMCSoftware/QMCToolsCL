@@ -40,7 +40,7 @@ jobs:
         shell: bash -l {0}
         run: |
           python -m pip install siphash24
-          conda install pyopencl -y
+          conda install -c conda-forge pyopencl -y
           if [ "$RUNNER_OS" == "macOS" ]; then
             conda install -c conda-forge ocl_icd_wrapper_apple -y
           elif [ "$RUNNER_OS" == "Linux" ]; then
