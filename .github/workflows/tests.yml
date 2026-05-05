@@ -16,11 +16,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           miniforge-version: "latest"
-          with:
-            auto-activate-base: true
-            auto-update-conda: true
-            python-version: "3.12"
-            activate-environment: test
+          auto-activate-base: true
       - name: Install Base Dependencies 
         shell: bash -l {0}
         run: |
