@@ -1,51 +1,28 @@
-name: Build and publish wheels
+name: PDM Build Windows
 
 on:
   push:
-    tags: ["v*"]
-  workflow_dispatch:
+    branches: [ "main", "master"]
 
 jobs:
-  wheels:
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-14]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pypa/cibuildwheel@v2.21.3
-        env:
-          # one wheel per (CPython minor, platform); skip PyPy and 32-bit
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-*"
-          CIBW_SKIP: "*-win32 *_i686 *-musllinux_*"
-          CIBW_ARCHS_MACOS: "auto"
-          CIBW_TEST_COMMAND: 'python -c "import qmctoolscl; print(qmctoolscl.__version__)"'
-      - uses: actions/upload-artifact@v4
-        with:
-          name: wheels-${{ matrix.os }}
-          path: wheelhouse/*.whl
+  build:
+    runs-on: windows-latest
 
-  sdist:
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: pipx run build --sdist
-      - uses: actions/upload-artifact@v4
-        with:
-          name: sdist
-          path: dist/*.tar.gz
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  publish:
-    needs: [wheels, sdist]
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write          # PyPI trusted publishing, no API token needed
-    steps:
-      - uses: actions/download-artifact@v4
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
         with:
-          path: dist
-          merge-multiple: true
-      - uses: pypa/gh-action-pypi-publish@release/v1
+          python-version: '3.12'
+          cache: false
+        
+      - name: Build package
+        run: pdm build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
