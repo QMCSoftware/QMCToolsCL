@@ -5,7 +5,7 @@
 # pdm publish 
 
 [build-system]
-requires = ["pdm-backend","setuptools","wheel"]
+requires = ["pdm-backend","setuptools>=77","wheel"]
 build-backend = "pdm.backend"
 
 [project.urls]
@@ -35,7 +35,7 @@ keywords=[
     ]
 license = "Apache-2.0"
 dynamic = ["version"]
-requires-python = ">= 3.5"
+requires-python = ">= 3.9"
 dependencies = [
     "numpy >= 1.17.0",
     ]
