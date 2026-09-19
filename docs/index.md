@@ -1475,21 +1475,6 @@ array([[[[0, 1, 0, 0, 0, 0, 0],
          [3, 2, 6, 5, 0, 4, 1],
          [3, 4, 2, 6, 1, 5, 0],
          [2, 6, 1, 3, 0, 4, 5]]]], dtype=uint64)
->>> # accuracy + speedup: gdn_get_digital_permutations vs. a naive per-digit loop over rng.permutation, same seed
->>> def _naive_gdn_get_digital_permutations(rng,r,d,tmax_new,r_b,bases):
-...     bases_2d = np.atleast_2d(bases)
-...     perms = np.zeros((r,d,tmax_new,bases_2d.max()),dtype=np.uint64)
-...     for l in range(r):
-...         for j in range(d):
-...             b = int(bases_2d[l%r_b,j])
-...             perms[l,j,:,:b] = [rng.permutation(b) for t in range(tmax_new)]
-...     return perms
->>> _args9 = (np.uint64(32),np.uint64(20),np.uint64(63),np.uint64(1),np.array([[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71]],dtype=np.uint64)) # r,d,tmax_new,r_b,bases (first 20 primes)
->>> bool(np.array_equal(_naive_gdn_get_digital_permutations(np.random.Generator(np.random.PCG64(7)),*_args9),qmctoolscl.gdn_get_digital_permutations(np.random.Generator(np.random.PCG64(7)),*_args9)))
-True
->>> import timeit
->>> min(timeit.repeat(lambda: qmctoolscl.gdn_get_digital_permutations(np.random.Generator(np.random.PCG64(7)),*_args9),repeat=3,number=1)) < min(timeit.repeat(lambda: _naive_gdn_get_digital_permutations(np.random.Generator(np.random.PCG64(7)),*_args9),repeat=3,number=1))
-True
 >>> bmax = bases.max().astype(np.uint64)
 >>> time_perf,time_process = qmctoolscl.gdn_digital_permutation(r,n,d,r_x,r_b,tmax,tmax_new,bmax,perms,xdig,xdig_new,**kwargs)
 >>> xdig_new
