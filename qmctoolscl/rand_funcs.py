@@ -134,16 +134,15 @@ Args:
 def gdn_get_digital_permutations(rng, r, d, tmax_new, r_b, bases):
     """Return permutations for gdn
 
-    Digit permutations are drawn with one vectorized rng.permuted call per (replication, dimension) pair, rather than one rng.permutation call per digit.
+Digit permutations are drawn with one vectorized rng.permuted call per (replication, dimension) pair, rather than one rng.permutation call per digit.
 
-    Args:
-        rng (np.random._generator.Generator): random number generator
-        r (np.uint64): replications
-        d (np.uint64): dimension
-        tmax_new (np.uint64): number of bits in each shift
-        r_b (np.uint64): replications of bases
-        bases (np.ndarray of np.uint64): bases of size r_b*d
-    """
+Args:
+    rng (np.random._generator.Generator): random number generator
+    r (np.uint64): replications
+    d (np.uint64): dimension
+    tmax_new (np.uint64): number of bits in each shift
+    r_b (np.uint64): replications of bases
+    bases (np.ndarray of np.uint64): bases of size r_b*d"""
     bases_2d = np.atleast_2d(bases)
     bmax = bases_2d.max()
     perms = np.zeros((r,d,tmax_new,bmax),dtype=np.uint64)
