@@ -134,12 +134,14 @@ Args:
 def gdn_get_digital_permutations(rng, r, d, tmax_new, r_b, bases):
     """Return permutations for gdn
 
-Args: 
+Digit permutations are drawn with one vectorized rng.permuted call per (replication, dimension) pair, rather than one rng.permutation call per digit.
+
+Args:
     rng (np.random._generator.Generator): random number generator
-    r (np.uint64): replications 
-    d (np.uint64): dimension 
-    tmax_new (np.uint64): number of bits in each shift 
-    r_b (np.uint64): replications of bases 
+    r (np.uint64): replications
+    d (np.uint64): dimension
+    tmax_new (np.uint64): number of bits in each shift
+    r_b (np.uint64): replications of bases
     bases (np.ndarray of np.uint64): bases of size r_b*d"""
     bases_2d = np.atleast_2d(bases)
     bmax = bases_2d.max()
@@ -147,9 +149,8 @@ Args:
     for l in range(r):
         l_b = int(l%r_b)
         for j in range(d):
-            b = bases_2d[l_b,j]
-            for t in range(tmax_new):
-                perms[l,j,t,:b] = rng.permutation(b)
+            b = int(bases_2d[l_b,j])
+            perms[l,j,:,:b] = rng.permuted(np.broadcast_to(np.arange(b,dtype=np.uint64),(tmax_new,b)),axis=-1)
     return perms
 
 class NUSNode_dnb2(object):
